@@ -3,7 +3,7 @@ from consumer import Message
 from typing import List
 
 
-class Storage(ABC):
+class AbstractStorage(ABC):
     @abstractmethod
     def write(self, messages: List[Message]):
         pass

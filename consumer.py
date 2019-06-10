@@ -7,7 +7,11 @@ class Message:
         self.key = value
 
 
-class Consumer(ABC):
+class AbstractConsumer(ABC):
+    def __init__(self, bootstrap_servers: List[str], topics: List[str]):
+        self.bootstrap_servers = bootstrap_servers
+        self.topics = topics
+
     @abstractmethod
-    def poll(self, timeout_ms: int=0, max_records: int=0) -> List[Message]:
+    def poll(self, timeout_ms: int=-1, max_records: int=-1) -> List[Message]:
         pass
