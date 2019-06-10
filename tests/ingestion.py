@@ -1,5 +1,5 @@
 import unittest
-from ingester import Ingester, DummyConsumer, DummyStorage
+from ingestion import Ingester, DummyConsumer, DummyStorage
 from typing import List
 
 
