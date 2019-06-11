@@ -1,11 +1,13 @@
+import json
 import uuid
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from typing import List
 
 
 class Measure(ABC):
     @abstractmethod
-    def to_dict(self):
+    def to_json(self) -> str:
         pass
 
 
@@ -13,8 +15,8 @@ class ValueMeasure(Measure):
     def __init__(self, value):
         self.value = value
 
-    def to_dict(self):
-        return {'value': self.value}
+    def to_json(self) -> str:
+        return json.dumps({'value': self.value})
 
 
 class RefMeasure(Measure):
@@ -22,18 +24,19 @@ class RefMeasure(Measure):
         self.ref = ref
         self.index = index
 
-    def to_dict(self):
-        return {'reference': self.ref, 'index': self.index}
+    def to_json(self) -> str:
+        return json.dumps({'reference': self.ref, 'index': self.index})
 
 
 class TimeSeries:
-    def __init__(self, time: str, sensorcode: uuid, measure: Measure):
-        self.time = time
+    def __init__(self, time: datetime, sensorcode: uuid.UUID, measure: Measure):
+        self.time = time.astimezone(timezone.utc)
         self.sensorcode = sensorcode
         self.measure = measure
 
-    def to_dict(self):
-        return {'time': self.time, 'sensorcode': self.sensorcode, 'measure': self.measure.to_dict()}
+    def to_json(self) -> str:
+        return json.dumps({'time': self.time.strftime('%Y-%m-%dT%H:%M:%SZ'), 'sensorcode': str(self.sensorcode),
+                           'measure': self.measure.to_json()})
 
 
 class Message:
@@ -63,7 +66,7 @@ class MessageConverter(ABC):
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
         pass
 
-    def get_sensorcode(self, _id: str) -> uuid:
+    def get_sensorcode(self, _id: str) -> uuid.UUID:
         return uuid.uuid5(uuid.NAMESPACE_DNS, _id)
 
 

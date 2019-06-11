@@ -1,5 +1,8 @@
+import datetime
 import json
+import random
 import time
+import uuid
 from typing import List
 
 from ingestion import Consumer, Storage, TimeSeries, Message, MessageConverter
@@ -24,6 +27,6 @@ class DummyConverter(MessageConverter):
         series = []
         for m in messages:
             m = json.loads(m.value)
-            series.append(TimeSeries(m['time'], m['sensorcode'], m['measure']))
+            series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(), random.random()))
 
         return series

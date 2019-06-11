@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 from typing import List
@@ -18,10 +19,10 @@ class NgsiConverter(MessageConverter):
                 value = attr['value']
 
                 if value is not None and str(value).strip() and \
-                        name not in ('timestamp', 'location', 'latitude', 'longitude'):
+                        name not in ('dateObserved', 'location', 'latitude', 'longitude'):
 
-                    if name == 'dateObserved':
-                        time = attr['value']
+                    if name == 'timestamp':
+                        time = datetime.datetime.fromtimestamp(float(value), datetime.timezone.utc)
                     else:
                         try:
                             measures[name] = float(value)
