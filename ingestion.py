@@ -7,7 +7,7 @@ from typing import List
 
 class Measure(ABC):
     @abstractmethod
-    def to_json(self) -> str:
+    def to_dict(self) -> dict:
         pass
 
 
@@ -15,7 +15,7 @@ class ValueMeasure(Measure):
     def __init__(self, value):
         self.value = value
 
-    def to_json(self) -> str:
+    def to_dict(self) -> dict:
         return json.dumps({'value': self.value})
 
 
@@ -24,8 +24,8 @@ class RefMeasure(Measure):
         self.ref = ref
         self.index = index
 
-    def to_json(self) -> str:
-        return json.dumps({'reference': self.ref, 'index': self.index})
+    def to_dict(self) -> dict:
+        return {'reference': self.ref, 'index': self.index}
 
 
 class TimeSeries:
@@ -34,9 +34,9 @@ class TimeSeries:
         self.sensorcode = sensorcode
         self.measure = measure
 
-    def to_json(self) -> str:
-        return json.dumps({'time': self.time.strftime('%Y-%m-%dT%H:%M:%SZ'), 'sensorcode': str(self.sensorcode),
-                           'measure': self.measure.to_json()})
+    def to_dict(self) -> dict:
+        return {'time': self.time.strftime('%Y-%m-%dT%H:%M:%SZ'), 'sensorcode': str(self.sensorcode),
+                'measure': self.measure.to_dict()}
 
 
 class Message:
