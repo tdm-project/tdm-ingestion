@@ -46,9 +46,6 @@ class Message:
 
 
 class Consumer(ABC):
-    def __init__(self, bootstrap_servers: List[str], topics: List[str]):
-        self.bootstrap_servers = bootstrap_servers
-        self.topics = topics
 
     @abstractmethod
     def poll(self, timeout_ms: int = -1, max_records: int = -1) -> List[Message]:
@@ -83,6 +80,7 @@ class Ingester:
 if __name__ == '__main__':
     import argparse
     import importlib
+    from converters.ngsi_converter import NgsiConverter
 
 
     def import_class(class_path: str):
@@ -93,23 +91,21 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    consumer_choices = ['ingestion.DummyConsumer', 'confluent_kafka_consumer.Consumer']
-    storage_choices = ['tdmq_storage.Storage']
+    consumer_choices = ['tests.dummies.DummyConsumer', 'confluent_kafka_consumer.Consumer']
+    storage_choices = ['tdmq_storage.TDMQStorage']
     parser.add_argument('-c', help='consumer class', choices=consumer_choices, dest='consumer_class',
                         default=consumer_choices[0])
     parser.add_argument('-s', help='storage class', choices=consumer_choices, dest='storage_class',
                         default=storage_choices[0])
-    parser.add_argument('--bootstrap_servers', help='kafka  comma separated bootstrap servers',
-                        dest='bootstrap_servers', required=True)
-    parser.add_argument('--topics', help='kafka comma separated topics', dest='topics', required=True)
+    parser.add_argument('--consumer_args', dest='consumer_args', help='json dict with kwargs for building the consumer',
+                        default='{}')
+    parser.add_argument('--storage_args', dest='storage_args', help='json dict with kwargs for building the storage',
+                        default='{}')
     args = parser.parse_args()
 
-    bootstrap_servers = args.bootstrap_servers.split(',')
-    topics = args.topics.split(',')
-
-    storage = import_class(args.storage_class)()
-    consumer = import_class(args.consumer_class)(bootstrap_servers, topics)
-    ingester = Ingester(consumer, storage)
+    storage = import_class(args.storage_class)(**json.loads(args.storage_args))
+    consumer = import_class(args.consumer_class)(**json.loads(args.consumer_args))
+    ingester = Ingester(consumer, storage, NgsiConverter())
 
     while True:
         ingester.process()
