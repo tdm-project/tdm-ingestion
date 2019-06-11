@@ -1,7 +1,7 @@
 import unittest
 
-from dummies import DummyConsumer, DummyStorage, DummyConverter
-from ingestion import Ingester, TimeSeries
+from tests.dummies import DummyConsumer, DummyStorage, DummyConverter
+from ingestion import Ingester
 
 
 class TestIngester(unittest.TestCase):
