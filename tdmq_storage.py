@@ -10,5 +10,5 @@ class TDMQStorage(Storage):
         self.tdmq_url = tdmq_url
 
     def write(self, timeseries: List[TimeSeries]):
-        requests.post(os.path.join(self.tdmq_url, '/measures'),
+        r = requests.post(os.path.join(self.tdmq_url, 'api/v0.0/measures'),
                       json=[ts.to_dict() for ts in timeseries]).raise_for_status()
