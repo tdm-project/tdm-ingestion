@@ -1,3 +1,4 @@
+import uuid
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -26,7 +27,7 @@ class RefMeasure(Measure):
 
 
 class TimeSeries:
-    def __init__(self, time: str, sensorcode: str, measure: Measure):
+    def __init__(self, time: str, sensorcode: uuid, measure: Measure):
         self.time = time
         self.sensorcode = sensorcode
         self.measure = measure
@@ -61,6 +62,9 @@ class MessageConverter(ABC):
     @abstractmethod
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
         pass
+
+    def get_sensorcode(self, _id: str) -> uuid:
+        return uuid.uuid5(uuid.NAMESPACE_DNS, _id)
 
 
 class Ingester:
