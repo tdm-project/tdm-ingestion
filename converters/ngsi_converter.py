@@ -1,6 +1,5 @@
 import json
 import logging
-import uuid
 from typing import List
 
 from ingestion import MessageConverter, Message, TimeSeries, ValueMeasure
@@ -11,7 +10,7 @@ class NgsiConverter(MessageConverter):
         res = []
         for m in messages:
             m_dict = json.loads(m.value)
-            _id =m_dict['body']['id']
+            _id = m_dict['body']['id']
             time = None
             measures = {}
             for attr in m_dict['body']['attributes']:

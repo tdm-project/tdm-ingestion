@@ -37,6 +37,5 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(str(timeseries_list[1].sensorcode), '1fe408c8-e7b2-55ff-b902-d50f021b1d3a')
 
 
-
 if __name__ == '__main__':
     unittest.main()
