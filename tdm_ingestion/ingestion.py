@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -103,7 +105,7 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', help='conf file', default='conf.yaml', dest='conf_file')
+    parser.add_argument('conf_file', help='conf file', default='conf.yaml')
     args = parser.parse_args()
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
