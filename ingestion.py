@@ -16,7 +16,7 @@ class ValueMeasure(Measure):
         self.value = value
 
     def to_dict(self) -> dict:
-        return json.dumps({'value': self.value})
+        return {'value': self.value}
 
 
 class RefMeasure(Measure):
