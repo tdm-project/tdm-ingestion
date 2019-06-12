@@ -1,12 +1,12 @@
 consumer:
-  class: consumers.confluent_kafka_consumer.KafkaConsumer
+  class: tdm_ingestion.consumers.confluent_kafka_consumer.KafkaConsumer
   args:
     bootstrap_servers:
       - localhost:9092
     topics:
       - test
 storage:
-  class: storage.tdmq_storage.TDMQStorage
+  class: tdm_ingestion.storage.tdmq_storage.TDMQStorage
   args:
     tdmq_url: http://localhost:8000
 
