@@ -8,9 +8,15 @@ from ingestion import MessageConverter, Message, TimeSeries, ValueMeasure
 
 class NgsiConverter(MessageConverter):
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
+        logging.debug("messages %s", len(messages))
         res = []
         for m in messages:
-            m_dict = json.loads(m.value)
+            try:
+                m_dict = json.loads(m.value)
+            except json.decoder.JSONDecodeError:
+                logging.error('skipping message %s, error while jsondecoding', m.value)
+                continue
+
             _id = m_dict['body']['id']
             time = None
             measures = {}
