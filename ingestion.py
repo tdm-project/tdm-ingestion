@@ -1,4 +1,3 @@
-import json
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -85,11 +84,21 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
+
     def import_class(class_path: str):
         class_path_splitted = class_path.split('.')
         module = '.'.join(class_path_splitted[:-1])
         cls = class_path_splitted[-1]
         return getattr(importlib.import_module(module), cls)
+
+
+    def parse_kwargs(comma_separated_kwargs: str) -> dict:
+        res = {}
+        for key_value in comma_separated_kwargs.split(','):
+            splitted_key_value = key_value.split('=')
+            if len(splitted_key_value) == 2:
+                res[splitted_key_value[0]] = splitted_key_value[1]
+        return res
 
 
     parser = argparse.ArgumentParser()
@@ -99,14 +108,14 @@ if __name__ == '__main__':
                         default=consumer_choices[0])
     parser.add_argument('-s', help='storage class', choices=consumer_choices, dest='storage_class',
                         default=storage_choices[0])
-    parser.add_argument('--consumer_args', dest='consumer_args', help='json dict with kwargs for building the consumer',
-                        default='{}')
-    parser.add_argument('--storage_args', dest='storage_args', help='json dict with kwargs for building the storage',
-                        default='{}')
+    parser.add_argument('--consumer-args', dest='consumer_args', help='comma separated key=value',
+                        default='')
+    parser.add_argument('--storage-args', dest='storage_args', help='comma separated key=value',
+                        default='')
     args = parser.parse_args()
 
-    storage = import_class(args.storage_class)(**json.loads(args.storage_args))
-    consumer = import_class(args.consumer_class)(**json.loads(args.consumer_args))
+    storage = import_class(args.storage_class)(**parse_kwargs(args.storage_args))
+    consumer = import_class(args.consumer_class)(**parse_kwargs(args.consumer_args))
     ingester = Ingester(consumer, storage, NgsiConverter())
 
     while True:
