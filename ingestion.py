@@ -47,7 +47,7 @@ class Message:
 class Consumer(ABC):
 
     @abstractmethod
-    def poll(self, timeout_ms: int = -1, max_records: int = -1) -> List[Message]:
+    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[Message]:
         pass
 
 
@@ -72,14 +72,15 @@ class Ingester:
         self.storage = storage
         self.converter = converter
 
-    def process(self, timeout_ms: int = 0, max_records: int = 0):
-        self.storage.write(self.converter.convert(self.consumer.poll(timeout_ms, max_records)))
+    def process(self, timeout_s: int = -1, max_records: int = 1):
+        self.storage.write(self.converter.convert(self.consumer.poll(timeout_s, max_records)))
 
 
 if __name__ == '__main__':
     import argparse
     import importlib
     import logging
+    import yaml
     from converters.ngsi_converter import NgsiConverter
 
     logging.basicConfig(level=logging.DEBUG)
@@ -102,21 +103,16 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    consumer_choices = ['tests.dummies.DummyConsumer', 'confluent_kafka_consumer.Consumer']
-    storage_choices = ['tdmq_storage.TDMQStorage']
-    parser.add_argument('-c', help='consumer class', choices=consumer_choices, dest='consumer_class',
-                        default=consumer_choices[0])
-    parser.add_argument('-s', help='storage class', choices=consumer_choices, dest='storage_class',
-                        default=storage_choices[0])
-    parser.add_argument('--consumer-args', dest='consumer_args', help='comma separated key=value',
-                        default='')
-    parser.add_argument('--storage-args', dest='storage_args', help='comma separated key=value',
-                        default='')
+    parser.add_argument('-c', help='conf file', default='conf.yaml', dest='conf_file')
     args = parser.parse_args()
+    with open(args.conf_file, 'r') as conf_file:
+        conf = yaml.safe_load(conf_file)
+        logging.debug('conf %s', conf)
+        storage = import_class(conf['storage']['class'])(**conf['storage']['args'])
+        consumer = import_class(conf['consumer']['class'])(**conf['consumer']['args'])
+        ingester_process_args = conf['ingester']['process']
 
-    storage = import_class(args.storage_class)(**parse_kwargs(args.storage_args))
-    consumer = import_class(args.consumer_class)(**parse_kwargs(args.consumer_args))
     ingester = Ingester(consumer, storage, NgsiConverter())
 
     while True:
-        ingester.process()
+        ingester.process(**ingester_process_args)

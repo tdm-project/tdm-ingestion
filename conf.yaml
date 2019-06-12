@@ -1,0 +1,16 @@
+consumer:
+  class: consumers.confluent_kafka_consumer.KafkaConsumer
+  args:
+    bootstrap_servers:
+      - localhost:9092
+    topics:
+      - test
+storage:
+  class: storage.tdmq_storage.TDMQStorage
+  args:
+    tdmq_url: http://localhost:8000
+
+ingester:
+  process:
+    timeout_s: 20
+    max_records: 10
