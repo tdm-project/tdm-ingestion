@@ -80,8 +80,10 @@ class Ingester:
 if __name__ == '__main__':
     import argparse
     import importlib
+    import logging
     from converters.ngsi_converter import NgsiConverter
 
+    logging.basicConfig(level=logging.DEBUG)
 
     def import_class(class_path: str):
         class_path_splitted = class_path.split('.')
