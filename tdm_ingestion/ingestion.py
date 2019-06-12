@@ -81,7 +81,7 @@ if __name__ == '__main__':
     import importlib
     import logging
     import yaml
-    from converters.ngsi_converter import NgsiConverter
+    from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 
     logging.basicConfig(level=logging.DEBUG)
 

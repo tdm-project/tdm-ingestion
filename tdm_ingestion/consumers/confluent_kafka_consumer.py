@@ -1,7 +1,7 @@
 from typing import List
 
 from confluent_kafka import Consumer as ConfluentKafkaConsumer
-from ingestion import Consumer, Message
+from tdm_ingestion.ingestion import Consumer, Message
 
 
 class KafkaConsumer(Consumer):

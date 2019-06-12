@@ -3,7 +3,7 @@ import os
 from typing import List
 
 import requests
-from ingestion import Storage, TimeSeries
+from tdm_ingestion.ingestion import Storage, TimeSeries
 
 
 class TDMQStorage(Storage):

@@ -1,8 +1,8 @@
 import json
 import unittest
 
-from converters.ngsi_converter import NgsiConverter
-from ingestion import Message
+from tdm_ingestion.converters.ngsi_converter import NgsiConverter
+from tdm_ingestion.ingestion import Message
 
 
 class TestNgsiConverter(unittest.TestCase):

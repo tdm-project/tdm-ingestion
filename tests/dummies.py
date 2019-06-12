@@ -4,7 +4,7 @@ import random
 import uuid
 from typing import List
 
-from ingestion import Consumer, Storage, TimeSeries, Message, MessageConverter
+from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, MessageConverter
 
 
 class DummyStorage(Storage):
