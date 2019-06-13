@@ -1,5 +1,5 @@
 ###### Description
-This repo contains code fro ingesting data from topic kafka containing ngsi json message to tdmq.
+This repo contains code for ingesting data from kafka topics containing ngsi json messages to tdmq.
 
 ###### Installing
 pip install --user -e .[confluent-kafka]
