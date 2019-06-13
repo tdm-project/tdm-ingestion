@@ -117,4 +117,7 @@ if __name__ == '__main__':
     ingester = Ingester(consumer, storage, NgsiConverter())
 
     while True:
-        ingester.process(**ingester_process_args)
+        try:
+            ingester.process(**ingester_process_args)
+        except Exception as ex:
+            logging.exception(ex)
