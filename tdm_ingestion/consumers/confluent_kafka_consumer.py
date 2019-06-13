@@ -6,13 +6,14 @@ from tdm_ingestion.ingestion import Consumer, Message
 
 class KafkaConsumer(Consumer):
 
-    def __init__(self, bootstrap_servers: List[str], topics: List[str]):
+    def __init__(self, bootstrap_servers: List[str], topics: List[str], group_id: str='tdm_ingestion'):
         self.bootstrap_servers = ','.join(bootstrap_servers)
         self.topics = topics
+        self.group_id = group_id
 
         self.consumer = ConfluentKafkaConsumer({
             'bootstrap.servers': self.bootstrap_servers,
-            'group.id': '1'
+            'group.id': group_id
         })
         self.consumer.subscribe(self.topics)
 
