@@ -30,13 +30,14 @@ class RefMeasure(Measure):
 
 
 class TimeSeries:
-    def __init__(self, time: datetime, sensorcode: uuid.UUID, measure: Measure):
-        self.time = time.astimezone(timezone.utc)
+    def __init__(self, utc_time: datetime, sensorcode: uuid.UUID, measure: Measure):
+
+        self.time = utc_time
         self.sensorcode = sensorcode
         self.measure = measure
 
-    def to_dict(self) -> dict:
-        return {'time': self.time.strftime('%Y-%m-%dT%H:%M:%SZ'), 'sensorcode': str(self.sensorcode),
+    def to_dict(self, time_format: str = '%Y-%m-%dT%H:%M:%SZ') -> dict:
+        return {'time': self.time.strftime(time_format), 'sensorcode': str(self.sensorcode),
                 'measure': self.measure.to_dict()}
 
 
