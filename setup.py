@@ -1,8 +1,11 @@
 from setuptools import find_packages, setup
 
+with open('VERSION') as f:
+   version = f.read().strip()
+
 setup(
     name='tdm_ingestion',
-    version='0.0.1',
+    version=version,
     packages=find_packages(),
     zip_safe=False,
     install_requires=['requests', 'pyaml'],
