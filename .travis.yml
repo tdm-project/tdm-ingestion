@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.6"
+cache: pip
+install:
+  - pip install -e .[confluent-kafka]
+script:
+  - cd tests
+  - python -m unittest
