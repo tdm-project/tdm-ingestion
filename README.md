@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tdm-project/tdm-ingestion.svg?branch=master)](https://travis-ci.org/tdm-project/tdm-ingestion)
+
 ###### Description
 This repo contains code for ingesting data from kafka topics containing ngsi json messages to tdmq.
 
