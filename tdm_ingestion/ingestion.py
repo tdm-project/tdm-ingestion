@@ -37,7 +37,13 @@ class MessageConverter(ABC):
         pass
 
 
-class Ingester:
+class Ingester(ABC):
+    @abstractmethod
+    def process(self, timeout_s: int = -1, max_records: int = 1):
+        pass
+
+
+class BasicIngester(Ingester):
     def __init__(self, consumer: Consumer, storage: Storage,
                  converter: MessageConverter):
         self.consumer = consumer
