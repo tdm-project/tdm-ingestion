@@ -5,11 +5,17 @@ from typing import List, Dict
 from tdm_ingestion.models import TimeSeries
 from tdm_ingestion.utils import import_class
 
+    def __repr__(self):
+        return str(self.to_dict())
+
 
 class Message:
     def __init__(self, key: str, value: str):
         self.key = key
         self.value = value
+
+    def __repr__(self):
+        return f'key: {self.key}, value {self.value}'
 
 
 class Consumer(ABC):
