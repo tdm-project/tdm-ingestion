@@ -5,9 +5,6 @@ from typing import List, Dict
 from tdm_ingestion.models import TimeSeries
 from tdm_ingestion.utils import import_class
 
-    def __repr__(self):
-        return str(self.to_dict())
-
 
 class Message:
     def __init__(self, key: str, value: str):
@@ -45,7 +42,11 @@ class MessageConverter(ABC):
 
 class Ingester(ABC):
     @abstractmethod
-    def process(self, timeout_s: int = -1, max_records: int = 1):
+    def process(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def process_forever(self, *args, **kwargs):
         pass
 
 
@@ -56,9 +57,16 @@ class BasicIngester(Ingester):
         self.storage = storage
         self.converter = converter
 
-    def process(self, timeout_s: int = -1, max_records: int = 1):
+    def process(self, *args, **kwargs):
         self.storage.write(
-            self.converter.convert(self.consumer.poll(timeout_s, max_records)))
+            self.converter.convert(self.consumer.poll(*args, **kwargs)))
+
+    def process_forever(self, *args, **kwargs):
+        while True:
+            try:
+                self.process(*args, **kwargs)
+            except Exception as ex:
+                logging.exception(ex)
 
 
 if __name__ == '__main__':
@@ -69,6 +77,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
+
     def parse_kwargs(comma_separated_kwargs: str) -> dict:
         res = {}
         for key_value in comma_separated_kwargs.split(','):
@@ -76,6 +85,7 @@ if __name__ == '__main__':
             if len(splitted_key_value) == 2:
                 res[splitted_key_value[0]] = splitted_key_value[1]
         return res
+
 
     parser = argparse.ArgumentParser()
     parser.add_argument('conf_file', help='conf file', default='conf.yaml')
@@ -89,10 +99,5 @@ if __name__ == '__main__':
             **conf['consumer']['args'])
         ingester_process_args = conf['ingester']['process']
 
-    ingester = Ingester(consumer, storage, CachedNgsiConverter())
-
-    while True:
-        try:
-            ingester.process(**ingester_process_args)
-        except Exception as ex:
-            logging.exception(ex)
+    ingester = BasicIngester(consumer, storage, CachedNgsiConverter())
+    ingester.process_forever(**ingester_process_args)
