@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import uuid
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -31,9 +30,6 @@ class MessageConverter(ABC):
     @abstractmethod
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
         pass
-
-    def get_sensorcode(self, _id: str) -> uuid.UUID:
-        return uuid.uuid5(uuid.NAMESPACE_DNS, _id)
 
 
 class Ingester:
