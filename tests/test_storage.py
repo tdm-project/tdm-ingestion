@@ -30,7 +30,7 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensors_type.values()))
+                         jsons.dumps(client.sensor_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sensors.values()))
@@ -46,7 +46,7 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensors_type.values()))
+                         jsons.dumps(client.sensor_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sensors.values()))
@@ -64,7 +64,7 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensors_type.values()))
+                         jsons.dumps(client.sensor_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sensors.values()))

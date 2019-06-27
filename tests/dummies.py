@@ -19,14 +19,26 @@ class DummyStorage(Storage):
 
 
 class DummyClient(Client):
+
     def __init__(self):
         self.sensors = {}
-        self.sensors_type = {}
+        self.sensor_types = {}
         self.time_series = []
+
+    def sensors_count(self, query: Dict) -> int:
+        try:
+            return len([self.sensors[query['name']]])
+        except KeyError:
+            return 0
+    def sensor_types_count(self, query: Dict) -> int:
+        try:
+            return len([self.sensor_types[query['name']]])
+        except KeyError:
+            return 0
 
     def create_sensor_type(self, sensor_types: List[SensorType]) -> List[
         AnyStr]:
-        self.sensors_type.update({s.name: s for s in sensor_types})
+        self.sensor_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
     def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
@@ -43,11 +55,11 @@ class DummyClient(Client):
         """
         k = _id if _id else query['name']
         try:
-            return self.sensors_type[k]
+            return self.sensor_types[k]
         except KeyError:
             raise Client.NotFound
 
-    def get_sensor(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
         """
             only query by name is supported
         """

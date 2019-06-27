@@ -1,4 +1,3 @@
-import logging
 from typing import List, Dict, AnyStr, Union, Type, Set
 
 from tdm_ingestion.ingestion import Storage as BaseStorage, TimeSeries
@@ -17,17 +16,13 @@ class Storage(BaseStorage):
         if not obj.name in self._cache[obj.__class__]:
             query = {'name': obj.name}
             if isinstance(obj, Sensor):
-                get_method = self.client.get_sensor
+                count_method = self.client.sensors_count
                 create_method = self.client.create_sensors
             else:
-                get_method = self.client.get_sensor_type
+                count_method = self.client.sensor_types_count
                 create_method = self.client.create_sensor_type
 
-            try:
-                get_method(query=query)
-            except Client.NotFound as ex:
-                logging.error('query %s on %s returns not found', query,
-                              obj.__class__.__name__)
+            if count_method(query=query) <= 0:
                 create_method([obj])
             self._cache[obj.__class__].add(obj.name)
 

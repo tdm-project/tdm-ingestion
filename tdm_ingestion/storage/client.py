@@ -28,5 +28,13 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def get_sensor(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+        pass
+
+    @abstractmethod
+    def sensors_count(self, query: Dict) -> int:
+        pass
+
+    @abstractmethod
+    def sensor_types_count(self, query: Dict) -> int:
         pass
