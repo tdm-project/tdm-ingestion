@@ -1,13 +1,18 @@
 import datetime
 import uuid
 from abc import ABC
+from typing import AnyStr, List
 
 import jsons
+import stringcase
 
 
 class Model(ABC):
     def to_json(self):
-        return jsons.dumps(self)
+        dct = {}
+        for k,v in self.__dict__.items():
+            dct[stringcase.camelcase(k)] = v
+        return jsons.dumps(dct)
 
 
 class Measure(Model):
