@@ -45,6 +45,9 @@ class SensorType(Model):
         self.function = category or ["sensing"]
         self.__dict__.update(kwargs)
 
+    def __repr__(self):
+        return f'SensorType {self.name}'
+
 
 class GeometryType(Enum):
     Point = "Point"
@@ -73,6 +76,9 @@ class Sensor(Model):
         self.type = type
         self.node = node
         self.geometry = geometry
+
+    def __repr__(self):
+        return f'Sensor {self.name} of {repr(self.type)}'
 
     def to_json(self):
         dct = dict(self.__dict__)
