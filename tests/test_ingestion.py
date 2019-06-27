@@ -1,6 +1,5 @@
 import datetime
 import unittest
-import uuid
 
 from jsonpickle import json
 from tdm_ingestion.ingestion import Ingester
@@ -23,7 +22,7 @@ class TestTimeSeries(unittest.TestCase):
         now = datetime.datetime.now(datetime.timezone.utc)
         value = 100
         sensor_type = SensorType('test', 'test', ['test'])
-        sensor = Sensor('sensor', sensor_type, 'test', Point(0,0))
+        sensor = Sensor('sensor', sensor_type, 'test', Point(0, 0))
         ts = TimeSeries(now, sensor, ValueMeasure(100))
         time_format = '%Y-%m-%dT%H:%M:%SZ'
         to_dict = json.loads(ts.to_json())
