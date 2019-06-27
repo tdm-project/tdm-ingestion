@@ -2,9 +2,12 @@ import datetime
 import json
 import random
 import uuid
-from typing import List
+from typing import List, AnyStr, Dict
 
-from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, MessageConverter
+from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
+    MessageConverter
+from tdm_ingestion.models import Sensor, SensorType
+from tdm_ingestion.storage.client import Client
 
 
 class DummyStorage(Storage):
@@ -15,26 +18,70 @@ class DummyStorage(Storage):
         self.messages += messages
 
 
+class DummyClient(Client):
+    def __init__(self):
+        self.sensors = {}
+        self.sensors_type = {}
+        self.time_series = []
+
+    def create_sensor_type(self, sensor_types: List[SensorType]) -> List[
+        AnyStr]:
+        self.sensors_type.update({s.name: s for s in sensor_types})
+        return [s.name for s in sensor_types]
+
+    def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
+        self.sensors.update({s.name: s for s in sensors})
+        return [s.name for s in sensors]
+
+    def create_time_series(self, time_series: List[TimeSeries]):
+        self.time_series += time_series
+
+    def get_sensor_type(self, _id: AnyStr = None,
+                        query: Dict = None) -> SensorType:
+        """
+            only query by name is supported
+        """
+        k = _id if _id else query['name']
+        try:
+            return self.sensors_type[k]
+        except KeyError:
+            raise Client.NotFound
+
+    def get_sensor(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+        """
+            only query by name is supported
+        """
+        k = _id if _id else query['name']
+        try:
+            return self.sensors[k]
+        except KeyError:
+            raise Client.NotFound
+
+
 class DummyConsumer(Consumer):
     message = {
-        "headers": [{"fiware-service": "tdm"}, {"fiware-servicePath": "/cagliari/edge/meteo"},
+        "headers": [{"fiware-service": "tdm"},
+                    {"fiware-servicePath": "/cagliari/edge/meteo"},
                     {"timestamp": 1531774294021}],
         "body": {
             "attributes": [
                 {"name": "barometricPressure", "type": "float", "value": " "},
-                {"name": "dateObserved", "type": "String", "value": "2018-07-16T20:51:33+00:00"},
-                {"name": "location", "type": "geo:point", "value": "39.2479168, 9.1329701"},
-                {"name": "timestamp", "type": "Integer", "value": "1531774293"},
+                {"name": "dateObserved", "type": "String",
+                 "value": "2018-07-16T20:51:33+00:00"},
+                {"name": "location", "type": "geo:point",
+                 "value": "39.2479168, 9.1329701"},
+                {"name": "timestamp", "type": "Integer",
+                 "value": "1531774293"},
                 {"name": "windDirection", "type": "Float", "value": "174.545"},
                 {"name": "windSpeed", "type": "Float", "value": "0.000"},
                 {"name": "latitude", "type": "string", "value": "39.2479168"},
                 {"name": "longitude", "type": "string", "value": "9.1329701"}
             ],
             "type": "WeatherObserved",
-            "isPattern": "false", "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+            "isPattern": "false",
+            "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
         }
     }
-
 
     def poll(self, timeout_ms=0, max_records=0) -> List[Message]:
         return [Message('key', json.dumps(DummyConsumer.message))]
@@ -45,6 +92,7 @@ class DummyConverter(MessageConverter):
         series = []
         for m in messages:
             m = json.loads(m.value)
-            series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(), random.random()))
+            series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(),
+                                     random.random()))
 
         return series
