@@ -3,7 +3,8 @@ import json
 import logging
 from typing import List
 
-from tdm_ingestion.ingestion import MessageConverter, Message, TimeSeries, ValueMeasure
+from tdm_ingestion.models import TimeSeries, ValueMeasure
+from tdm_ingestion.ingestion import MessageConverter, Message
 
 
 class NgsiConverter(MessageConverter):

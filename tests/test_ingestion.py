@@ -2,7 +2,8 @@ import datetime
 import unittest
 import uuid
 
-from tdm_ingestion.ingestion import Ingester, TimeSeries, ValueMeasure
+from tdm_ingestion.ingestion import Ingester
+from tdm_ingestion.models import ValueMeasure, TimeSeries
 from tests.dummies import DummyConsumer, DummyStorage, DummyConverter
 
 
