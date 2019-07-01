@@ -40,7 +40,7 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_write_sensors_type_pre_loaded(self):
         client = DummyClient()
-        client.create_sensor_type(sensors_type)
+        client.create_sensor_types(sensors_type)
 
         storage = CachedStorage(client)
         storage.write(time_series)
@@ -57,7 +57,7 @@ class TestCachedStorage(unittest.TestCase):
     def test_write_all_data_preloaded(self):
         client = DummyClient()
 
-        client.create_sensor_type(sensors_type)
+        client.create_sensor_types(sensors_type)
         client.create_sensors(sensors)
 
         storage = CachedStorage(client)

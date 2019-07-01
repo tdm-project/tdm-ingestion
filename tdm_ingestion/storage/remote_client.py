@@ -1,15 +1,16 @@
+import logging
 import os
 from abc import ABC, abstractmethod
 from typing import AnyStr, Dict, List, Union
 
 import requests
-from tdm_ingestion.models import Sensor, SensorType, TimeSeries
+from tdm_ingestion.models import Sensor, SensorType, TimeSeries, Model
 from tdm_ingestion.storage.base import Client as BaseClient
 
 
 class Http(ABC):
     @abstractmethod
-    def post(self, url: AnyStr, json: Union[List, Dict] = None) -> Union[
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None) -> Union[
         List, Dict]:
         pass
 
@@ -20,10 +21,13 @@ class Http(ABC):
 
 
 class Requests(Http):
-    def post(self, url: AnyStr, json: Union[List, Dict] = None) -> Union[
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None) -> Union[
         List, Dict]:
         json = json or {}
-        r = requests.post(url, json=json)
+        logging.debug("doing POST with url %s and json %s", url, json)
+        r = requests.post(url, data=json,
+                          headers={'content-type': 'application/json'}
+                          )
         r.raise_for_status()
         return r.json()
 
@@ -58,9 +62,11 @@ class Requests(Http):
 
 
 class Client(BaseClient):
-    def __init__(self, client, url, api_version='v0.0'):
-        self.client = client
+
+    def __init__(self, http_client, url, api_version='v0.0'):
+        self.http = http_client
         self.url = url
+        logging.debug("url %s", self.url)
         self.api_version = api_version
         self.sensor_types_url = os.path.join(self.url,
                                              f'api/{api_version}/sensor_types')
@@ -69,18 +75,24 @@ class Client(BaseClient):
         self.measures_url = os.path.join(self.url,
                                          f'api/{api_version}/measures')
 
-    def create_sensor_type(self, sensor_types: List[SensorType]) -> List[
+    @staticmethod
+    def create_from_json(json: Dict):
+        logging.debug("building Client with %s", json)
+        # TODO works only with Requests client
+        return Client(Requests(), json['url'])
+
+    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
         AnyStr]:
-        return self.client.post(os.path.join(self.url, self.sensor_types_url),
-                                [st.to_json() for st in sensor_types])
+        return self.http.post(self.sensor_types_url,
+                              Model.list_to_json(sensor_types))
 
     def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
-        return self.client.post(self.sensors_url,
-                                [s.to_json() for s in sensors])
+        return self.http.post(self.sensors_url,
+                              Model.list_to_json(sensors))
 
     def create_time_series(self, time_series: List[TimeSeries]):
-        return self.client.post(self.measures_url,
-                                [ts.to_json() for ts in time_series])
+        return self.http.post(self.measures_url,
+                              Model.list_to_json(time_series))
 
     def get_sensor_type(self, _id: AnyStr = None,
                         query: Dict = None) -> Union[
@@ -95,12 +107,12 @@ class Client(BaseClient):
     #                                  params=query)
     #            return [SensorType(**data) for data in res]
 
-    def get_sensor(self, _id: AnyStr = None, query: Dict = None) -> Union[
+    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Union[
         Sensor, List[Sensor]]:
         raise NotImplementedError
 
-    def sensor_exists(self, query):
-        return len(self.client.get(self.sensors_url, params=query)) > 0
+    def sensors_count(self, query):
+        return len(self.http.get(self.sensors_url, params=query)) > 0
 
-    def sensor_type_exists(self, query: Dict):
-        return len(self.client.get(self.sensor_types_url, params=query)) > 0
+    def sensor_types_count(self, query: Dict):
+        return len(self.http.get(self.sensor_types_url, params=query)) > 0

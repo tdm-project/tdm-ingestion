@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
 
 from tdm_ingestion.models import TimeSeries
 from tdm_ingestion.utils import import_class
@@ -22,6 +21,11 @@ class Consumer(ABC):
 
 
 class Storage(ABC):
+    @staticmethod
+    @abstractmethod
+    def create_from_json(json: Dict) -> "Storage":
+        pass
+
     @abstractmethod
     def write(self, messages: List[TimeSeries]):
         pass
@@ -69,8 +73,8 @@ if __name__ == '__main__':
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
         logging.debug('conf %s', conf)
-        storage = import_class(conf['storage']['class'])(
-            **conf['storage']['args'])
+        storage = import_class(conf['storage']['class']).create_from_json(
+            conf['storage']['args'])
         consumer = import_class(conf['consumer']['class'])(
             **conf['consumer']['args'])
         ingester_process_args = conf['ingester']['process']

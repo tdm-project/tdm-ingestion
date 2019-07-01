@@ -1,22 +1,31 @@
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import AnyStr, List
+from typing import AnyStr, List, Dict, Union
 
 import jsons
 import stringcase
 
 
-def jsonify(obj: dict):
+def to_camel_case_dict(obj: Dict) -> Dict:
     dct = {}
     for k, v in obj.items():
         dct[stringcase.camelcase(k)] = v
-    return jsons.dumps(dct)
+    return dct
+
+
+def jsonify(obj: Union[Dict, List]) -> str:
+    return jsons.dumps(obj)
 
 
 class Model(ABC):
-    def to_json(self):
-        return jsonify(self.__dict__)
+    def to_json(self, serialize: bool = True) -> Union[Dict, str]:
+        camel_cased = to_camel_case_dict(self.__dict__)
+        return jsonify(camel_cased) if serialize else camel_cased
+
+    @staticmethod
+    def list_to_json(models: List["Model"]) -> str:
+        return jsonify([m.to_json(False) for m in models])
 
 
 class Measure(Model):
@@ -64,9 +73,10 @@ class Point(Geometry):
         self.latitude = latitude
         self.longitude = longitude
 
-    def to_json(self):
-        return jsonify(
+    def to_json(self, serialize: bool = True) -> Union[Dict, str]:
+        camel_cased = to_camel_case_dict(
             {"type": "Point", "coordinates": [self.longitude, self.latitude]})
+        return jsonify(camel_cased) if serialize else camel_cased
 
 
 class Sensor(Model):
@@ -80,10 +90,12 @@ class Sensor(Model):
     def __repr__(self):
         return f'Sensor {self.name} of {repr(self.type)}'
 
-    def to_json(self):
+    def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
         dct["type"] = self.type.name
-        return jsonify(dct)
+        dct["geometry"] = self.geometry.to_json(False)
+        camel_cased = to_camel_case_dict(dct)
+        return jsonify(camel_cased) if serialize else camel_cased
 
 
 class TimeSeries(Model):
@@ -93,7 +105,8 @@ class TimeSeries(Model):
         self.sensor = sensor
         self.measure = measure
 
-    def to_json(self):
+    def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
         dct["sensor"] = self.sensor.name
-        return jsonify(dct)
+        camel_cased = to_camel_case_dict(dct)
+        return jsonify(camel_cased) if serialize else camel_cased

@@ -11,6 +11,10 @@ from tdm_ingestion.storage.base import Client
 
 
 class DummyStorage(Storage):
+    @staticmethod
+    def create_from_json(json: Dict) -> "Storage":
+        raise NotImplementedError
+
     def __init__(self):
         self.messages = []
 
@@ -36,7 +40,7 @@ class DummyClient(Client):
         except KeyError:
             return 0
 
-    def create_sensor_type(self, sensor_types: List[SensorType]) -> List[
+    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
         AnyStr]:
         self.sensor_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]

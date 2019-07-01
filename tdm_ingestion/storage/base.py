@@ -5,6 +5,7 @@ from typing import Union, Type, Set
 from tdm_ingestion.ingestion import Storage as BaseStorage
 from tdm_ingestion.ingestion import TimeSeries
 from tdm_ingestion.models import SensorType, Sensor
+from tdm_ingestion.utils import import_class
 
 
 class Client(ABC):
@@ -12,7 +13,7 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_sensor_type(self, sensor_types: List[SensorType]) -> List[
+    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
         AnyStr]:
         pass
 
@@ -49,6 +50,12 @@ class CachedStorage(BaseStorage):
         self._cache: Dict[Type, Set[AnyStr]] = {SensorType: set(),
                                                 Sensor: set()}
 
+
+    @staticmethod
+    def create_from_json(json: Dict):
+        client = json['client']
+        return CachedStorage(import_class(client['class']).create_from_json(client['args']))
+
     def _idempotent_create(self, obj: Union[SensorType, Sensor]):
         if not obj.name in self._cache[obj.__class__]:
             query = {'name': obj.name}
@@ -57,7 +64,7 @@ class CachedStorage(BaseStorage):
                 create_method = self.client.create_sensors
             else:
                 count_method = self.client.sensor_types_count
-                create_method = self.client.create_sensor_type
+                create_method = self.client.create_sensor_types
 
             if count_method(query=query) <= 0:
                 create_method([obj])
@@ -70,3 +77,5 @@ class CachedStorage(BaseStorage):
                     self._idempotent_create(obj)
 
             self.client.create_time_series(time_series)
+
+
