@@ -7,7 +7,7 @@ from typing import List, AnyStr, Dict
 from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
     MessageConverter
 from tdm_ingestion.models import Sensor, SensorType
-from tdm_ingestion.storage.client import Client
+from tdm_ingestion.storage.base import Client
 
 
 class DummyStorage(Storage):

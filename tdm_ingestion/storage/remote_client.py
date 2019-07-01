@@ -4,7 +4,7 @@ from typing import AnyStr, Dict, List, Union
 
 import requests
 from tdm_ingestion.models import Sensor, SensorType, TimeSeries
-from tdm_ingestion.storage.client import Client as BaseClient
+from tdm_ingestion.storage.base import Client as BaseClient
 
 
 class Http(ABC):

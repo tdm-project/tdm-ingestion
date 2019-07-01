@@ -4,7 +4,7 @@ import unittest
 import jsons
 from tdm_ingestion.models import SensorType, ValueMeasure, Sensor, Point, \
     TimeSeries
-from tdm_ingestion.storage.cached_storage import Storage
+from tdm_ingestion.storage.base import CachedStorage
 from tests.dummies import DummyClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
@@ -26,7 +26,7 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_write_no_data(self):
         client = DummyClient()
-        storage = Storage(client)
+        storage = CachedStorage(client)
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
@@ -42,7 +42,7 @@ class TestCachedStorage(unittest.TestCase):
         client = DummyClient()
         client.create_sensor_type(sensors_type)
 
-        storage = Storage(client)
+        storage = CachedStorage(client)
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
@@ -60,7 +60,7 @@ class TestCachedStorage(unittest.TestCase):
         client.create_sensor_type(sensors_type)
         client.create_sensors(sensors)
 
-        storage = Storage(client)
+        storage = CachedStorage(client)
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
