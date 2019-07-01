@@ -33,7 +33,13 @@ def try_func(func, sleep, retry, *args, **kwargs):
     return res
 
 
+def check_docker_logs(container_name):
+    subprocess.check_output(["docker", "logs", container_name])
+
 def check_timeseries(base_url, sensor_name, params):
+    logging.debug("sensors %s", requests.get(f'{base_url}/sensors').json())
+    check_docker_logs('travis_ingester_1')
+    check_docker_logs('travis_web_1')
     r = requests.get(f"{base_url}/sensors", params={'name': sensor_name})
     r.raise_for_status()
     sensor_id = r.json()[0]['code']
@@ -80,7 +86,6 @@ _, _, _, sensor_name = NgsiConverter._get_names(data)
 sensor_name = f'{sensor_name}.windDirection'
 
 try_func(send_message, 1, 10, None, 'test', data)
-logging.debug("sensors %s", requests.get(f'{base_url}/sensors').json())
 try_func(check_timeseries, 1, 10, base_url, sensor_name,
          {
              'after': '2000-01-01T00:00:00Z',
