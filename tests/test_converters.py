@@ -29,11 +29,11 @@ class TestNgsiConverter(unittest.TestCase):
         timeseries_list = NgsiConverter().convert([Message('', json.dumps(TestNgsiConverter.message))])
         self.assertEqual(len(timeseries_list), 2)
         self.assertEqual(timeseries_list[0].measure.value, 174.545)
-        self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'), '2018-07-16T22:51:33')
+        self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'), '2018-07-16T20:51:33')
         self.assertEqual(str(timeseries_list[0].sensor.name), 'esp8266-7806085.Davis.windDirection')
 
         self.assertEqual(timeseries_list[1].measure.value, 0.0)
-        self.assertEqual(timeseries_list[1].time.strftime('%Y-%m-%dT%H:%M:%S'), '2018-07-16T22:51:33')
+        self.assertEqual(timeseries_list[1].time.strftime('%Y-%m-%dT%H:%M:%S'), '2018-07-16T20:51:33')
         self.assertEqual(str(timeseries_list[1].sensor.name), 'esp8266-7806085.Davis.windSpeed')
 
 

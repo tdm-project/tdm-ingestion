@@ -54,7 +54,8 @@ class NgsiConverter(MessageConverter):
             if value is not None and str(
                     value).strip() and name not in to_skip:
                 if name == 'timestamp':
-                    time = datetime.datetime.fromtimestamp(float(value))
+                    time = datetime.datetime.fromtimestamp(float(value),
+                                                           datetime.timezone.utc)
                 else:
                     measures[name] = float(value)
 
