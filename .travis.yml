@@ -7,8 +7,6 @@ cache: pip
 services:
   - docker
 
-services:
-  - docker
 
 before_install:
   - make images
