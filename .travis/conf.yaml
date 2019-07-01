@@ -6,9 +6,12 @@ consumer:
     topics:
       - test
 storage:
-  class: tdm_ingestion.storage.tdmq_storage.TDMQStorage
+  class: tdm_ingestion.storage.base.CachedStorage
   args:
-    tdmq_url: http://web:8000
+    client:
+      class: tdm_ingestion.storage.remote_client.Client
+      args:
+        url: http://web:8000
 
 ingester:
   process:
