@@ -1,7 +1,7 @@
 import datetime
 import unittest
 
-from jsonpickle import json
+import json
 from tdm_ingestion.ingestion import Ingester
 from tdm_ingestion.models import ValueMeasure, TimeSeries, SensorType, Sensor, \
     Point
