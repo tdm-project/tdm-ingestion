@@ -79,8 +79,9 @@ _, _, _, sensor_name = NgsiConverter._get_names(data)
 
 sensor_name = f'{sensor_name}.windDirection'
 
-try_func(send_message, 1, 20, None, 'test', data)
-try_func(check_timeseries, 1, 20, base_url, sensor_name,
+try_func(send_message, 1, 10, None, 'test', data)
+logging.debug("sensors %s", requests.get(f'{base_url}/sensors').json())
+try_func(check_timeseries, 1, 10, base_url, sensor_name,
          {
              'after': '2000-01-01T00:00:00Z',
              'before': '2100-01-01T00:00:00Z'
