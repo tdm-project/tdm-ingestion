@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from tdm_ingestion.models import TimeSeries
+from tdm_ingestion.utils import import_class
 
 
 class Message:
@@ -46,19 +47,11 @@ class Ingester:
 
 if __name__ == '__main__':
     import argparse
-    import importlib
     import logging
     import yaml
     from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 
     logging.basicConfig(level=logging.DEBUG)
-
-
-    def import_class(class_path: str):
-        class_path_splitted = class_path.split('.')
-        module = '.'.join(class_path_splitted[:-1])
-        cls = class_path_splitted[-1]
-        return getattr(importlib.import_module(module), cls)
 
 
     def parse_kwargs(comma_separated_kwargs: str) -> dict:
