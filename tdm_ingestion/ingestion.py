@@ -53,7 +53,7 @@ if __name__ == '__main__':
     import argparse
     import logging
     import yaml
-    from tdm_ingestion.converters.ngsi_converter import NgsiConverter
+    from tdm_ingestion.converters.ngsi_converter import CachedNgsiConverter
 
     logging.basicConfig(level=logging.DEBUG)
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             **conf['consumer']['args'])
         ingester_process_args = conf['ingester']['process']
 
-    ingester = Ingester(consumer, storage, NgsiConverter())
+    ingester = Ingester(consumer, storage, CachedNgsiConverter())
 
     while True:
         try:
