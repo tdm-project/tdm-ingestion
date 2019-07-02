@@ -3,6 +3,7 @@ consumer:
   args:
     bootstrap_servers:
       - kafka:29092
+    auto.offset.reset: beginning
     topics:
       - test
 storage:
