@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from collections import OrderedDict
-from typing import List, AnyStr, Tuple, Dict
+from typing import List, Tuple, Dict
 
 from tdm_ingestion.ingestion import MessageConverter, Message
 from tdm_ingestion.models import TimeSeries, ValueMeasure, Geometry, Point, \
@@ -23,16 +23,19 @@ class NgsiConverter(MessageConverter):
         return Point(geom['latitude'], geom['longitude'])
 
     @staticmethod
-    def _get_names(msg: Dict) -> Tuple[AnyStr, AnyStr, AnyStr, AnyStr]:
+    def _get_names(msg: Dict) -> Tuple[str, str, str, str]:
         p = re.compile(
             r'(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)'
             r'\.(?P<Sensor>[a-zA-Z0-9_-]+)')
 
-        st_type, node_name, station_name, st_name = p.search(
-            msg['body']['id']).groups()
+        if p:
+            st_type, node_name, station_name, st_name = p.search(
+                msg['body']['id']).groups()
 
-        sensor_name = '{}.{}'.format(station_name, st_name)
-        return node_name, st_name, st_type, sensor_name
+            sensor_name = '{}.{}'.format(station_name, st_name)
+            return node_name, st_name, st_type, sensor_name
+        else:
+            raise RuntimeError(f'invalid id {msg["body"]["id"]}')
 
     @staticmethod
     def _create_models(msg: Dict) -> List[TimeSeries]:
@@ -45,7 +48,7 @@ class NgsiConverter(MessageConverter):
 
         geometry = NgsiConverter._get_geometry(msg)
 
-        measures = OrderedDict()
+        measures: Dict = OrderedDict()
         time = None
         to_skip = {'dateObserved', 'location', 'latitude', 'longitude'}
         for attr in msg['body']['attributes']:
@@ -54,8 +57,9 @@ class NgsiConverter(MessageConverter):
             if value is not None and str(
                     value).strip() and name not in to_skip:
                 if name == 'timestamp':
-                    time = datetime.datetime.fromtimestamp(float(value),
-                                                           datetime.timezone.utc)
+                    time = datetime.datetime.fromtimestamp(
+                        float(value), datetime.timezone.utc
+                    )
                 else:
                     measures[name] = float(value)
 
@@ -72,7 +76,7 @@ class NgsiConverter(MessageConverter):
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
 
         logging.debug("messages %s", len(messages))
-        timeseries_list = []
+        timeseries_list: List = []
         for m in messages:
             try:
                 m_dict = json.loads(m.value)

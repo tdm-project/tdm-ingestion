@@ -6,7 +6,11 @@ from tdm_ingestion.ingestion import Consumer, Message
 
 class KafkaConsumer(Consumer):
 
-    def __init__(self, bootstrap_servers: List[str], topics: List[str], group_id: str='tdm_ingestion', **kwargs):
+    def __init__(self,
+                 bootstrap_servers: List[str],
+                 topics: List[str],
+                 group_id: str = 'tdm_ingestion', **kwargs
+                 ):
         self.bootstrap_servers = ','.join(bootstrap_servers)
         self.topics = topics
         self.group_id = group_id
@@ -20,4 +24,5 @@ class KafkaConsumer(Consumer):
         self.consumer.subscribe(self.topics)
 
     def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[Message]:
-        return [Message(m.key(), m.value()) for m in self.consumer.consume(max_records, timeout_s)]
+        return [Message(m.key(), m.value()) for m in
+                self.consumer.consume(max_records, timeout_s)]

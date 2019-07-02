@@ -13,8 +13,8 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
-        AnyStr]:
+    def create_sensor_types(self,
+                            sensor_types: List[SensorType]) -> List[AnyStr]:
         pass
 
     @abstractmethod
@@ -50,14 +50,14 @@ class CachedStorage(BaseStorage):
         self._cache: Dict[Type, Set[AnyStr]] = {SensorType: set(),
                                                 Sensor: set()}
 
-
     @staticmethod
     def create_from_json(json: Dict):
         client = json['client']
-        return CachedStorage(import_class(client['class']).create_from_json(client['args']))
+        return CachedStorage(
+            import_class(client['class']).create_from_json(client['args']))
 
     def _idempotent_create(self, obj: Union[SensorType, Sensor]):
-        if not obj.name in self._cache[obj.__class__]:
+        if obj.name not in self._cache[obj.__class__]:
             query = {'name': obj.name}
             if isinstance(obj, Sensor):
                 count_method = self.client.sensors_count
@@ -77,5 +77,3 @@ class CachedStorage(BaseStorage):
                     self._idempotent_create(obj)
 
             self.client.create_time_series(time_series)
-
-

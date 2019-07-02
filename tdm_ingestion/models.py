@@ -1,7 +1,7 @@
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import AnyStr, List, Dict, Union
+from typing import List, Dict, Union
 
 import jsons
 import stringcase
@@ -44,8 +44,8 @@ class RefMeasure(Measure):
 
 
 class SensorType(Model):
-    def __init__(self, name: AnyStr, type: AnyStr,
-                 controlled_property: List[AnyStr], category: AnyStr = None,
+    def __init__(self, name: str, type: str,
+                 controlled_property: List[str], category: str = None,
                  function=None, **kwargs):
         self.name = name
         self.type = type
@@ -80,7 +80,7 @@ class Point(Geometry):
 
 
 class Sensor(Model):
-    def __init__(self, name: AnyStr, type: SensorType, node: AnyStr,
+    def __init__(self, name: str, type: SensorType, node: str,
                  geometry: Geometry):
         self.name = name
         self.type = type
@@ -99,7 +99,7 @@ class Sensor(Model):
 
 
 class TimeSeries(Model):
-    def __init__(self, utc_time: datetime, sensor: Sensor,
+    def __init__(self, utc_time: datetime.datetime, sensor: Sensor,
                  measure: Measure):
         self.time = utc_time
         self.sensor = sensor

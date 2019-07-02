@@ -10,19 +10,19 @@ from tdm_ingestion.storage.base import Client as BaseClient
 
 class Http(ABC):
     @abstractmethod
-    def post(self, url: AnyStr, json: Union[List, Dict, str] = None) -> Union[
-        List, Dict]:
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None
+             ) -> Union[List, Dict]:
         pass
 
     @abstractmethod
-    def get(self, url, params: Union[List, Dict] = None) -> Union[
-        List, Dict]:
+    def get(self, url, params: Union[List, Dict] = None
+            ) -> Union[List, Dict]:
         pass
 
 
 class Requests(Http):
-    def post(self, url: AnyStr, json: Union[List, Dict, str] = None) -> Union[
-        List, Dict]:
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None
+             ) -> Union[List, Dict]:
         json = json or {}
         logging.debug("doing POST with url %s and json %s", url, json)
         r = requests.post(url, data=json,
@@ -31,8 +31,8 @@ class Requests(Http):
         r.raise_for_status()
         return r.json()
 
-    def get(self, url, params: Union[List, Dict] = None) -> Union[
-        List, Dict]:
+    def get(self, url, params: Union[List, Dict] = None
+            ) -> Union[List, Dict]:
         params = params or {}
         r = requests.get(url, params=params)
         r.raise_for_status()
@@ -81,8 +81,8 @@ class Client(BaseClient):
         # TODO works only with Requests client
         return Client(Requests(), json['url'])
 
-    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
-        AnyStr]:
+    def create_sensor_types(self, sensor_types: List[SensorType]
+                            ) -> List[AnyStr]:
         return self.http.post(self.sensor_types_url,
                               Model.list_to_json(sensor_types))
 
@@ -95,20 +95,12 @@ class Client(BaseClient):
                               Model.list_to_json(time_series))
 
     def get_sensor_type(self, _id: AnyStr = None,
-                        query: Dict = None) -> Union[
-        SensorType, List[SensorType]]:
+                        query: Dict = None
+                        ) -> Union[SensorType, List[SensorType]]:
         raise NotImplementedError
 
-    #        if _id:
-    #            data = self.client.get(os.path.join(self.sensors_type_url, _id))
-    #            return SensorType(**data)
-    #        else:
-    #            res = self.client.get(os.path.join(self.sensors_type_url),
-    #                                  params=query)
-    #            return [SensorType(**data) for data in res]
-
-    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Union[
-        Sensor, List[Sensor]]:
+    def get_sensors(self, _id: AnyStr = None, query: Dict = None
+                    ) -> Union[Sensor, List[Sensor]]:
         raise NotImplementedError
 
     def sensors_count(self, query):

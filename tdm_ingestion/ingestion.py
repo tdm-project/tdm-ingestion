@@ -15,8 +15,8 @@ class Message:
 class Consumer(ABC):
 
     @abstractmethod
-    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[
-        Message]:
+    def poll(self, timeout_s: int = -1,
+             max_records: int = -1) -> List[Message]:
         pass
 
 
@@ -57,7 +57,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-
     def parse_kwargs(comma_separated_kwargs: str) -> dict:
         res = {}
         for key_value in comma_separated_kwargs.split(','):
@@ -65,7 +64,6 @@ if __name__ == '__main__':
             if len(splitted_key_value) == 2:
                 res[splitted_key_value[0]] = splitted_key_value[1]
         return res
-
 
     parser = argparse.ArgumentParser()
     parser.add_argument('conf_file', help='conf file', default='conf.yaml')
