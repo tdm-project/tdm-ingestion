@@ -6,15 +6,17 @@ from tdm_ingestion.ingestion import Consumer, Message
 
 class KafkaConsumer(Consumer):
 
-    def __init__(self, bootstrap_servers: List[str], topics: List[str], group_id: str='tdm_ingestion'):
+    def __init__(self, bootstrap_servers: List[str], topics: List[str], group_id: str='tdm_ingestion', **kwargs):
         self.bootstrap_servers = ','.join(bootstrap_servers)
         self.topics = topics
         self.group_id = group_id
 
-        self.consumer = ConfluentKafkaConsumer({
+        params = {
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': group_id
-        })
+        }
+        params.update(kwargs)
+        self.consumer = ConfluentKafkaConsumer(params)
         self.consumer.subscribe(self.topics)
 
     def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[Message]:
