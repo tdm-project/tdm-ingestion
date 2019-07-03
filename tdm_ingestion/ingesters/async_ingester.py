@@ -1,10 +1,9 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Callable, Dict
 
-from tdm_ingestion.ingestion import Ingester, Consumer, MessageConverter, \
-    Storage
+from tdm_ingestion.ingestion import Consumer, MessageConverter, \
+    Storage, BasicIngester
 
 
 class AsyncElement(ABC):
@@ -90,67 +89,32 @@ class AsyncPipeline(Pipeline):
         self.loop.run_until_complete(self._run())
 
 
-class AsyncConsumer(AsyncSource):
-    def __init__(self, queue: asyncio.Queue, consumer: Consumer,
-                 timeout_s: int = -1, max_records: int = -1):
-        super().__init__(queue, consumer.poll, timeout_s, max_records)
+class AsyncIngester(BasicIngester):
 
+    def __init__(self, consumer: Consumer, storage: Storage,
+                 converter: MessageConverter, pipeline: AsyncPipeline = None):
+        super().__init__(consumer, storage, converter)
+        self.pipeline = pipeline or AsyncPipeline()
+        messages_queue: asyncio.Queue = asyncio.Queue(loop=self.pipeline.loop)
+        timeseries_queue: asyncio.Queue = asyncio.Queue(
+            loop=self.pipeline.loop)
+        self.elements = [
+            AsyncSource(messages_queue, consumer.poll),
+            AsyncStage(messages_queue, timeseries_queue,
+                       converter.convert),
+            AsyncSink(timeseries_queue, storage.write)
+        ]
+        self.pipeline.connect(*self.elements)
 
-class AsyncConverter(AsyncElement):
-    def __init__(self, queue: asyncio.Queue, converter: MessageConverter):
-        super().__init__(queue)
-        self.converter = converter
+        def _set_first_element_args(args, kwargs):
+            self.elements[0].args = args
+            self.elements[0].kwargs = kwargs
+            self.pipeline.run_until_complete()
 
-    async def process(self):
-        messages = await self.queue.get()
-        logging.debug('messages to convert %s', messages)
-        await self.queue.put(self.converter.convert(messages))
+        def process(self, *args, **kwargs):
+            self._set_first_element_args(args, kwargs)
+            self.pipeline.run_until_complete()
 
-
-class AsyncStorage(AsyncElement):
-    def __init__(self, queue: asyncio.Queue, storage: Storage):
-        super().__init__(queue)
-        self.storage = storage
-
-    async def process(self):
-        messages = await self.queue.get()
-        logging.debug('messages to store %s', messages)
-
-        return self.storage.write(messages)
-
-
-class AsyncIngester(Ingester):
-    def __init__(self, pipeline: Pipeline):
-        self.pipeline = pipeline
-
-    def process(self, *args, **kwargs):
-        self.pipeline.run_until_complete(*args, **kwargs)
-
-    def process_forever(self, *args, **kwargs):
-        self.pipeline.run_forever(*args, **kwargs)
-
-
-def async_ingester_factory(funcs_and_kwargs: List[Tuple[Callable, Dict]],
-                           pipeline_class=AsyncPipeline,
-                           pipeline_kwargs=None,
-                           source_class=AsyncSource, stage_class=AsyncStage,
-                           sink_class=AsyncSink):
-    pipeline_kwargs = pipeline_kwargs or {}
-    pipeline = pipeline_class(**pipeline_kwargs)
-    elements = []
-    queue = asyncio.Queue(loop=pipeline.loop)
-    for idx, func_and_kwargs in enumerate(funcs_and_kwargs):
-        if idx == 0:
-            elements.append(
-                source_class(queue, func_and_kwargs[0], **func_and_kwargs[1]))
-        elif idx == len(funcs_and_kwargs) - 1:
-            elements.append(
-                sink_class(queue, func_and_kwargs[0], **func_and_kwargs[1]))
-        else:
-            input_queue = queue
-            queue = asyncio.Queue(loop=pipeline.loop)
-            elements.append(
-                stage_class(input_queue, queue, func_and_kwargs[0],
-                            **func_and_kwargs[1]))
-    pipeline.connect(*elements)
-    return AsyncIngester(pipeline)
+        def process_forever(self, *args, **kwargs):
+            self._set_first_element_args(args, kwargs)
+            self.pipeline.run_forever()

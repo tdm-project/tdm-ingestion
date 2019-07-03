@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
@@ -15,7 +16,14 @@ class Message:
         return f'key: {self.key}, value {self.value}'
 
 
-class Consumer(ABC):
+class JsonBuildable:
+    @classmethod
+    def create_from_json(cls, json: Dict):
+        json = json or {}
+        return cls(**json)
+
+
+class Consumer(ABC, JsonBuildable):
 
     @abstractmethod
     def poll(self, timeout_s: int = -1,
@@ -23,24 +31,19 @@ class Consumer(ABC):
         pass
 
 
-class Storage(ABC):
-    @staticmethod
-    @abstractmethod
-    def create_from_json(json: Dict) -> "Storage":
-        pass
-
+class Storage(ABC, JsonBuildable):
     @abstractmethod
     def write(self, messages: List[TimeSeries]):
         pass
 
 
-class MessageConverter(ABC):
+class MessageConverter(ABC, JsonBuildable):
     @abstractmethod
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
         pass
 
 
-class Ingester(ABC):
+class Ingester(ABC, JsonBuildable):
     @abstractmethod
     def process(self, *args, **kwargs):
         pass
@@ -51,6 +54,17 @@ class Ingester(ABC):
 
 
 class BasicIngester(Ingester):
+    @classmethod
+    def create_from_json(cls, json: Dict) -> "Ingester":
+        consumer = import_class(json['consumer']['class']).create_from_json(
+            json['consumer']['args'])
+
+        storage = import_class(json['storage']['class']).create_from_json(
+            json['storage']['args'])
+        converter = import_class(json['converter']['class']).create_from_json(
+            json['converter']['args'])
+        return cls(consumer, storage, converter)
+
     def __init__(self, consumer: Consumer, storage: Storage,
                  converter: MessageConverter):
         self.consumer = consumer
@@ -71,9 +85,7 @@ class BasicIngester(Ingester):
 
 if __name__ == '__main__':
     import argparse
-    import logging
     import yaml
-    from tdm_ingestion.converters.ngsi_converter import CachedNgsiConverter
 
     logging.basicConfig(level=logging.DEBUG)
 
@@ -93,11 +105,9 @@ if __name__ == '__main__':
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
         logging.debug('conf %s', conf)
-        storage = import_class(conf['storage']['class']).create_from_json(
-            conf['storage']['args'])
-        consumer = import_class(conf['consumer']['class'])(
-            **conf['consumer']['args'])
+
+        ingester = import_class(conf['ingester']['class']).create_from_json(
+            conf['ingester']['args'])
         ingester_process_args = conf['ingester']['process']
 
-    ingester = BasicIngester(consumer, storage, CachedNgsiConverter())
-    ingester.process_forever(**ingester_process_args)
+        ingester.process_forever(**ingester_process_args)
