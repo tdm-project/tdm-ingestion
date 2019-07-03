@@ -7,6 +7,9 @@ cache: pip
 services:
   - docker
 
+env:
+  - CONF=basic
+  - CONF=async
 
 before_install:
   - make images

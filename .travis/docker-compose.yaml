@@ -42,7 +42,10 @@ services:
     depends_on:
       - web
       - kafka
+    environment:
+      CONF: ${CONF} #basic or async
     volumes:
-      - "./conf.yaml:/data/conf.yaml"
+      - "./conf.yaml:/data/basic-conf.yaml"
+      - "./async-conf.yaml:/data/async-conf.yaml"
     command:
-       - "/data/conf.yaml"
+       - /data/${CONF}-conf.yaml

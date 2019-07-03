@@ -1,6 +1,6 @@
 
 ingester:
-  class: tdm_ingestion.ingestion.BasicIngester
+  class: tdm_ingestion.ingesters.async_ingester.AsyncIngester
   args:
     consumer:
       class: tdm_ingestion.consumers.confluent_kafka_consumer.KafkaConsumer
