@@ -3,11 +3,10 @@ ingester:
   class: tdm_ingestion.ingesters.async_ingester.AsyncIngester
   args:
     consumer:
-      class: tdm_ingestion.consumers.confluent_kafka_consumer.KafkaConsumer
+      class: tdm_ingestion.consumers.async_consumer.KafkaAIOConsumer
       args:
         bootstrap_servers:
           - kafka:29092
-        auto.offset.reset: beginning
         topics:
           - test
     storage:

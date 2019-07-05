@@ -38,7 +38,7 @@ services:
       CREATE_DB: "true"
 
   ingester:
-    image: tdmproject/tdm-ingestion
+    image: ${IMG}
     depends_on:
       - web
       - kafka

@@ -10,7 +10,8 @@ setup(
     zip_safe=False,
     install_requires=['requests', 'pyaml', 'jsons', 'stringcase'],
     extras_require={
-        'confluent-kafka': ['confluent-kafka']
+        'confluent': ['confluent-kafka'],
+        'async': ['aiokafka']
     },
     scripts=['tdm_ingestion/ingestion.py']
 )
