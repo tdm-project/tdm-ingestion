@@ -5,6 +5,9 @@ from abc import ABC, abstractmethod
 from tdm_ingestion.ingestion import Consumer, MessageConverter, \
     Storage, BasicIngester
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 class AsyncElement(ABC):
     def __init__(self, func, *args, **kwargs):
@@ -22,9 +25,17 @@ class AsyncSource(AsyncElement):
         super().__init__(func, *args, **kwargs)
         self.queue = queue
 
-    async def process(self):
-        logging.debug('source')
-        await self.queue.put(self.func(*self.args, self.kwargs))
+    async def process(self, forever: bool = False):
+        async def _process():
+            data = await self.func(*self.args, **self.kwargs)
+            logger.debug(f"Source._process {data}")
+            if data:
+                await self.queue.put(data)
+                logger.debug("inserted into the queue")
+        logger.debug('source')
+        await _process()
+        while forever:
+            await _process()
 
 
 class AsyncSink(AsyncElement):
@@ -32,10 +43,16 @@ class AsyncSink(AsyncElement):
         super().__init__(func, *args, **kwargs)
         self.queue = queue
 
-    async def process(self):
-        messages = await self.queue.get()
-        logging.debug('messages to store %s', messages)
-        self.func(messages, *self.args, **self.kwargs)
+    async def process(self, forever: bool = False):
+        async def _process():
+            logger.debug("Sink._process")
+            messages = await self.queue.get()
+            logging.debug('messages to store %s', messages)
+            self.func(messages, *self.args, **self.kwargs)
+
+        await _process()
+        while forever:
+            await _process()
 
 
 class AsyncStage(AsyncElement):
@@ -44,11 +61,17 @@ class AsyncStage(AsyncElement):
         self.in_queue = in_queue
         self.out_queue = out_queue
 
-    async def process(self):
-        messages = await self.in_queue.get()
-        logging.debug('messages to convert %s', messages)
-        await self.out_queue.put(
-            self.func(messages, *self.args, **self.kwargs))
+    async def process(self, forever: bool = False):
+        async def _process():
+            logger.debug("Stage._process")
+            messages = await self.in_queue.get()
+            logging.debug('messages to convert %s', messages)
+            await self.out_queue.put(
+                self.func(messages, *self.args, **self.kwargs))
+
+        await _process()
+        while forever:
+            await _process()
 
 
 class Pipeline(ABC):
@@ -72,18 +95,23 @@ class AsyncPipeline(Pipeline):
         super().__init__()
         self.loop = loop or asyncio.get_event_loop()
 
-    def _run(self) -> asyncio.Future:
+    def _run(self, forever: bool = False) -> asyncio.Future:
         return asyncio.ensure_future(
-            asyncio.gather(*[el.process() for el in self.elements]))
+            asyncio.gather(*[el.process(forever) for el in self.elements]))
+
+#    def run_forever(self, callback=None, *args, **kwargs):
+#        future = self._run(True)
+#        if callback:
+#            future.add_done_callback(callback)
+#        try:
+#            self.loop.run_forever()
+#        except Exception as ex:
+#            logging.exception(ex)
+#        finally:
+#            self.loop.close()
 
     def run_forever(self, callback=None, *args, **kwargs):
-        future = self._run()
-        if callback:
-            future.add_done_callback(callback)
-        try:
-            self.loop.run_forever()
-        finally:
-            self.loop.close()
+        self.loop.run_until_complete(self._run(True))
 
     def run_until_complete(self):
         self.loop.run_until_complete(self._run())
@@ -106,15 +134,15 @@ class AsyncIngester(BasicIngester):
         ]
         self.pipeline.connect(*self.elements)
 
-        def _set_first_element_args(args, kwargs):
-            self.elements[0].args = args
-            self.elements[0].kwargs = kwargs
-            self.pipeline.run_until_complete()
+    def _set_first_element_args(self, args, kwargs):
+        self.elements[0].args = args
+        self.elements[0].kwargs = kwargs
 
-        def process(self, *args, **kwargs):
-            self._set_first_element_args(args, kwargs)
-            self.pipeline.run_until_complete()
+    def process(self, *args, **kwargs):
+        self._set_first_element_args(args, kwargs)
+        self.pipeline.run_until_complete()
 
-        def process_forever(self, *args, **kwargs):
-            self._set_first_element_args(args, kwargs)
-            self.pipeline.run_forever()
+    def process_forever(self, *args, **kwargs):
+        logging.info(f'process forever {args}, {kwargs}')
+        self._set_first_element_args(args, kwargs)
+        self.pipeline.run_forever()

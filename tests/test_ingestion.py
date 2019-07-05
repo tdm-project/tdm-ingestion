@@ -7,24 +7,25 @@ from tdm_ingestion.ingestion import BasicIngester
 from tdm_ingestion.models import SensorType, Sensor, \
     Point
 from tdm_ingestion.models import TimeSeries, ValueMeasure
-from tests.dummies import DummyConsumer, DummyStorage, DummyConverter
+from tests.dummies import DummyConsumer, DummyStorage, DummyConverter, \
+    AsyncDummyConsumer
 
 
 class TestIngester(unittest.TestCase):
 
-    def _test_ingester(self, ingester_cls):
-        storage = DummyStorage()
-        consumer = DummyConsumer()
-        converter = DummyConverter()
+    def _test_ingester(self, ingester_cls, storage_cls, consumer_cls, converter_cls):
+        storage = storage_cls()
+        consumer = consumer_cls()
+        converter = converter_cls()
         ingester = ingester_cls(consumer, storage, converter)
         ingester.process()
         self.assertEqual(len(storage.messages), 1)
 
     def test_basic_ingester(self):
-        self._test_ingester(BasicIngester)
+        self._test_ingester(BasicIngester, DummyStorage, DummyConsumer, DummyConverter)
 
     def test_async_ingester(self):
-        self._test_ingester(AsyncIngester)
+        self._test_ingester(AsyncIngester, DummyStorage, AsyncDummyConsumer, DummyConverter)
 
 
 

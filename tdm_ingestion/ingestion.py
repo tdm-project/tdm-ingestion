@@ -87,8 +87,6 @@ if __name__ == '__main__':
     import argparse
     import yaml
 
-    logging.basicConfig(level=logging.DEBUG)
-
 
     def parse_kwargs(comma_separated_kwargs: str) -> dict:
         res = {}
@@ -101,7 +99,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('conf_file', help='conf file', default='conf.yaml')
+    parser.add_argument('-d', help='debug', dest='debug', action='store_true',
+                        default=False)
+
     args = parser.parse_args()
+    logging_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=logging_level)
+
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
         logging.debug('conf %s', conf)

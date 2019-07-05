@@ -1,4 +1,5 @@
 import datetime
+import datetime
 import json
 import random
 import uuid
@@ -34,6 +35,7 @@ class DummyClient(Client):
             return len([self.sensors[query['name']]])
         except KeyError:
             return 0
+
     def sensor_types_count(self, query: Dict) -> int:
         try:
             return len([self.sensor_types[query['name']]])
@@ -112,3 +114,12 @@ class DummyConverter(MessageConverter):
                                      random.random()))
 
         return series
+
+
+class AsyncDummyConsumer(Consumer):
+    def __init__(self):
+        self.consumer = DummyConsumer()
+
+    async def poll(self, timeout_s: int = -1, max_records: int = -1
+                   ) -> List[Message]:
+        return self.consumer.poll(timeout_s, max_records)
