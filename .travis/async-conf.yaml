@@ -9,6 +9,7 @@ ingester:
           - kafka:29092
         topics:
           - test
+        auto_offset_reset: earliest
     storage:
       class: tdm_ingestion.storage.base.CachedStorage
       args:

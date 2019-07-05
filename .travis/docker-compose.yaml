@@ -44,8 +44,11 @@ services:
       - kafka
     environment:
       CONF: ${CONF} #basic or async
+
     volumes:
       - "./conf.yaml:/data/basic-conf.yaml"
       - "./async-conf.yaml:/data/async-conf.yaml"
     command:
        - /data/${CONF}-conf.yaml
+
+    restart: on-failure
