@@ -19,5 +19,6 @@ images:
 
 tests: images
 	IMG=${IMG} CONF=${BACKEND} docker-compose -f .travis/docker-compose.yaml up -d
-
-
+	for i in $(seq 1 20); do docker exec travis_web_1 curl http://localhost:8000/api/v0.0/sensors;if [[ "$?" -ne 0  ]]; then sleep 5; else break; fi; done
+	cd tests; python integration_tests.py
+	docker-compose -f .travis/docker-compose.yaml down
