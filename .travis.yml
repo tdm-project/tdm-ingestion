@@ -17,6 +17,8 @@ install:
   - pip install kafka
 
 script:
-  - cd tests; python -m unittest; cd -
+  - cd tests
+  - python -m unittest
+  - cd -
   - make tests
 
