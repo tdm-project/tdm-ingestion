@@ -11,7 +11,7 @@ setup(
     install_requires=['requests', 'pyaml', 'jsons', 'stringcase'],
     extras_require={
         'sync': ['confluent-kafka'],
-        'async': ['aiokafka']
+        'async': ['aiokafka', 'aiohttp']
     },
     scripts=['tdm_ingestion/ingestion.py']
 )

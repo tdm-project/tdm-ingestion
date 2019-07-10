@@ -48,7 +48,7 @@ class AsyncSink(AsyncElement):
             logger.debug("Sink._process")
             messages = await self.queue.get()
             logging.debug('messages to store %s', messages)
-            self.func(messages, *self.args, **self.kwargs)
+            await self.func(messages, *self.args, **self.kwargs)
 
         await _process()
         while forever:
