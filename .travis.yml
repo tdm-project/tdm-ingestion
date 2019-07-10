@@ -11,9 +11,6 @@ env:
   - CONF=sync
   - CONF=async
 
-before_install:
-  - make images
-  - docker-compose -f .travis/docker-compose.yaml up -d
 
 install:
   - pip install -e .[confluent-kafka]
