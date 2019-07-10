@@ -99,19 +99,19 @@ class AsyncPipeline(Pipeline):
         return asyncio.ensure_future(
             asyncio.gather(*[el.process(forever) for el in self.elements]))
 
-#    def run_forever(self, callback=None, *args, **kwargs):
-#        future = self._run(True)
-#        if callback:
-#            future.add_done_callback(callback)
-#        try:
-#            self.loop.run_forever()
-#        except Exception as ex:
-#            logging.exception(ex)
-#        finally:
-#            self.loop.close()
-
     def run_forever(self, callback=None, *args, **kwargs):
-        self.loop.run_until_complete(self._run(True))
+        future = self._run(True)
+        if callback:
+            future.add_done_callback(callback)
+        try:
+            self.loop.run_forever()
+        except Exception as ex:
+            logging.exception(ex)
+        finally:
+            self.loop.close()
+
+#    def run_forever(self, callback=None, *args, **kwargs):
+#        self.loop.run_until_complete(self._run(True))
 
     def run_until_complete(self):
         self.loop.run_until_complete(self._run())

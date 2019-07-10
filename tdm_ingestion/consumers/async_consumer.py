@@ -24,15 +24,12 @@ class KafkaAIOConsumer(Consumer):
                                          bootstrap_servers=bootstrap_servers,
                                          loop=loop, group_id=group_id,
                                          **kwargs)
-        self.is_started = False
+        loop.run_until_complete(asyncio.ensure_future(self.consumer.start()))
 
     async def poll(self, timeout_s: int = -1, max_records: int = -1
                    ) -> List[Message]:
         timeout_s = timeout_s if timeout_s > 0 else 0
         max_records = max_records if max_records > 0 else None
-        if not self.is_started:
-            await self.consumer.start()
-            self.is_started = True
 
         logger.debug("async polling")
         data = await self.consumer.getmany(timeout_ms=timeout_s,
@@ -42,7 +39,7 @@ class KafkaAIOConsumer(Consumer):
             values = list(data.values())
             if values:
                 logger.debug(f"values: {values}")
-                return  [Message(m.key, m.value) for m in
-                     functools.reduce(list.extend, list(data.values()))]
+                return [Message(m.key, m.value) for m in
+                        functools.reduce(list.extend, list(data.values()))]
         except Exception as ex:
             logging.exception(ex)
