@@ -8,12 +8,13 @@ from tdm_ingestion.models import SensorType, Sensor, \
     Point
 from tdm_ingestion.models import TimeSeries, ValueMeasure
 from tests.dummies import DummyConsumer, DummyStorage, DummyConverter, \
-    AsyncDummyConsumer
+    AsyncDummyConsumer, AsyncDummyStorage
 
 
 class TestIngester(unittest.TestCase):
 
-    def _test_ingester(self, ingester_cls, storage_cls, consumer_cls, converter_cls):
+    def _test_ingester(self, ingester_cls, storage_cls, consumer_cls,
+                       converter_cls):
         storage = storage_cls()
         consumer = consumer_cls()
         converter = converter_cls()
@@ -22,11 +23,12 @@ class TestIngester(unittest.TestCase):
         self.assertEqual(len(storage.messages), 1)
 
     def test_basic_ingester(self):
-        self._test_ingester(BasicIngester, DummyStorage, DummyConsumer, DummyConverter)
+        self._test_ingester(BasicIngester, DummyStorage, DummyConsumer,
+                            DummyConverter)
 
     def test_async_ingester(self):
-        self._test_ingester(AsyncIngester, DummyStorage, AsyncDummyConsumer, DummyConverter)
-
+        self._test_ingester(AsyncIngester, AsyncDummyStorage,
+                            AsyncDummyConsumer, DummyConverter)
 
 
 class TestTimeSeries(unittest.TestCase):
