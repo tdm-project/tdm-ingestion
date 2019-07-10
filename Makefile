@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 ifndef BACKEND
-	override BACKEND = confluent
+	override BACKEND = sync
 endif
 
 NAME   := tdmproject/tdm-ingestion-${BACKEND}

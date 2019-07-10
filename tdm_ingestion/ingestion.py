@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('conf_file', help='conf file', default='conf.yaml')
+    parser.add_argument('conf_file', help='conf file', default='sync-conf.yaml')
     parser.add_argument('-d', help='debug', dest='debug', action='store_true',
                         default=False)
 

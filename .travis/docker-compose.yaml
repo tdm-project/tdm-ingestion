@@ -43,10 +43,10 @@ services:
       - web
       - kafka
     environment:
-      CONF: ${CONF} #basic or async
+      CONF: ${CONF} #sync or async
 
     volumes:
-      - "./conf.yaml:/data/basic-conf.yaml"
+      - "./sync-conf.yaml:/data/sync-conf.yaml"
       - "./async-conf.yaml:/data/async-conf.yaml"
     command:
        - /data/${CONF}-conf.yaml
