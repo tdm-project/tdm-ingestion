@@ -70,7 +70,11 @@ class NgsiConverter(MessageConverter):
                         float(value), datetime.timezone.utc
                     )
                 else:
-                    measures[name] = float(value)
+                    try:
+                        measures[name] = float(value)
+                    except ValueError:
+                        logging.error(
+                            f"cannot convert to float {name} = {value}")
 
         time_series_list = []
         for measure, value in measures.items():
