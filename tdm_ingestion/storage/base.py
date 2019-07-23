@@ -47,11 +47,11 @@ class CachedStorage(BaseStorage):
     def __init__(self, client: Client):
         self.client = client
 
-        self._cache: Dict[Type, Set[AnyStr]] = {SensorType: set(),
-                                                Sensor: set()}
+        self._cache: Dict[Type, Set[str]] = {SensorType: set(),
+                                             Sensor: set()}
 
-    @staticmethod
-    def create_from_json(json: Dict):
+    @classmethod
+    def create_from_json(cls, json: Dict):
         client = json['client']
         return CachedStorage(
             import_class(client['class']).create_from_json(client['args']))

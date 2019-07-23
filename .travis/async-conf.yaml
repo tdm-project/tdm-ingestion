@@ -1,0 +1,25 @@
+
+ingester:
+  class: tdm_ingestion.ingesters.async_ingester.AsyncIngester
+  args:
+    consumer:
+      class: tdm_ingestion.consumers.async_consumer.KafkaAIOConsumer
+      args:
+        bootstrap_servers:
+          - kafka:29092
+        topics:
+          - test
+        auto_offset_reset: earliest
+    storage:
+      class: tdm_ingestion.storage.async.AsyncCachedStorage
+      args:
+        client:
+          class: tdm_ingestion.storage.async.AsyncClient
+          args:
+            url: http://web:8000
+    converter:
+      class: tdm_ingestion.converters.ngsi_converter.NgsiConverter
+      args:
+  process:
+    timeout_s: 20
+    max_records: 10

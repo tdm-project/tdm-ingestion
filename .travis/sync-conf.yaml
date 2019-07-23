@@ -1,0 +1,25 @@
+
+ingester:
+  class: tdm_ingestion.ingestion.BasicIngester
+  args:
+    consumer:
+      class: tdm_ingestion.consumers.confluent_kafka_consumer.KafkaConsumer
+      args:
+        bootstrap_servers:
+          - kafka:29092
+        auto.offset.reset: beginning
+        topics:
+          - test
+    storage:
+      class: tdm_ingestion.storage.base.CachedStorage
+      args:
+        client:
+          class: tdm_ingestion.storage.remote_client.Client
+          args:
+            url: http://web:8000
+    converter:
+      class: tdm_ingestion.converters.ngsi_converter.NgsiConverter
+      args:
+  process:
+    timeout_s: 20
+    max_records: 10

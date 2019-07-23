@@ -8,7 +8,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-kafka:5.0.1
+    image: confluentinc/cp-kafka
     depends_on:
       - zookeeper
     ports:
@@ -38,11 +38,17 @@ services:
       CREATE_DB: "true"
 
   ingester:
-    image: tdmproject/tdm-ingestion
+    image: ${IMG}
     depends_on:
       - web
       - kafka
+    environment:
+      CONF: ${CONF} #sync or async
+
     volumes:
-      - "./conf.yaml:/data/conf.yaml"
+      - "./sync-conf.yaml:/data/sync-conf.yaml"
+      - "./async-conf.yaml:/data/async-conf.yaml"
     command:
-       - "/data/conf.yaml"
+       - /data/${CONF}-conf.yaml
+
+    restart: on-failure

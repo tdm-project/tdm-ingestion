@@ -7,17 +7,18 @@ cache: pip
 services:
   - docker
 
+env:
+  - CONF=sync
+  - CONF=async
 
-before_install:
-  - make images
-  - docker-compose -f .travis/docker-compose.yaml up -d
 
 install:
   - pip install -e .[confluent-kafka]
   - pip install kafka
 
 script:
-  - cd tests; python -m unittest
-  - for i in $(seq 1 20); do docker exec travis_web_1 curl http://localhost:8000/api/v0.0/sensors;if [[ "$?" -ne 0  ]]; then sleep 5; else break; fi; done
-  - python integration_tests.py
+  - cd tests
+  - python -m unittest
+  - cd -
+  - make tests
 

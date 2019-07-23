@@ -1,20 +1,34 @@
 import datetime
+import json
 import unittest
 
-import json
-from tdm_ingestion.ingestion import Ingester
-from tdm_ingestion.models import ValueMeasure, TimeSeries, SensorType, Sensor, \
+from tdm_ingestion.ingesters.async_ingester import AsyncIngester
+from tdm_ingestion.ingestion import BasicIngester
+from tdm_ingestion.models import SensorType, Sensor, \
     Point
-from tests.dummies import DummyConsumer, DummyStorage, DummyConverter
+from tdm_ingestion.models import TimeSeries, ValueMeasure
+from tests.dummies import DummyConsumer, DummyStorage, DummyConverter, \
+    AsyncDummyConsumer, AsyncDummyStorage
 
 
 class TestIngester(unittest.TestCase):
 
-    def test_process(self):
-        storage = DummyStorage()
-        ingester = Ingester(DummyConsumer(), storage, DummyConverter())
+    def _test_ingester(self, ingester_cls, storage_cls, consumer_cls,
+                       converter_cls):
+        storage = storage_cls()
+        consumer = consumer_cls()
+        converter = converter_cls()
+        ingester = ingester_cls(consumer, storage, converter)
         ingester.process()
         self.assertEqual(len(storage.messages), 1)
+
+    def test_basic_ingester(self):
+        self._test_ingester(BasicIngester, DummyStorage, DummyConsumer,
+                            DummyConverter)
+
+    def test_async_ingester(self):
+        self._test_ingester(AsyncIngester, AsyncDummyStorage,
+                            AsyncDummyConsumer, DummyConverter)
 
 
 class TestTimeSeries(unittest.TestCase):

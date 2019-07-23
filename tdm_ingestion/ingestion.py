@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
@@ -11,8 +12,18 @@ class Message:
         self.key = key
         self.value = value
 
+    def __repr__(self):
+        return f'key: {self.key}, value {self.value}'
 
-class Consumer(ABC):
+
+class JsonBuildable:
+    @classmethod
+    def create_from_json(cls, json: Dict):
+        json = json or {}
+        return cls(**json)
+
+
+class Consumer(ABC, JsonBuildable):
 
     @abstractmethod
     def poll(self, timeout_s: int = -1,
@@ -20,42 +31,62 @@ class Consumer(ABC):
         pass
 
 
-class Storage(ABC):
-    @staticmethod
-    @abstractmethod
-    def create_from_json(json: Dict) -> "Storage":
-        pass
-
+class Storage(ABC, JsonBuildable):
     @abstractmethod
     def write(self, messages: List[TimeSeries]):
         pass
 
 
-class MessageConverter(ABC):
+class MessageConverter(ABC, JsonBuildable):
     @abstractmethod
     def convert(self, messages: List[Message]) -> List[TimeSeries]:
         pass
 
 
-class Ingester:
+class Ingester(ABC, JsonBuildable):
+    @abstractmethod
+    def process(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def process_forever(self, *args, **kwargs):
+        pass
+
+
+class BasicIngester(Ingester):
+    @classmethod
+    def create_from_json(cls, json: Dict) -> "Ingester":
+        consumer = import_class(json['consumer']['class']).create_from_json(
+            json['consumer']['args'])
+
+        storage = import_class(json['storage']['class']).create_from_json(
+            json['storage']['args'])
+        converter = import_class(json['converter']['class']).create_from_json(
+            json['converter']['args'])
+        return cls(consumer, storage, converter)
+
     def __init__(self, consumer: Consumer, storage: Storage,
                  converter: MessageConverter):
         self.consumer = consumer
         self.storage = storage
         self.converter = converter
 
-    def process(self, timeout_s: int = -1, max_records: int = 1):
+    def process(self, *args, **kwargs):
         self.storage.write(
-            self.converter.convert(self.consumer.poll(timeout_s, max_records)))
+            self.converter.convert(self.consumer.poll(*args, **kwargs)))
+
+    def process_forever(self, *args, **kwargs):
+        while True:
+            try:
+                self.process(*args, **kwargs)
+            except Exception as ex:
+                logging.exception(ex)
 
 
 if __name__ == '__main__':
     import argparse
-    import logging
     import yaml
-    from tdm_ingestion.converters.ngsi_converter import CachedNgsiConverter
 
-    logging.basicConfig(level=logging.DEBUG)
 
     def parse_kwargs(comma_separated_kwargs: str) -> dict:
         res = {}
@@ -65,22 +96,22 @@ if __name__ == '__main__':
                 res[splitted_key_value[0]] = splitted_key_value[1]
         return res
 
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('conf_file', help='conf file', default='conf.yaml')
+    parser.add_argument('conf_file', help='conf file', default='sync-conf.yaml')
+    parser.add_argument('-d', help='debug', dest='debug', action='store_true',
+                        default=False)
+
     args = parser.parse_args()
+    logging_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=logging_level)
+
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
         logging.debug('conf %s', conf)
-        storage = import_class(conf['storage']['class']).create_from_json(
-            conf['storage']['args'])
-        consumer = import_class(conf['consumer']['class'])(
-            **conf['consumer']['args'])
+
+        ingester = import_class(conf['ingester']['class']).create_from_json(
+            conf['ingester']['args'])
         ingester_process_args = conf['ingester']['process']
 
-    ingester = Ingester(consumer, storage, CachedNgsiConverter())
-
-    while True:
-        try:
-            ingester.process(**ingester_process_args)
-        except Exception as ex:
-            logging.exception(ex)
+        ingester.process_forever(**ingester_process_args)
