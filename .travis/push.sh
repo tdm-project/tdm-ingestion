@@ -1,5 +1,5 @@
 VERSION=$(cat VERSION)
 echo "${CI_PASS}" | docker login -u "${CI_USER}" --password-stdin
-
-docker tag $IMAGE $IMAGE:$CONF-$VERSION
-docker push $IMAGE:$VERSION
+TAG="$CONF-$VERSION"
+docker tag "$IMG" "$IMG:$TAG"
+docker push "$IMAGE:$TAG"
