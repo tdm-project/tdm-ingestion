@@ -29,5 +29,5 @@ deploy:
   - provider: script
     script: bash .travis/push.sh
     on:
-      repo: $IMG
+      repo: tdm-project/tdm-ingestion
       branch: master
