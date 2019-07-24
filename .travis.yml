@@ -8,6 +8,8 @@ services:
   - docker
 
 env:
+  global:
+    - IMG=tdmproject/tdm-ingestion
   - CONF=sync
   - CONF=async
 
@@ -22,3 +24,9 @@ script:
   - cd -
   - make tests
 
+deploy:
+  - provider: script
+    script: bash .travis/push.sh
+    on:
+      repo: $IMG
+      branch: master
