@@ -10,8 +10,9 @@ services:
 env:
   global:
     - IMG=tdmproject/tdm-ingestion
-  - CONF=sync
-  - CONF=async
+  matrix:
+    - CONF=sync
+    - CONF=async
 
 
 install:
