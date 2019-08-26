@@ -49,6 +49,7 @@ services:
       - "./sync-conf.yaml:/data/sync-conf.yaml"
       - "./async-conf.yaml:/data/async-conf.yaml"
     command:
+       - -d
        - /data/${CONF}-conf.yaml
 
     restart: on-failure
