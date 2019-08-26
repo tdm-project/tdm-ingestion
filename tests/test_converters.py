@@ -35,38 +35,27 @@ class TestNgsiConverter(unittest.TestCase):
     def _test_convert(self, converter):
         timeseries_list = converter.convert(
             [Message('', json.dumps(TestNgsiConverter.message))])
-        self.assertEqual(len(timeseries_list), 2)
-        self.assertEqual(timeseries_list[0].measure.value, 174.545)
+        self.assertEqual(len(timeseries_list), 1)
+        self.assertEqual(timeseries_list[0].data,
+                         {'windDirection': 174.545, 'windSpeed': 0.0})
         self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'),
                          '2018-07-16T20:51:33')
-        self.assertEqual(str(timeseries_list[0].sensor.name),
-                         'esp8266-7806085.Davis.windDirection')
-
-        self.assertEqual(timeseries_list[1].measure.value, 0.0)
-        self.assertEqual(timeseries_list[1].time.strftime('%Y-%m-%dT%H:%M:%S'),
-                         '2018-07-16T20:51:33')
-        self.assertEqual(str(timeseries_list[1].sensor.name),
-                         'esp8266-7806085.Davis.windSpeed')
+        self.assertEqual(str(timeseries_list[0].source.name),
+                         'esp8266-7806085.Davis')
 
     def test_ngsi_convert(self):
         self._test_convert(NgsiConverter())
 
     def test_cached_convert(self):
         converter = CachedNgsiConverter()
-        self.assertEqual(len(converter.sensor_types), 0)
         self.assertEqual(len(converter.sensors), 0)
 
         self._test_convert(converter)
 
-        self.assertEqual(len(converter.sensor_types), 1)
-        self.assertEqual(len(converter.sensors), 2)
+        self.assertEqual(len(converter.sensors), 1)
 
         self.assertTrue(
-            isinstance(list(converter.sensor_types.values())[0], SensorType))
-        self.assertTrue(
             isinstance(list(converter.sensors.values())[0], Sensor))
-        self.assertTrue(
-            isinstance(list(converter.sensors.values())[1], Sensor))
 
 
 if __name__ == '__main__':

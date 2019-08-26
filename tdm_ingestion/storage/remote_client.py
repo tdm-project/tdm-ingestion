@@ -7,6 +7,7 @@ import requests
 from tdm_ingestion.models import Sensor, SensorType, TimeSeries, Model
 from tdm_ingestion.storage.base import Client as BaseClient
 
+logger = logging.getLogger(__name__)
 
 class Http(ABC):
     @abstractmethod
@@ -68,12 +69,12 @@ class Client(BaseClient):
         self.url = url
         logging.debug("url %s", self.url)
         self.api_version = api_version
-        self.sensor_types_url = os.path.join(self.url,
-                                             f'api/{api_version}/sensor_types')
-        self.sensors_url = os.path.join(self.url,
-                                        f'api/{api_version}/sensors')
-        self.measures_url = os.path.join(self.url,
-                                         f'api/{api_version}/measures')
+        self.entity_types_url = os.path.join(self.url,
+                                             f'api/{api_version}/entity_types')
+        self.sources_url = os.path.join(self.url,
+                                        f'api/{api_version}/sources')
+        self.records_url = os.path.join(self.url,
+                                        f'api/{api_version}/records')
 
     @staticmethod
     def create_from_json(json: Dict):
@@ -81,30 +82,31 @@ class Client(BaseClient):
         # TODO works only with Requests client
         return Client(Requests(), json['url'])
 
-    def create_sensor_types(self, sensor_types: List[SensorType]
+    def create_entity_types(self, sensor_types: List[SensorType]
                             ) -> List[AnyStr]:
-        return self.http.post(self.sensor_types_url,
+        return self.http.post(self.entity_types_url,
                               Model.list_to_json(sensor_types))
 
-    def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
-        return self.http.post(self.sensors_url,
+    def create_sources(self, sensors: List[Sensor]) -> List[AnyStr]:
+        logger.debug('create_sources %s', Model.list_to_json(sensors))
+        return self.http.post(self.sources_url,
                               Model.list_to_json(sensors))
 
     def create_time_series(self, time_series: List[TimeSeries]):
-        return self.http.post(self.measures_url,
+        return self.http.post(self.records_url,
                               Model.list_to_json(time_series))
 
-    def get_sensor_type(self, _id: AnyStr = None,
-                        query: Dict = None
-                        ) -> Union[SensorType, List[SensorType]]:
+    def get_entity_types(self, _id: AnyStr = None,
+                         query: Dict = None
+                         ) -> Union[SensorType, List[SensorType]]:
         raise NotImplementedError
 
-    def get_sensors(self, _id: AnyStr = None, query: Dict = None
+    def get_sources(self, _id: AnyStr = None, query: Dict = None
                     ) -> Union[Sensor, List[Sensor]]:
         raise NotImplementedError
 
-    def sensors_count(self, query):
-        return len(self.http.get(self.sensors_url, params=query)) > 0
+    def sources_count(self, query):
+        return len(self.http.get(self.sources_url, params=query)) > 0
 
     def sensor_types_count(self, query: Dict):
-        return len(self.http.get(self.sensor_types_url, params=query)) > 0
+        return len(self.http.get(self.entity_types_url, params=query)) > 0

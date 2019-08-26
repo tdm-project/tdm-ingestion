@@ -13,12 +13,12 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_sensor_types(self,
+    def create_entity_types(self,
                             sensor_types: List[SensorType]) -> List[AnyStr]:
         pass
 
     @abstractmethod
-    def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
+    def create_sources(self, sensors: List[Sensor]) -> List[AnyStr]:
         pass
 
     @abstractmethod
@@ -26,16 +26,16 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def get_sensor_type(self, _id: AnyStr = None,
-                        query: Dict = None) -> SensorType:
+    def get_entity_types(self, _id: AnyStr = None,
+                         query: Dict = None) -> SensorType:
         pass
 
     @abstractmethod
-    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
         pass
 
     @abstractmethod
-    def sensors_count(self, query: Dict) -> int:
+    def sources_count(self, query: Dict) -> int:
         pass
 
     @abstractmethod
@@ -46,9 +46,7 @@ class Client(ABC):
 class CachedStorage(BaseStorage):
     def __init__(self, client: Client):
         self.client = client
-
-        self._cache: Dict[Type, Set[str]] = {SensorType: set(),
-                                             Sensor: set()}
+        self._cache: Set = set()
 
     @classmethod
     def create_from_json(cls, json: Dict):
@@ -57,23 +55,14 @@ class CachedStorage(BaseStorage):
             import_class(client['class']).create_from_json(client['args']))
 
     def _idempotent_create(self, obj: Union[SensorType, Sensor]):
-        if obj.name not in self._cache[obj.__class__]:
-            query = {'name': obj.name}
-            if isinstance(obj, Sensor):
-                count_method = self.client.sensors_count
-                create_method = self.client.create_sensors
-            else:
-                count_method = self.client.sensor_types_count
-                create_method = self.client.create_sensor_types
-
-            if count_method(query=query) <= 0:
-                create_method([obj])
-            self._cache[obj.__class__].add(obj.name)
+        if obj.name not in self._cache:
+            if self.client.sources_count(query={'name': obj.name}) <= 0:
+                self.client.create_sources([obj])
+            self._cache.add(obj.name)
 
     def write(self, time_series: List[TimeSeries]):
         if time_series:
             for ts in time_series:
-                for obj in [ts.sensor.type, ts.sensor]:
-                    self._idempotent_create(obj)
+                self._idempotent_create(ts.source)
 
             self.client.create_time_series(time_series)

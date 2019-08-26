@@ -35,14 +35,14 @@ class TestTimeSeries(unittest.TestCase):
     def test_to_dict(self):
         now = datetime.datetime.now(datetime.timezone.utc)
         value = 100
-        sensor_type = SensorType('test', 'test', ['test'])
-        sensor = Sensor('sensor', sensor_type, 'test', Point(0, 0))
-        ts = TimeSeries(now, sensor, ValueMeasure(100))
+        sensor_type = SensorType('test', 'test')
+        sensor = Sensor('sensor', sensor_type, 'test', Point(0, 0), ['test'])
+        ts = TimeSeries(now, sensor, {'value': 100.0})
         time_format = '%Y-%m-%dT%H:%M:%SZ'
         to_dict = json.loads(ts.to_json())
         self.assertEqual(to_dict['time'], now.strftime(time_format))
-        self.assertEqual(to_dict['sensor'], str(sensor.name))
-        self.assertEqual(to_dict['measure'], {'value': value})
+        self.assertEqual(to_dict['source'], str(sensor.name))
+        self.assertEqual(to_dict['data'], {'value': value})
 
 
 if __name__ == '__main__':

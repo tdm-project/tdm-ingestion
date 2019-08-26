@@ -44,15 +44,9 @@ class RefMeasure(Measure):
 
 
 class SensorType(Model):
-    def __init__(self, name: str, type: str,
-                 controlled_property: List[str], category: str = None,
-                 function=None, **kwargs):
+    def __init__(self, name: str, category: str):
         self.name = name
-        self.type = type
-        self.controlled_property = controlled_property
         self.category = category or ["sensor"]
-        self.function = category or ["sensing"]
-        self.__dict__.update(kwargs)
 
     def __repr__(self):
         return f'SensorType {self.name}'
@@ -81,32 +75,41 @@ class Point(Geometry):
 
 class Sensor(Model):
     def __init__(self, name: str, type: SensorType, node: str,
-                 geometry: Geometry):
+                 geometry: Geometry, controlled_properties: List[str]):
         self.name = name
         self.type = type
         self.node = node
         self.geometry = geometry
+        self.controlled_properties = controlled_properties
 
     def __repr__(self):
         return f'Sensor {self.name} of {repr(self.type)}'
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
-        dct = dict(self.__dict__)
-        dct["type"] = self.type.name
-        dct["geometry"] = self.geometry.to_json(False)
-        camel_cased = to_camel_case_dict(dct)
-        return jsonify(camel_cased) if serialize else camel_cased
+        dct = dict(
+            id=self.name,
+            alias=self.name,
+            entity_type=self.type.name,
+            entity_category="Station",
+            default_footprint=self.geometry.to_json(False),
+            stationary=True,
+            controlledProperties=self.controlled_properties,
+            shape=[],
+            description={
+            }
+        )
+        return jsonify(dct) if serialize else dct
 
 
 class TimeSeries(Model):
     def __init__(self, utc_time: datetime.datetime, sensor: Sensor,
-                 measure: Measure):
+                 measure: Dict[str, float]):
         self.time = utc_time
-        self.sensor = sensor
-        self.measure = measure
+        self.source = sensor
+        self.data = measure
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
-        dct["sensor"] = self.sensor.name
+        dct["source"] = self.source.name
         camel_cased = to_camel_case_dict(dct)
         return jsonify(camel_cased) if serialize else camel_cased

@@ -30,7 +30,7 @@ class DummyClient(Client):
         self.sensor_types = {}
         self.time_series = []
 
-    def sensors_count(self, query: Dict) -> int:
+    def sources_count(self, query: Dict) -> int:
         try:
             return len([self.sensors[query['name']]])
         except KeyError:
@@ -42,20 +42,20 @@ class DummyClient(Client):
         except KeyError:
             return 0
 
-    def create_sensor_types(self, sensor_types: List[SensorType]) -> List[
+    def create_entity_types(self, sensor_types: List[SensorType]) -> List[
         AnyStr]:
         self.sensor_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
-    def create_sensors(self, sensors: List[Sensor]) -> List[AnyStr]:
+    def create_sources(self, sensors: List[Sensor]) -> List[AnyStr]:
         self.sensors.update({s.name: s for s in sensors})
         return [s.name for s in sensors]
 
     def create_time_series(self, time_series: List[TimeSeries]):
         self.time_series += time_series
 
-    def get_sensor_type(self, _id: AnyStr = None,
-                        query: Dict = None) -> SensorType:
+    def get_entity_types(self, _id: AnyStr = None,
+                         query: Dict = None) -> SensorType:
         """
             only query by name is supported
         """
@@ -65,7 +65,7 @@ class DummyClient(Client):
         except KeyError:
             raise Client.NotFound
 
-    def get_sensors(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
         """
             only query by name is supported
         """
