@@ -29,7 +29,7 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   web:
-    image: tdmproject/tdmq
+    image: tdmproject/tdmq:d95288a8501c241f6581d265f56b4f4e17125385
     depends_on:
       - "timescaledb"
     ports:
@@ -49,6 +49,7 @@ services:
       - "./sync-conf.yaml:/data/sync-conf.yaml"
       - "./async-conf.yaml:/data/async-conf.yaml"
     command:
+       - -d
        - /data/${CONF}-conf.yaml
 
     restart: on-failure

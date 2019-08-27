@@ -36,15 +36,16 @@ def try_func(func, sleep, retry, *args, **kwargs):
 def check_docker_logs(container_name):
     subprocess.check_output(["docker", "logs", container_name])
 
-def check_timeseries(base_url, sensor_name, params):
-    logging.debug("sensors %s", requests.get(f'{base_url}/sensors').json())
+
+def check_timeseries(base_url, sensor_id, params):
+    logging.debug("sensors %s", requests.get(f'{base_url}/sources').json())
     check_docker_logs('travis_ingester_1')
     check_docker_logs('travis_web_1')
-    r = requests.get(f"{base_url}/sensors", params={'name': sensor_name})
+    r = requests.get(f"{base_url}/sources", params={'id': sensor_id})
     r.raise_for_status()
-    sensor_id = r.json()[0]['code']
+    tdmq_id = r.json()[0]['tdmq_id']
     r = requests.get(
-        f"{base_url}/sensors/{sensor_id}/timeseries",
+        f"{base_url}/sources/{tdmq_id}/timeseries",
         params=params)
     r.raise_for_status()
     return len(r.json()['data']) > 0
@@ -66,12 +67,6 @@ def increment_and_wait(counter, wait=5):
     counter += 1
 
 
-def get_sensor_id(url, sensor_name):
-    r = requests.get(url, params={'name': sensor_name})
-    r.raise_for_status()
-    return r.json()[0]['code']
-
-
 with open('messages/ngsi-weather.json', 'rb') as f:
     data = json.load(f)
 
@@ -83,7 +78,7 @@ print(f'base_url {base_url}')
 
 _, _, _, sensor_name = NgsiConverter._get_names(data)
 
-sensor_name = f'{sensor_name}.windDirection'
+sensor_name = f'{sensor_name}'
 
 try_func(send_message, 1, 10, None, 'test', data)
 try_func(check_timeseries, 1, 10, base_url, sensor_name,

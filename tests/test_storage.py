@@ -9,16 +9,16 @@ from tests.dummies import DummyClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
 sensors_type = [
-    SensorType('st1', 'type1', ['temp']),
-    SensorType('st2', 'type2', ['temp'])
+    SensorType('st1', 'type1'),
+    SensorType('st2', 'type2')
 ]
 sensors = [
-    Sensor('s1', sensors_type[0], 'node', Point(0, 0)),
-    Sensor('s2', sensors_type[1], 'node', Point(1, 1))
+    Sensor('s1', sensors_type[0], 'node', Point(0, 0), ['temp']),
+    Sensor('s2', sensors_type[1], 'node', Point(1, 1), ['temp'])
 ]
 time_series = [
-    TimeSeries(now, sensors[0], ValueMeasure(0)),
-    TimeSeries(now, sensors[1], ValueMeasure(1)),
+    TimeSeries(now, sensors[0], {'value': 0.0}),
+    TimeSeries(now, sensors[1], {'value': 1.0})
 ]
 
 
@@ -29,8 +29,6 @@ class TestCachedStorage(unittest.TestCase):
         storage = CachedStorage(client)
         storage.write(time_series)
 
-        self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensor_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sensors.values()))
@@ -40,7 +38,7 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_write_sensors_type_pre_loaded(self):
         client = DummyClient()
-        client.create_sensor_types(sensors_type)
+        client.create_entity_types(sensors_type)
 
         storage = CachedStorage(client)
         storage.write(time_series)
@@ -57,8 +55,8 @@ class TestCachedStorage(unittest.TestCase):
     def test_write_all_data_preloaded(self):
         client = DummyClient()
 
-        client.create_sensor_types(sensors_type)
-        client.create_sensors(sensors)
+        client.create_entity_types(sensors_type)
+        client.create_sources(sensors)
 
         storage = CachedStorage(client)
         storage.write(time_series)

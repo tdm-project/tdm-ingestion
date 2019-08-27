@@ -98,13 +98,16 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('conf_file', help='conf file', default='sync-conf.yaml')
+    parser.add_argument('conf_file', help='conf file',
+                        default='sync-conf.yaml')
     parser.add_argument('-d', help='debug', dest='debug', action='store_true',
                         default=False)
 
     args = parser.parse_args()
     logging_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(level=logging_level)
+    logging.basicConfig(level=logging_level,
+                        format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                        datefmt='%Y-%m-%d:%H:%M:%S')
 
     with open(args.conf_file, 'r') as conf_file:
         conf = yaml.safe_load(conf_file)
