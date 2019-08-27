@@ -9,6 +9,7 @@ from tdm_ingestion.storage.base import Client as BaseClient
 
 logger = logging.getLogger(__name__)
 
+
 class Http(ABC):
     @abstractmethod
     def post(self, url: AnyStr, json: Union[List, Dict, str] = None
@@ -38,28 +39,6 @@ class Requests(Http):
         r = requests.get(url, params=params)
         r.raise_for_status()
         return r.json()
-
-
-# class RemoteModel:
-#    def __init__(self, url, client):
-#        self.url = url
-#        self.client = client
-#
-#    def __getattr__(self, item):
-#        if item in self.__dict__:
-#            if self.__dict__[item]:
-#                return self.__dict__[item]
-#            else:
-#                self.__dict__.update(
-#                    self.client(self.url, {'name': self.name})[0])
-#        else:
-#            raise AttributeError
-#
-#
-# class RemoteSensorType(RemoteModel, SensorType):
-#    def __init__(self, name: AnyStr, url: AnyStr, client):
-#        super(SensorType).__init__(name, None, None)
-#        super(RemoteModel).__init__(url, client)
 
 
 class Client(BaseClient):
