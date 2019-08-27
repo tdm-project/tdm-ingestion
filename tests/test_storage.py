@@ -5,9 +5,8 @@ import jsons
 from tdm_ingestion.models import SensorType, Sensor, Point, \
     TimeSeries
 from tdm_ingestion.storage.base import CachedStorage
-from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
-from tdm_ingestion.storage.remote_client import Requests
-from tests.dummies import DummyClient
+from tdm_ingestion.storage.ckan import CkanStorage
+from tests.dummies import DummyClient, DummyCkan
 
 now = datetime.datetime.now(datetime.timezone.utc)
 sensors_type = [
@@ -73,9 +72,15 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_write_ckan(self):
         storage = CkanStorage(
-            RemoteCkan('http://127.0.0.1:5000', Requests(), 'tester'), 'lisa',
+            DummyCkan(),
+            'lisa',
             'test')
         storage.write(time_series)
+        self.assertEqual(
+            storage.client.resources,
+            {'test': {'dataset': 'lisa', 'records': [
+                {'timestamp': now.timestamp(), 'value': 0.0},
+                {'timestamp': now.timestamp(), 'value': 1.0}]}})
 
 
 if __name__ == '__main__':

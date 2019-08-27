@@ -3,12 +3,13 @@ import datetime
 import json
 import random
 import uuid
-from typing import List, AnyStr, Dict
+from typing import List, AnyStr, Dict, Any
 
 from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
     MessageConverter
 from tdm_ingestion.models import Sensor, SensorType
 from tdm_ingestion.storage.base import Client
+from tdm_ingestion.storage.ckan import CkanClient
 
 
 class DummyStorage(Storage):
@@ -124,6 +125,7 @@ class AsyncDummyConsumer(Consumer):
                    ) -> List[Message]:
         return self.consumer.poll(timeout_s, max_records)
 
+
 class AsyncDummyStorage(Storage):
     @staticmethod
     def create_from_json(json: Dict) -> "Storage":
@@ -134,3 +136,16 @@ class AsyncDummyStorage(Storage):
 
     async def write(self, messages: List[TimeSeries]):
         self.messages += messages
+
+
+class DummyCkan(CkanClient):
+    def __init__(self):
+        self.resources = {}
+
+    def create_resource(self, resource: str, dataset: str,
+                        records: List[Dict[str, Any]],
+                        upsert: bool = False) -> None:
+        self.resources[resource] = dict(
+            dataset=dataset,
+            records=records
+        )
