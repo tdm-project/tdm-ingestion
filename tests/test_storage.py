@@ -2,9 +2,11 @@ import datetime
 import unittest
 
 import jsons
-from tdm_ingestion.models import SensorType, ValueMeasure, Sensor, Point, \
+from tdm_ingestion.models import SensorType, Sensor, Point, \
     TimeSeries
 from tdm_ingestion.storage.base import CachedStorage
+from tdm_ingestion.storage.ckan import Ckan
+from tdm_ingestion.storage.remote_client import Requests
 from tests.dummies import DummyClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
@@ -28,7 +30,6 @@ class TestCachedStorage(unittest.TestCase):
         client = DummyClient()
         storage = CachedStorage(client)
         storage.write(time_series)
-
 
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sensors.values()))
@@ -69,6 +70,11 @@ class TestCachedStorage(unittest.TestCase):
 
         self.assertEqual(jsons.dumps(time_series),
                          jsons.dumps(client.time_series))
+
+    def test_write_ckan(self):
+        storage = Ckan('http://127.0.0.1:5000', Requests(), 'tester', 'lisa',
+                       'test')
+        storage.write(time_series)
 
 
 if __name__ == '__main__':
