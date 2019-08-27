@@ -12,31 +12,36 @@ logger = logging.getLogger(__name__)
 
 class Http(ABC):
     @abstractmethod
-    def post(self, url: AnyStr, json: Union[List, Dict, str] = None
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None,
+             headers: Dict[str, str] = None
              ) -> Union[List, Dict]:
         pass
 
     @abstractmethod
-    def get(self, url, params: Union[List, Dict] = None
+    def get(self, url, params: Union[List, Dict] = None,
+            headers: Dict[str, str] = None
             ) -> Union[List, Dict]:
         pass
 
 
 class Requests(Http):
-    def post(self, url: AnyStr, json: Union[List, Dict, str] = None
+    def post(self, url: AnyStr, json: Union[List, Dict, str] = None,
+             headers: Dict[str, str] = None
              ) -> Union[List, Dict]:
         json = json or {}
         logging.debug("doing POST with url %s and json %s", url, json)
-        r = requests.post(url, data=json,
-                          headers={'content-type': 'application/json'}
-                          )
+        headers = headers or {}
+        headers['content-type'] = 'application/json'
+        r = requests.post(url, data=json, headers=headers)
         r.raise_for_status()
         return r.json()
 
-    def get(self, url, params: Union[List, Dict] = None
+    def get(self, url, params: Union[List, Dict] = None,
+            headers: Dict[str, str] = None
             ) -> Union[List, Dict]:
         params = params or {}
-        r = requests.get(url, params=params)
+        headers = headers or {}
+        r = requests.get(url, params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 
