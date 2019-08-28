@@ -11,10 +11,10 @@ ingester:
           - test
         auto_offset_reset: earliest
     storage:
-      class: tdm_ingestion.storage.async.AsyncCachedStorage
+      class: tdm_ingestion.storage.tdmq.AsyncCachedStorage
       args:
         client:
-          class: tdm_ingestion.storage.async.AsyncClient
+          class: tdm_ingestion.tdmq.http.AsyncClient
           args:
             url: http://web:8000
     converter:

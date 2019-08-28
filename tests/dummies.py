@@ -8,8 +8,8 @@ from typing import List, AnyStr, Dict, Any
 from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
     MessageConverter
 from tdm_ingestion.models import Sensor, SensorType
-from tdm_ingestion.storage.base import Client
 from tdm_ingestion.storage.ckan import CkanClient
+from tdm_ingestion.tdmq import Client
 
 
 class DummyStorage(Storage):
@@ -37,7 +37,7 @@ class DummyClient(Client):
         except KeyError:
             return 0
 
-    def sensor_types_count(self, query: Dict) -> int:
+    def entity_types_count(self, query: Dict) -> int:
         try:
             return len([self.sensor_types[query['name']]])
         except KeyError:

@@ -2,9 +2,9 @@ import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 
+from tdm_ingestion.http.base import Http
 from tdm_ingestion.ingestion import Storage
 from tdm_ingestion.models import TimeSeries
-from tdm_ingestion.storage.remote_client import Http
 
 
 class CkanClient(ABC):

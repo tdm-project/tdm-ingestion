@@ -4,8 +4,8 @@ import unittest
 import jsons
 from tdm_ingestion.models import SensorType, Sensor, Point, \
     TimeSeries
-from tdm_ingestion.storage.base import CachedStorage
 from tdm_ingestion.storage.ckan import CkanStorage
+from tdm_ingestion.storage.tdmq import CachedStorage
 from tests.dummies import DummyClient, DummyCkan
 
 now = datetime.datetime.now(datetime.timezone.utc)
