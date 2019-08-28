@@ -6,7 +6,7 @@ from tdm_ingestion.models import EntityType, Source, Point, \
     TimeSeries
 from tdm_ingestion.storage.ckan import CkanStorage
 from tdm_ingestion.storage.tdmq import CachedStorage
-from tests.dummies import DummyClient, DummyCkan
+from tests.dummies import DummyTDMQClient, DummyCkan
 
 now = datetime.datetime.now(datetime.timezone.utc)
 sensors_type = [
@@ -14,8 +14,8 @@ sensors_type = [
     EntityType('st2', 'type2')
 ]
 sensors = [
-    Source('s1', sensors_type[0], 'node', Point(0, 0), ['temp']),
-    Source('s2', sensors_type[1], 'node', Point(1, 1), ['temp'])
+    Source('s1', sensors_type[0], Point(0, 0), ['temp']),
+    Source('s2', sensors_type[1], Point(1, 1), ['temp'])
 ]
 time_series = [
     TimeSeries(now, sensors[0], {'value': 0.0}),
@@ -26,34 +26,40 @@ time_series = [
 class TestCachedStorage(unittest.TestCase):
 
     def test_write_no_data(self):
-        client = DummyClient()
+        client = DummyTDMQClient()
         storage = CachedStorage(client)
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors),
-                         jsons.dumps(client.sensors.values()))
+                         jsons.dumps(client.sources.values()))
 
+        actual_time_series = []
+        for ts_list in client.time_series.values():
+            actual_time_series.extend(ts_list)
         self.assertEqual(jsons.dumps(time_series),
-                         jsons.dumps(client.time_series))
+                         jsons.dumps(actual_time_series))
 
     def test_write_sensors_type_pre_loaded(self):
-        client = DummyClient()
+        client = DummyTDMQClient()
         client.create_entity_types(sensors_type)
 
         storage = CachedStorage(client)
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensor_types.values()))
+                         jsons.dumps(client.entity_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
-                         jsons.dumps(client.sensors.values()))
+                         jsons.dumps(client.sources.values()))
 
+        actual_time_series = []
+        for ts_list in client.time_series.values():
+            actual_time_series.extend(ts_list)
         self.assertEqual(jsons.dumps(time_series),
-                         jsons.dumps(client.time_series))
+                         jsons.dumps(actual_time_series))
 
     def test_write_all_data_preloaded(self):
-        client = DummyClient()
+        client = DummyTDMQClient()
 
         client.create_entity_types(sensors_type)
         client.create_sources(sensors)
@@ -62,13 +68,18 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(time_series)
 
         self.assertEqual(jsons.dumps(sensors_type),
-                         jsons.dumps(client.sensor_types.values()))
+                         jsons.dumps(client.entity_types.values()))
 
         self.assertEqual(jsons.dumps(sensors),
-                         jsons.dumps(client.sensors.values()))
+                         jsons.dumps(client.sources.values()))
+
+        actual_time_series = []
+        for ts_list in client.time_series.values():
+            actual_time_series.extend(ts_list)
 
         self.assertEqual(jsons.dumps(time_series),
-                         jsons.dumps(client.time_series))
+                         jsons.dumps(actual_time_series)
+                         )
 
     def test_write_ckan(self):
         storage = CkanStorage(

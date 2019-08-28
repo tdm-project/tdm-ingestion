@@ -3,7 +3,8 @@ import datetime
 import json
 import random
 import uuid
-from typing import List, AnyStr, Dict, Any
+from collections import defaultdict
+from typing import List, AnyStr, Dict, Any, Union
 
 from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
     MessageConverter
@@ -24,36 +25,45 @@ class DummyStorage(Storage):
         self.messages += messages
 
 
-class DummyClient(Client):
+class DummyTDMQClient(Client):
 
     def __init__(self):
-        self.sensors = {}
-        self.sensor_types = {}
-        self.time_series = []
+        self.sources = {}
+        self.sources_by_types = defaultdict(list)
+        self.entity_types = {}
+        self.time_series = defaultdict(list)
 
     def sources_count(self, query: Dict) -> int:
         try:
-            return len([self.sensors[query['name']]])
+            return len([self.sources[query['name']]])
         except KeyError:
             return 0
 
     def entity_types_count(self, query: Dict) -> int:
         try:
-            return len([self.sensor_types[query['name']]])
+            return len([self.entity_types[query['name']]])
         except KeyError:
             return 0
 
     def create_entity_types(self, sensor_types: List[EntityType]) -> List[
         AnyStr]:
-        self.sensor_types.update({s.name: s for s in sensor_types})
+        self.entity_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
-    def create_sources(self, sensors: List[Source]) -> List[AnyStr]:
-        self.sensors.update({s._id: s for s in sensors})
-        return [s._id for s in sensors]
+    def create_sources(self, sources: List[Source]) -> List[AnyStr]:
+        for source in sources:
+            self.sources[source._id] = source
+            self.sources_by_types[source.type.name].append(source)
+        return [s._id for s in sources]
 
     def create_time_series(self, time_series: List[TimeSeries]):
-        self.time_series += time_series
+        for ts in time_series:
+            self.time_series[ts.source._id].append(ts)
+            self.create_sources([ts.source])
+
+    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
+        TimeSeries]:
+        return self.time_series[source._id]
 
     def get_entity_types(self, _id: AnyStr = None,
                          query: Dict = None) -> EntityType:
@@ -62,19 +72,23 @@ class DummyClient(Client):
         """
         k = _id if _id else query['name']
         try:
-            return self.sensor_types[k]
+            return self.entity_types[k]
         except KeyError:
             raise Client.NotFound
 
-    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Source:
-        """
-            only query by name is supported
-        """
-        k = _id if _id else query['name']
-        try:
-            return self.sensors[k]
-        except KeyError:
-            raise Client.NotFound
+    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Union[
+        Source, List[Source]]:
+        if _id is None and query is None:
+            return list(self.sources.values())
+        elif _id:
+            try:
+                return self.sources[_id]
+            except KeyError:
+                raise Client.NotFound
+        elif query:
+            if 'entity_type' in query:
+                return self.sources_by_types[query['entity_type']]
+
 
 
 class DummyConsumer(Consumer):

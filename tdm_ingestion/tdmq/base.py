@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Any, Union
 
 from tdm_ingestion.models import EntityType, Source, TimeSeries
 
@@ -22,12 +22,18 @@ class Client(ABC):
         pass
 
     @abstractmethod
+    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
+        TimeSeries]:
+        pass
+
+    @abstractmethod
     def get_entity_types(self, _id: str = None,
                          query: Dict = None) -> EntityType:
         pass
 
     @abstractmethod
-    def get_sources(self, _id: str = None, query: Dict = None) -> Source:
+    def get_sources(self, _id: str = None, query: Dict = None) -> Union[
+        Source, List[Source]]:
         pass
 
     @abstractmethod

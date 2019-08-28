@@ -1,7 +1,8 @@
 import logging
 import os
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 
+from tdm_ingestion.http.base import Http
 from tdm_ingestion.http.requests import Requests
 from tdm_ingestion.models import EntityType, Model, TimeSeries, Source
 from tdm_ingestion.tdmq.base import Client as BaseClient
@@ -9,7 +10,7 @@ from tdm_ingestion.tdmq.base import Client as BaseClient
 
 class Client(BaseClient):
 
-    def __init__(self, http_client, url, api_version='v0.0'):
+    def __init__(self, http_client: Http, url, api_version='v0.0'):
         self.http = http_client
         self.url = url
         logging.debug("url %s", self.url)
@@ -40,6 +41,11 @@ class Client(BaseClient):
     def create_time_series(self, time_series: List[TimeSeries]):
         return self.http.post(self.records_url,
                               Model.list_to_json(time_series))
+
+    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
+        TimeSeries]:
+        return self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
+                             params=query)
 
     def get_entity_types(self, _id: str = None,
                          query: Dict = None
