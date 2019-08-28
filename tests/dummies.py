@@ -6,7 +6,7 @@ import uuid
 from collections import defaultdict
 from typing import List, AnyStr, Dict, Any, Union
 
-from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
+from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, \
     MessageConverter
 from tdm_ingestion.models import Source, EntityType
 from tdm_ingestion.storage.ckan import CkanClient
@@ -90,7 +90,6 @@ class DummyTDMQClient(Client):
                 return self.sources_by_types[query['entity_type']]
 
 
-
 class DummyConsumer(Consumer):
     message = {
         "headers": [{"fiware-service": "tdm"},
@@ -116,15 +115,15 @@ class DummyConsumer(Consumer):
         }
     }
 
-    def poll(self, timeout_ms=0, max_records=0) -> List[Message]:
-        return [Message('key', json.dumps(DummyConsumer.message))]
+    def poll(self, timeout_ms=0, max_records=0) -> List[str]:
+        return [json.dumps(DummyConsumer.message)]
 
 
 class DummyConverter(MessageConverter):
-    def convert(self, messages: List[Message]) -> List[TimeSeries]:
+    def convert(self, messages: List[str]) -> List[TimeSeries]:
         series = []
         for m in messages:
-            m = json.loads(m.value)
+            m = json.loads(m)
             series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(),
                                      random.random()))
 
@@ -135,8 +134,8 @@ class AsyncDummyConsumer(Consumer):
     def __init__(self):
         self.consumer = DummyConsumer()
 
-    async def poll(self, timeout_s: int = -1, max_records: int = -1
-                   ) -> List[Message]:
+    async def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[
+        str]:
         return self.consumer.poll(timeout_s, max_records)
 
 

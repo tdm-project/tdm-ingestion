@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
-from tdm_ingestion.ingestion import MessageConverter, Message
+from tdm_ingestion.ingestion import MessageConverter
 from tdm_ingestion.models import TimeSeries, Geometry, Point, \
     EntityType, Source
 
@@ -86,16 +86,16 @@ class NgsiConverter(MessageConverter):
 
         return TimeSeries(time, sensor, records)
 
-    def convert(self, messages: List[Message]) -> List[TimeSeries]:
+    def convert(self, messages: List[str]) -> List[TimeSeries]:
 
         logging.debug("messages %s", len(messages))
         timeseries_list: List = []
         for m in messages:
             try:
-                m_dict = json.loads(m.value)
+                m_dict = json.loads(m)
             except json.decoder.JSONDecodeError:
                 logging.error('skipping message %s, error while jsondecoding',
-                              m.value)
+                              m)
                 continue
 
             timeseries_list.append(self._create_models(m_dict))

@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import List
+from typing import List, Any
 
-from tdm_ingestion.ingestion import Consumer, Message
+from tdm_ingestion.ingestion import Consumer
 from tdm_ingestion.models import EntityType
 from tdm_ingestion.tdmq import Client
 
@@ -24,8 +24,7 @@ class TDMQConsumer(Consumer):
         self.bucket = bucket
         self.operation = operation
 
-    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[
-        Message]:
+    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[Any]:
         sources = self.client.get_sources(
             query={'entity_type': self.entity_type.name})
         res = []

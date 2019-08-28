@@ -28,11 +28,10 @@ class AsyncSource(AsyncElement):
     async def process(self, forever: bool = False):
         async def _process():
             data = await self.func(*self.args, **self.kwargs)
-            logger.debug(f"Source._process {data}")
             if data:
+                logger.debug(f"Source._process {data}")
                 await self.queue.put(data)
                 logger.debug("inserted into the queue")
-        logger.debug('source')
         await _process()
         while forever:
             await _process()

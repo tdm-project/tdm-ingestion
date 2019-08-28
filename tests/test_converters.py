@@ -3,7 +3,6 @@ import unittest
 
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter, \
     CachedNgsiConverter
-from tdm_ingestion.ingestion import Message
 from tdm_ingestion.models import Source
 
 
@@ -34,7 +33,7 @@ class TestNgsiConverter(unittest.TestCase):
 
     def _test_convert(self, converter):
         timeseries_list = converter.convert(
-            [Message('', json.dumps(TestNgsiConverter.message))])
+            [json.dumps(TestNgsiConverter.message)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].data,
                          {'windDirection': 174.545, 'windSpeed': 0.0})

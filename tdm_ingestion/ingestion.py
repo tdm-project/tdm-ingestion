@@ -1,19 +1,10 @@
 #!/usr/bin/python3
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from tdm_ingestion.models import TimeSeries
 from tdm_ingestion.utils import import_class
-
-
-class Message:
-    def __init__(self, key: str, value: str):
-        self.key = key
-        self.value = value
-
-    def __repr__(self):
-        return f'key: {self.key}, value {self.value}'
 
 
 class JsonBuildable:
@@ -27,7 +18,7 @@ class Consumer(ABC, JsonBuildable):
 
     @abstractmethod
     def poll(self, timeout_s: int = -1,
-             max_records: int = -1) -> List[Message]:
+             max_records: int = -1) -> List[Any]:
         pass
 
 
@@ -39,7 +30,7 @@ class Storage(ABC, JsonBuildable):
 
 class MessageConverter(ABC, JsonBuildable):
     @abstractmethod
-    def convert(self, messages: List[Message]) -> List[TimeSeries]:
+    def convert(self, messages: List[Any]) -> List[TimeSeries]:
         pass
 
 
