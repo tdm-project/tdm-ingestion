@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Union
 
 from tdm_ingestion.http.requests import Requests
-from tdm_ingestion.models import SensorType, Model, TimeSeries, Sensor
+from tdm_ingestion.models import EntityType, Model, TimeSeries, Source
 from tdm_ingestion.tdmq.base import Client as BaseClient
 
 
@@ -27,12 +27,12 @@ class Client(BaseClient):
         # TODO works only with Requests client
         return Client(Requests(), json['url'])
 
-    def create_entity_types(self, sensor_types: List[SensorType]
+    def create_entity_types(self, sensor_types: List[EntityType]
                             ) -> List[str]:
         return self.http.post(self.entity_types_url,
                               Model.list_to_json(sensor_types))
 
-    def create_sources(self, sensors: List[Sensor]) -> List[str]:
+    def create_sources(self, sensors: List[Source]) -> List[str]:
         logging.debug('create_sources %s', Model.list_to_json(sensors))
         return self.http.post(self.sources_url,
                               Model.list_to_json(sensors))
@@ -43,11 +43,11 @@ class Client(BaseClient):
 
     def get_entity_types(self, _id: str = None,
                          query: Dict = None
-                         ) -> Union[SensorType, List[SensorType]]:
+                         ) -> Union[EntityType, List[EntityType]]:
         raise NotImplementedError
 
     def get_sources(self, _id: str = None, query: Dict = None
-                    ) -> Union[Sensor, List[Sensor]]:
+                    ) -> Union[Source, List[Source]]:
         raise NotImplementedError
 
     def sources_count(self, query):
@@ -66,13 +66,13 @@ class AsyncClient(Client):
         logging.debug("building Client with %s", json)
         return AsyncClient(AioHttp(), json['url'])
 
-    async def create_entity_types(self, sensor_types: List[SensorType]
+    async def create_entity_types(self, sensor_types: List[EntityType]
                                   ) -> List[str]:
         logging.debug("create_sensor_types")
         return await self.http.post(self.entity_types_url,
                                     Model.list_to_json(sensor_types))
 
-    async def create_sources(self, sensors: List[Sensor]) -> List[str]:
+    async def create_sources(self, sensors: List[Source]) -> List[str]:
         logging.debug("create_sensors")
         return await self.http.post(self.sources_url,
                                     Model.list_to_json(sensors))

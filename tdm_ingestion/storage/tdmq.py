@@ -4,7 +4,7 @@ from typing import Union, Set
 
 from tdm_ingestion.ingestion import Storage as BaseStorage
 from tdm_ingestion.ingestion import TimeSeries
-from tdm_ingestion.models import SensorType, Sensor
+from tdm_ingestion.models import EntityType, Source
 from tdm_ingestion.tdmq.base import Client
 from tdm_ingestion.tdmq.http import AsyncClient
 from tdm_ingestion.utils import import_class
@@ -21,11 +21,11 @@ class CachedStorage(BaseStorage):
         return CachedStorage(
             import_class(client['class']).create_from_json(client['args']))
 
-    def _idempotent_create(self, obj: Union[SensorType, Sensor]):
-        if obj.name not in self._cache:
-            if self.client.sources_count(query={'name': obj.name}) <= 0:
+    def _idempotent_create(self, obj: Union[EntityType, Source]):
+        if obj._id not in self._cache:
+            if self.client.sources_count(query={'name': obj._id}) <= 0:
                 self.client.create_sources([obj])
-            self._cache.add(obj.name)
+            self._cache.add(obj._id)
 
     def write(self, time_series: List[TimeSeries]):
         if time_series:
@@ -38,8 +38,8 @@ class AsyncCachedStorage(BaseStorage):
     # FIXME duplicated code
     def __init__(self, client: AsyncClient):
         self.client = client
-        self._cache: Dict[Type, Set[str]] = {SensorType: set(),
-                                             Sensor: set()}
+        self._cache: Dict[Type, Set[str]] = {EntityType: set(),
+                                             Source: set()}
 
     @classmethod
     def create_from_json(cls, json: Dict):
@@ -47,10 +47,10 @@ class AsyncCachedStorage(BaseStorage):
         return AsyncCachedStorage(
             import_class(client['class']).create_from_json(client['args']))
 
-    async def _idempotent_create(self, obj: Union[SensorType, Sensor]):
-        if obj.name not in self._cache[obj.__class__]:
-            query = {'name': obj.name}
-            if isinstance(obj, Sensor):
+    async def _idempotent_create(self, obj: Union[EntityType, Source]):
+        if obj._id not in self._cache[obj.__class__]:
+            query = {'name': obj._id}
+            if isinstance(obj, Source):
                 count_method = self.client.sources_count
                 create_method = self.client.create_sources
             else:
@@ -59,7 +59,7 @@ class AsyncCachedStorage(BaseStorage):
 
             if await count_method(query=query) <= 0:
                 await create_method([obj])
-            self._cache[obj.__class__].add(obj.name)
+            self._cache[obj.__class__].add(obj._id)
 
     async def write(self, time_series: List[TimeSeries]):
         if time_series:

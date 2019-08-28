@@ -4,9 +4,9 @@ import unittest
 
 from tdm_ingestion.ingesters.async_ingester import AsyncIngester
 from tdm_ingestion.ingestion import BasicIngester
-from tdm_ingestion.models import SensorType, Sensor, \
+from tdm_ingestion.models import EntityType, Source, \
     Point
-from tdm_ingestion.models import TimeSeries, ValueMeasure
+from tdm_ingestion.models import TimeSeries
 from tests.dummies import DummyConsumer, DummyStorage, DummyConverter, \
     AsyncDummyConsumer, AsyncDummyStorage
 
@@ -35,13 +35,13 @@ class TestTimeSeries(unittest.TestCase):
     def test_to_dict(self):
         now = datetime.datetime.now(datetime.timezone.utc)
         value = 100
-        sensor_type = SensorType('test', 'test')
-        sensor = Sensor('sensor', sensor_type, 'test', Point(0, 0), ['test'])
+        sensor_type = EntityType('test', 'test')
+        sensor = Source('sensor', sensor_type, 'test', Point(0, 0), ['test'])
         ts = TimeSeries(now, sensor, {'value': 100.0})
         time_format = '%Y-%m-%dT%H:%M:%SZ'
         to_dict = json.loads(ts.to_json())
         self.assertEqual(to_dict['time'], now.strftime(time_format))
-        self.assertEqual(to_dict['source'], str(sensor.name))
+        self.assertEqual(to_dict['source'], str(sensor._id))
         self.assertEqual(to_dict['data'], {'value': value})
 
 

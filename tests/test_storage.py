@@ -2,7 +2,7 @@ import datetime
 import unittest
 
 import jsons
-from tdm_ingestion.models import SensorType, Sensor, Point, \
+from tdm_ingestion.models import EntityType, Source, Point, \
     TimeSeries
 from tdm_ingestion.storage.ckan import CkanStorage
 from tdm_ingestion.storage.tdmq import CachedStorage
@@ -10,12 +10,12 @@ from tests.dummies import DummyClient, DummyCkan
 
 now = datetime.datetime.now(datetime.timezone.utc)
 sensors_type = [
-    SensorType('st1', 'type1'),
-    SensorType('st2', 'type2')
+    EntityType('st1', 'type1'),
+    EntityType('st2', 'type2')
 ]
 sensors = [
-    Sensor('s1', sensors_type[0], 'node', Point(0, 0), ['temp']),
-    Sensor('s2', sensors_type[1], 'node', Point(1, 1), ['temp'])
+    Source('s1', sensors_type[0], 'node', Point(0, 0), ['temp']),
+    Source('s2', sensors_type[1], 'node', Point(1, 1), ['temp'])
 ]
 time_series = [
     TimeSeries(now, sensors[0], {'value': 0.0}),

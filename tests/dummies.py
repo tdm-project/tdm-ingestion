@@ -7,7 +7,7 @@ from typing import List, AnyStr, Dict, Any
 
 from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
     MessageConverter
-from tdm_ingestion.models import Sensor, SensorType
+from tdm_ingestion.models import Source, EntityType
 from tdm_ingestion.storage.ckan import CkanClient
 from tdm_ingestion.tdmq import Client
 
@@ -43,20 +43,20 @@ class DummyClient(Client):
         except KeyError:
             return 0
 
-    def create_entity_types(self, sensor_types: List[SensorType]) -> List[
+    def create_entity_types(self, sensor_types: List[EntityType]) -> List[
         AnyStr]:
         self.sensor_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
-    def create_sources(self, sensors: List[Sensor]) -> List[AnyStr]:
-        self.sensors.update({s.name: s for s in sensors})
-        return [s.name for s in sensors]
+    def create_sources(self, sensors: List[Source]) -> List[AnyStr]:
+        self.sensors.update({s._id: s for s in sensors})
+        return [s._id for s in sensors]
 
     def create_time_series(self, time_series: List[TimeSeries]):
         self.time_series += time_series
 
     def get_entity_types(self, _id: AnyStr = None,
-                         query: Dict = None) -> SensorType:
+                         query: Dict = None) -> EntityType:
         """
             only query by name is supported
         """
@@ -66,7 +66,7 @@ class DummyClient(Client):
         except KeyError:
             raise Client.NotFound
 
-    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
+    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Source:
         """
             only query by name is supported
         """

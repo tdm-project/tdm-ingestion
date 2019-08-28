@@ -7,14 +7,14 @@ from typing import List, Tuple, Dict
 
 from tdm_ingestion.ingestion import MessageConverter, Message
 from tdm_ingestion.models import TimeSeries, Geometry, Point, \
-    SensorType, Sensor
+    EntityType, Source
 
 
 class NgsiConverter(MessageConverter):
     non_properties = {'latitude', 'longitude', 'timestamp', 'dateObserved',
                       'location'}
     to_skip = {'dateObserved', 'location', 'latitude', 'longitude'}
-    fiware_service_path_to_sensor_type = {'/cagliari/edge/meteo': SensorType(
+    fiware_service_path_to_sensor_type = {'/cagliari/edge/meteo': EntityType(
         'WeatherObserver', 'Station'
     )}
 
@@ -48,11 +48,10 @@ class NgsiConverter(MessageConverter):
         else:
             raise RuntimeError(f'invalid id {msg["body"]["id"]}')
 
-    def _create_sensor(self, sensor_name: str, sensor_type: SensorType,
-                       node_name: str, geometry: Geometry,
-                       properties: List[str]) -> Sensor:
-        return Sensor(sensor_name, sensor_type, node_name,
-                      geometry, properties)
+    def _create_sensor(self, sensor_name: str, sensor_type: EntityType,
+                       geometry: Geometry,
+                       properties: List[str]) -> Source:
+        return Source(sensor_name, sensor_type, geometry, properties)
 
     def _create_models(self, msg: Dict) -> TimeSeries:
         node_name, st_name, st_type, sensor_name = NgsiConverter._get_names(
@@ -82,7 +81,7 @@ class NgsiConverter(MessageConverter):
         sensor_type = self.fiware_service_path_to_sensor_type[
             self.get_fiware_service_path(msg)]
         sensor = self._create_sensor(f"{sensor_name}",
-                                     sensor_type, node_name,
+                                     sensor_type,
                                      geometry, properties)
 
         return TimeSeries(time, sensor, records)
@@ -111,13 +110,13 @@ class NgsiConverter(MessageConverter):
 
 class CachedNgsiConverter(NgsiConverter):
     def __init__(self):
-        self.sensors: Dict[str, Sensor] = defaultdict()
+        self.sensors: Dict[str, Source] = defaultdict()
 
-    def _create_sensor(self, sensor_name: str, sensor_type: SensorType,
-                       node_name: str, geometry: Geometry,
+    def _create_sensor(self,
+                       sensor_name: str,
+                       sensor_type: EntityType,
+                       geometry: Geometry,
                        properties: List[str]):
         return self.sensors.setdefault(sensor_name,
-                                       Sensor(sensor_name, sensor_type,
-                                              node_name, geometry, properties))
-
-
+                                       Source(sensor_name, sensor_type,
+                                              geometry, properties))

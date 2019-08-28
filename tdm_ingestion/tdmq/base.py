@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
-from tdm_ingestion.models import SensorType, Sensor, TimeSeries
+from tdm_ingestion.models import EntityType, Source, TimeSeries
 
 
 class Client(ABC):
@@ -10,11 +10,11 @@ class Client(ABC):
 
     @abstractmethod
     def create_entity_types(self,
-                            sensor_types: List[SensorType]) -> List[str]:
+                            sensor_types: List[EntityType]) -> List[str]:
         pass
 
     @abstractmethod
-    def create_sources(self, sensors: List[Sensor]) -> List[str]:
+    def create_sources(self, sensors: List[Source]) -> List[str]:
         pass
 
     @abstractmethod
@@ -23,11 +23,11 @@ class Client(ABC):
 
     @abstractmethod
     def get_entity_types(self, _id: str = None,
-                         query: Dict = None) -> SensorType:
+                         query: Dict = None) -> EntityType:
         pass
 
     @abstractmethod
-    def get_sources(self, _id: str = None, query: Dict = None) -> Sensor:
+    def get_sources(self, _id: str = None, query: Dict = None) -> Source:
         pass
 
     @abstractmethod

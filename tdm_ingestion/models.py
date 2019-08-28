@@ -43,9 +43,9 @@ class RefMeasure(Measure):
         self.index = index
 
 
-class SensorType(Model):
-    def __init__(self, name: str, category: str):
-        self.name = name
+class EntityType(Model):
+    def __init__(self, _id: str, category: str):
+        self.name = _id
         self.category = category or ["sensor"]
 
     def __repr__(self):
@@ -73,22 +73,26 @@ class Point(Geometry):
         return jsonify(camel_cased) if serialize else camel_cased
 
 
-class Sensor(Model):
-    def __init__(self, name: str, type: SensorType, node: str,
-                 geometry: Geometry, controlled_properties: List[str]):
-        self.name = name
+class Source(Model):
+    def __init__(self,
+                 _id: str,
+                 type: EntityType,
+                 geometry: Geometry,
+                 controlled_properties: List[str],
+                 tdmq_id: str = None):
+        self._id = _id
         self.type = type
-        self.node = node
         self.geometry = geometry
         self.controlled_properties = controlled_properties
+        self.tdmq_id = tdmq_id
 
     def __repr__(self):
-        return f'Sensor {self.name} of {repr(self.type)}'
+        return f'Sensor {self._id} of {repr(self.type)}'
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(
-            id=self.name,
-            alias=self.name,
+            id=self._id,
+            alias=self._id,
             entity_type=self.type.name,
             entity_category="Station",
             default_footprint=self.geometry.to_json(False),
@@ -102,7 +106,7 @@ class Sensor(Model):
 
 
 class TimeSeries(Model):
-    def __init__(self, utc_time: datetime.datetime, sensor: Sensor,
+    def __init__(self, utc_time: datetime.datetime, sensor: Source,
                  measure: Dict[str, float]):
         self.time = utc_time
         self.source = sensor
@@ -110,6 +114,6 @@ class TimeSeries(Model):
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
-        dct["source"] = self.source.name
+        dct["source"] = self.source._id
         camel_cased = to_camel_case_dict(dct)
         return jsonify(camel_cased) if serialize else camel_cased
