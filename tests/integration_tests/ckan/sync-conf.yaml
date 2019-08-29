@@ -1,0 +1,36 @@
+ingester:
+  class: tdm_ingestion.ingestion.BasicIngester
+  args:
+    consumer:
+      class: tdm_ingestion.consumers.tdmq_consumer.TDMQConsumer
+      args:
+        client:
+          class: tdm_ingestion.tdmq.remote.Client
+          args:
+            url: http://192.168.1.113:8000
+        entity_type:
+          class: tdm_ingestion.models.Entity_type
+          args:
+            _id: PointWeatherObserver
+            category: 'sensor'
+        bucket: 60
+        operation: avg
+
+    storage:
+      class: tdm_ingestion.storage.ckan.CkanStorage
+      args:
+        client:
+          class: tdm_ingestion.storage.ckan.RemoteCkan
+          args:
+            base_url: http://ckan:5000
+            client:
+              class: tdm_ingestion.http_client.requests.Http
+              args: {}
+            api_key: tester
+        dataset: lisa
+        resource: test
+
+
+  process:
+    timeout_s: 20
+    max_records: 10

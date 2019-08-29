@@ -1,0 +1,75 @@
+[
+  {
+    "id": "tdm/sensor_0",
+    "alias": "my desk",
+    "entity_type": "PointWeatherObserver",
+    "entity_category": "Station",
+    "default_footprint": {
+      "type": "Point",
+      "coordinates": [
+        8.936079,
+        38.990040
+      ]
+    },
+    "stationary": true,
+    "controlledProperties": [
+      "temperature",
+      "humidity"
+    ],
+    "shape": [],
+    "description": {
+      "type": "multisensor",
+      "brandName": "ProSensor",
+      "modelName": "R2D2",
+      "manufacturerName": "CRS4"
+    }
+  },
+  {
+    "id": "tdm/sensor_1",
+    "alias": "porto conte",
+    "entity_type": "PointWeatherObserver",
+    "entity_category": "Station",
+    "default_footprint": {
+      "type": "Point",
+      "coordinates": [
+        8.246969,
+        40.584128
+      ]
+    },
+    "controlledProperties": [
+      "humidity",
+      "temperature"
+    ],
+    "shape": [],
+    "storage": null,
+    "description": {
+      "type": "multisensor",
+      "brandName": "ProSensor",
+      "modelName": "R2D2",
+      "manufacturerName": "CRS4"
+    }
+  },
+  {
+    "id": "tdm/sensor_3",
+    "alias": "In città",
+    "entity_type": "EnergyConsumptionMonitor",
+    "entity_category": "Station",
+    "default_footprint": {
+      "type": "Point",
+      "coordinates": [
+        9.132862,
+        39.248232
+      ]
+    },
+    "controlledProperties": [
+      "power"
+    ],
+    "shape": [],
+    "description": {
+      "type": "power sensor",
+      "brandName": "ProSensor",
+      "modelName": "C3PO",
+      "manufacturerName": "CRS4"
+    }
+  }
+]
