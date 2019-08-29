@@ -1,13 +1,12 @@
 import json
 import logging
-import subprocess
 import time
 
 import requests
 from kafka import KafkaProducer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 from tests.integration_tests.utils import check_docker_logs, docker_compose_up, \
-    try_func, docker_compose_down
+    try_func, docker_compose_down, get_tdmq_port
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,11 +46,8 @@ try:
     with open('../../messages/ngsi-weather.json', 'rb') as f:
         data = json.load(f)
 
-    port = subprocess.check_output(
-        ['docker-compose', 'port', 'web', '8000']).strip().split(b':')[
-        -1].decode()
+    port = get_tdmq_port()
     base_url = f'http://localhost:{port}/api/v0.0'
-    print(f'base_url {base_url}')
 
     _, _, _, sensor_name = NgsiConverter._get_names(data)
 

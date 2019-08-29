@@ -36,3 +36,9 @@ def try_func(func, sleep, retry, *args, **kwargs):
 
 def check_docker_logs(service):
     subprocess.check_output(["docker-compose", "logs", service])
+
+
+def get_tdmq_port():
+    return subprocess.check_output(
+        ['docker-compose', 'port', 'web', '8000']).strip().split(b':')[
+        -1].decode()
