@@ -10,6 +10,14 @@ from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 logging.basicConfig(level=logging.DEBUG)
 
 
+def docker_compose_up():
+    subprocess.check_call(['docker-compose', 'up', '-d'])
+
+
+def docker_compose_down():
+    subprocess.check_call(['docker-compose', 'down'])
+
+
 def try_func(func, sleep, retry, *args, **kwargs):
     """
    func must return True or a similiar value
@@ -33,14 +41,14 @@ def try_func(func, sleep, retry, *args, **kwargs):
     return res
 
 
-def check_docker_logs(container_name):
-    subprocess.check_output(["docker", "logs", container_name])
+def check_docker_logs(service):
+    subprocess.check_output(["docker-compose", "logs", service])
 
 
 def check_timeseries(base_url, sensor_id, params):
     logging.debug("sensors %s", requests.get(f'{base_url}/sources').json())
-    check_docker_logs('travis_ingester_1')
-    check_docker_logs('travis_web_1')
+    check_docker_logs('ingester')
+    check_docker_logs('web')
     r = requests.get(f"{base_url}/sources", params={'id': sensor_id})
     r.raise_for_status()
     tdmq_id = r.json()[0]['tdmq_id']
@@ -67,22 +75,26 @@ def increment_and_wait(counter, wait=5):
     counter += 1
 
 
-with open('messages/ngsi-weather.json', 'rb') as f:
-    data = json.load(f)
+try:
+    docker_compose_up()
+    with open('../../messages/ngsi-weather.json', 'rb') as f:
+        data = json.load(f)
 
-port = subprocess.check_output(
-    ['docker', 'port', 'travis_web_1', '8000']).strip().split(b':')[
-    -1].decode()
-base_url = f'http://localhost:{port}/api/v0.0'
-print(f'base_url {base_url}')
+    port = subprocess.check_output(
+        ['docker-compose', 'port', 'web', '8000']).strip().split(b':')[
+        -1].decode()
+    base_url = f'http://localhost:{port}/api/v0.0'
+    print(f'base_url {base_url}')
 
-_, _, _, sensor_name = NgsiConverter._get_names(data)
+    _, _, _, sensor_name = NgsiConverter._get_names(data)
 
-sensor_name = f'{sensor_name}'
+    sensor_name = f'{sensor_name}'
 
-try_func(send_message, 1, 10, None, 'test', data)
-try_func(check_timeseries, 1, 10, base_url, sensor_name,
-         {
-             'after': '2000-01-01T00:00:00Z',
-             'before': '2100-01-01T00:00:00Z'
-         })
+    try_func(send_message, 1, 10, None, 'test', data)
+    try_func(check_timeseries, 1, 10, base_url, sensor_name,
+             {
+                 'after': '2000-01-01T00:00:00Z',
+                 'before': '2100-01-01T00:00:00Z'
+             })
+finally:
+    docker_compose_down()
