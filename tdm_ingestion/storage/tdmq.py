@@ -6,7 +6,7 @@ from tdm_ingestion.ingestion import Storage as BaseStorage
 from tdm_ingestion.ingestion import TimeSeries
 from tdm_ingestion.models import EntityType, Source
 from tdm_ingestion.tdmq.base import Client
-from tdm_ingestion.tdmq.http import AsyncClient
+from tdm_ingestion.tdmq.remote import AsyncClient
 from tdm_ingestion.utils import import_class
 
 

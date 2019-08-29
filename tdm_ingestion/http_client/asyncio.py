@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Union, List
 
 import aiohttp
-from tdm_ingestion.http.base import Http
+from tdm_ingestion.http_client.base import Http
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

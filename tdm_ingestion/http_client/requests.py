@@ -2,7 +2,7 @@ import logging
 from typing import Union, List, Dict
 
 import requests
-from tdm_ingestion.http.base import Http
+from tdm_ingestion.http_client.base import Http
 
 
 class Requests(Http):

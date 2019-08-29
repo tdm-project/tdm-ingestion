@@ -2,8 +2,8 @@ import logging
 import os
 from typing import Dict, List, Union, Any
 
-from tdm_ingestion.http.base import Http
-from tdm_ingestion.http.requests import Requests
+from tdm_ingestion.http_client.base import Http
+from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.models import EntityType, Model, TimeSeries, Source
 from tdm_ingestion.tdmq.base import Client as BaseClient
 
@@ -54,7 +54,10 @@ class Client(BaseClient):
 
     def get_sources(self, _id: str = None, query: Dict = None
                     ) -> Union[Source, List[Source]]:
-        raise NotImplementedError
+        if _id:
+            return Source(**self.http.get(f'{self.sources_url}/{_id}'))
+        return [Source(**s) for s in
+                self.http.get(f'{self.sources_url}', params=query)]
 
     def sources_count(self, query):
         return len(self.http.get(self.sources_url, params=query)) > 0
@@ -68,7 +71,7 @@ class AsyncClient(Client):
     @staticmethod
     def create_from_json(json: Dict):
         # FIXME it
-        from tdm_ingestion.http.asyncio import AioHttp
+        from tdm_ingestion.http_client.asyncio import AioHttp
         logging.debug("building Client with %s", json)
         return AsyncClient(AioHttp(), json['url'])
 

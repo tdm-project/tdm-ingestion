@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 
-from tdm_ingestion.http.base import Http
+from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.ingestion import Storage
 from tdm_ingestion.models import TimeSeries
 
