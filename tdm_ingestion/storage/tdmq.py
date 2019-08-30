@@ -64,8 +64,7 @@ class AsyncCachedStorage(BaseStorage):
     async def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
-                logging.debug(f"try create sensor sensor type for ts {ts}")
-                for obj in [ts.source.type, ts.source]:
-                    await self._idempotent_create(obj)
+                logging.debug(f"try create sensor  for ts {ts}")
+                await self._idempotent_create(ts.source)
 
             await self.client.create_time_series(time_series)

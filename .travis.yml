@@ -12,7 +12,7 @@ env:
     - IMG=tdmproject/tdm-ingestion
   matrix:
     - CONF=sync
-#    - CONF=async
+    - CONF=async
 
 
 install:

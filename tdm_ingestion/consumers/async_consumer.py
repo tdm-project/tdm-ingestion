@@ -32,7 +32,6 @@ class KafkaAIOConsumer(Consumer):
         max_records = max_records if max_records > 0 else None
         data = await self.consumer.getmany(timeout_ms=timeout_s,
                                            max_records=max_records)
-        #        logger.debug(f"{data}")
         try:
             values = list(data.values())
             if values:
