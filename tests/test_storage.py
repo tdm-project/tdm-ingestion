@@ -89,9 +89,18 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(time_series)
         self.assertEqual(
             storage.client.resources,
-            {'test': {'dataset': 'lisa', 'records': [
-                {'timestamp': now.timestamp(), 'value': 0.0},
-                {'timestamp': now.timestamp(), 'value': 1.0}]}})
+            {'test': {'dataset': 'lisa',
+                      'records': [{'date': now,
+                                   'location': '0,0',
+                                   'station': 's1',
+                                   'type': 'type1',
+                                   'value': 0.0},
+                                  {'date': now,
+                                   'location': '1,1',
+                                   'station': 's2',
+                                   'type': 'type2',
+                                   'value': 1.0}]}}
+        )
 
 
 if __name__ == '__main__':
