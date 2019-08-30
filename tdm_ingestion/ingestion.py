@@ -106,6 +106,11 @@ if __name__ == '__main__':
 
         ingester = import_class(conf['ingester']['class']).create_from_json(
             conf['ingester']['args'])
-        ingester_process_args = conf['ingester']['process']
 
-        ingester.process_forever(**ingester_process_args)
+        ingester_process_args = conf['ingester']['process'] \
+            if 'process' in conf['ingester'] else {}
+
+        process_method = ingester.process_forever if \
+            conf['ingester'].get('process_forever', True) else \
+            ingester.process
+        process_method(**ingester_process_args)
