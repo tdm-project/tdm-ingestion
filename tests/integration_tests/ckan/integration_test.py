@@ -13,11 +13,13 @@ docker_yaml = os.path.join(DIR, 'docker-compose.yaml')
 
 
 def check_ckan():
+    print('check ckan')
     try:
         dataset = requests.get(
             'http://localhost:5000/api/3/action/package_show?id=lisa').json()[
             'result']
 
+        print(f'num resources {dataset["num_resources"]}')
         assert dataset['num_resources'] == 1
         expected = """_id,station,type,date,location,humidity,temperature
 1,tdm/sensor_0,Station,2019-05-02T11:00:00+00:00,"38.9900400015583,8.93607900725268",0.272000001122554,23
@@ -26,6 +28,7 @@ def check_ckan():
 4,tdm/sensor_1,Station,2019-05-02T11:10:00+00:00,"40.5841280014956,8.24696900768626",0.379999995231628,22
 5,tdm/sensor_1,Station,2019-05-02T11:20:00+00:00,"40.5841280014956,8.24696900768626",0.349999994039536,25"""
         actual = requests.get(dataset['resources'][0]['url']).text
+        print(f'actual resource {actual}')
         assert expected.splitlines() == actual.splitlines()
     except Exception as ex:
         print(ex)
