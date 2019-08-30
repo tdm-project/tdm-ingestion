@@ -74,8 +74,7 @@ class CkanStorage(Storage):
                     'station': ts.source._id,
                     'type': ts.source.type.category,
                     'date': ts.time,
-                    'location': f'{ts.source.geometry.latitude}, \
-                            {ts.source.geometry.longitude}'
+                    'location': f'{ts.source.geometry.latitude},{ts.source.geometry.longitude}'
                 },
                 **ts.data
             }
