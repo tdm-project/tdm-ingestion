@@ -37,7 +37,7 @@ class RemoteCkan(CkanClient):
         logging.debug('create_resource %s %s, %s', resource, dataset, records)
         fields = [{"id": field} for field in records[0].keys()]
         data = dict(
-            resource=dict(package_id=dataset),
+            resource=dict(package_id=dataset, name=resource),
             fields=fields,
             records=records
         )
