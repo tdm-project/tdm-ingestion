@@ -5,7 +5,7 @@ from typing import Dict, List, Union, Any
 
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.http_client.requests import Requests
-from tdm_ingestion.models import EntityType, Model, Record, Source
+from tdm_ingestion.models import EntityType, Model, Record, Source, Point
 from tdm_ingestion.tdmq.base import Client as BaseClient
 
 
@@ -72,7 +72,9 @@ class Client(BaseClient):
         return [Source(
             _id=s['external_id'],
             tdmq_id=s['tdmq_id'],
-            type=EntityType(s['entity_type'], s['entity_category'])
+            type=EntityType(s['entity_type'], s['entity_category']),
+            geometry=Point(s['default_footprint']['coordinates'][1],
+                           s['default_footprint']['coordinates'][0])
         ) for s in
             self.http.get(f'{self.sources_url}', params=query)]
 

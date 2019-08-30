@@ -1,8 +1,8 @@
-import json
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 
+import jsons
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.ingestion import Storage
 from tdm_ingestion.models import Record
@@ -44,7 +44,7 @@ class RemoteCkan(CkanClient):
 
         self.client.post(
             f'{self.base_url}/api/3/action/datastore_create',
-            json=json.dumps(data),
+            json=jsons.dumps(data),
             headers=self.headers)
 
 
@@ -70,9 +70,13 @@ class CkanStorage(Storage):
     def write(self, records: List[Record]):
         self.client.create_resource(self.resource, self.dataset, [
             {
-                **{'timestamp': ts.time.timestamp(),
-
-                   },
+                **{
+                    'station': ts.source._id,
+                    'type': ts.source.type.category,
+                    'date': ts.time,
+                    'location': f'{ts.source.geometry.latitude}, \
+                            {ts.source.geometry.longitude}'
+                },
                 **ts.data
             }
             for ts in records])
