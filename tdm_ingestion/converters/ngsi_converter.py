@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import List, Tuple, Dict
 
 from tdm_ingestion.ingestion import MessageConverter
-from tdm_ingestion.models import TimeSeries, Geometry, Point, \
+from tdm_ingestion.models import Record, Geometry, Point, \
     EntityType, Source
 
 
@@ -53,7 +53,7 @@ class NgsiConverter(MessageConverter):
                        properties: List[str]) -> Source:
         return Source(sensor_name, sensor_type, geometry, properties)
 
-    def _create_models(self, msg: Dict) -> TimeSeries:
+    def _create_models(self, msg: Dict) -> Record:
         node_name, st_name, st_type, sensor_name = NgsiConverter._get_names(
             msg)
 
@@ -84,9 +84,9 @@ class NgsiConverter(MessageConverter):
                                      sensor_type,
                                      geometry, properties)
 
-        return TimeSeries(time, sensor, records)
+        return Record(time, sensor, records)
 
-    def convert(self, messages: List[str]) -> List[TimeSeries]:
+    def convert(self, messages: List[str]) -> List[Record]:
 
         logging.debug("messages %s", len(messages))
         timeseries_list: List = []

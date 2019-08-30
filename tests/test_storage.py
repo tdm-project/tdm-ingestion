@@ -3,7 +3,7 @@ import unittest
 
 import jsons
 from tdm_ingestion.models import EntityType, Source, Point, \
-    TimeSeries
+    Record
 from tdm_ingestion.storage.ckan import CkanStorage
 from tdm_ingestion.storage.tdmq import CachedStorage
 from tests.dummies import DummyTDMQClient, DummyCkan
@@ -18,8 +18,8 @@ sensors = [
     Source('s2', sensors_type[1], Point(1, 1), ['temp'])
 ]
 time_series = [
-    TimeSeries(now, sensors[0], {'value': 0.0}),
-    TimeSeries(now, sensors[1], {'value': 1.0})
+    Record(now, sensors[0], {'value': 0.0}),
+    Record(now, sensors[1], {'value': 1.0})
 ]
 
 

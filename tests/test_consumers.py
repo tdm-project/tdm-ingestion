@@ -3,7 +3,7 @@ import unittest
 
 from tdm_ingestion.consumers.tdmq_consumer import TDMQConsumer, BucketOperation
 from tdm_ingestion.models import EntityType, Source, Point, \
-    TimeSeries
+    Record
 from tests.dummies import DummyTDMQClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
@@ -16,8 +16,8 @@ sources = [
     Source('s2', entity_types[1], Point(1, 1), ['temp'])
 ]
 time_series = [
-    TimeSeries(now, sources[0], {'value': 0.0}),
-    TimeSeries(now, sources[1], {'value': 1.0})
+    Record(now, sources[0], {'value': 0.0}),
+    Record(now, sources[1], {'value': 1.0})
 ]
 
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
 
-from tdm_ingestion.models import EntityType, Source, TimeSeries
+from tdm_ingestion.models import EntityType, Source, Record
 
 
 class Client(ABC):
@@ -18,12 +18,12 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_time_series(self, time_series: List[TimeSeries]):
+    def create_time_series(self, time_series: List[Record]):
         pass
 
     @abstractmethod
     def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
-        TimeSeries]:
+        Record]:
         pass
 
     @abstractmethod

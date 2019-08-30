@@ -75,10 +75,10 @@ class Point(Geometry):
 
 class Source(Model):
     def __init__(self,
-                 _id: str,
-                 type: EntityType,
-                 geometry: Geometry,
-                 controlled_properties: List[str],
+                 _id: str = None,
+                 type: EntityType = None,
+                 geometry: Geometry = None,
+                 controlled_properties: List[str] = None,
                  tdmq_id: str = None):
         self._id = _id
         self.type = type
@@ -105,11 +105,11 @@ class Source(Model):
         return jsonify(dct) if serialize else dct
 
 
-class TimeSeries(Model):
-    def __init__(self, utc_time: datetime.datetime, sensor: Source,
+class Record(Model):
+    def __init__(self, utc_time: datetime.datetime, source: Source,
                  measure: Dict[str, float]):
         self.time = utc_time
-        self.source = sensor
+        self.source = source
         self.data = measure
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:

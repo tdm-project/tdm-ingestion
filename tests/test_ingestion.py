@@ -6,7 +6,7 @@ from tdm_ingestion.ingesters.async_ingester import AsyncIngester
 from tdm_ingestion.ingestion import BasicIngester
 from tdm_ingestion.models import EntityType, Source, \
     Point
-from tdm_ingestion.models import TimeSeries
+from tdm_ingestion.models import Record
 from tests.dummies import DummyConsumer, DummyStorage, DummyConverter, \
     AsyncDummyConsumer, AsyncDummyStorage
 
@@ -37,7 +37,7 @@ class TestTimeSeries(unittest.TestCase):
         value = 100
         sensor_type = EntityType('test', 'test')
         sensor = Source('sensor', sensor_type, 'test', Point(0, 0), ['test'])
-        ts = TimeSeries(now, sensor, {'value': 100.0})
+        ts = Record(now, sensor, {'value': 100.0})
         time_format = '%Y-%m-%dT%H:%M:%SZ'
         to_dict = json.loads(ts.to_json())
         self.assertEqual(to_dict['time'], now.strftime(time_format))

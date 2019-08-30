@@ -2,8 +2,8 @@ import logging
 from typing import List, Dict, Type
 from typing import Union, Set
 
+from tdm_ingestion.ingestion import Record
 from tdm_ingestion.ingestion import Storage as BaseStorage
-from tdm_ingestion.ingestion import TimeSeries
 from tdm_ingestion.models import EntityType, Source
 from tdm_ingestion.tdmq.base import Client
 from tdm_ingestion.tdmq.remote import AsyncClient
@@ -27,7 +27,7 @@ class CachedStorage(BaseStorage):
                 self.client.create_sources([obj])
             self._cache.add(obj._id)
 
-    def write(self, time_series: List[TimeSeries]):
+    def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
                 self._idempotent_create(ts.source)
@@ -61,7 +61,7 @@ class AsyncCachedStorage(BaseStorage):
                 await create_method([obj])
             self._cache[obj.__class__].add(obj._id)
 
-    async def write(self, time_series: List[TimeSeries]):
+    async def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
                 logging.debug(f"try create sensor sensor type for ts {ts}")

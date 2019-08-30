@@ -40,9 +40,8 @@ class TDMQConsumer(Consumer):
             query={'entity_type': self.entity_type.name})
         res = []
         for source in sources:
-            res += [self.client.get_time_series(
+            res += self.client.get_time_series(
                 source, {'bucket': self.bucket,
-                         'operation': self.operation
+                         'op': self.operation
                          })
-            ]
         return res

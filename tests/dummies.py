@@ -6,7 +6,7 @@ import uuid
 from collections import defaultdict
 from typing import List, AnyStr, Dict, Any, Union
 
-from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, \
+from tdm_ingestion.ingestion import Consumer, Storage, Record, \
     MessageConverter
 from tdm_ingestion.models import Source, EntityType
 from tdm_ingestion.storage.ckan import CkanClient
@@ -21,7 +21,7 @@ class DummyStorage(Storage):
     def __init__(self):
         self.messages = []
 
-    def write(self, messages: List[TimeSeries]):
+    def write(self, messages: List[Record]):
         self.messages += messages
 
 
@@ -56,13 +56,13 @@ class DummyTDMQClient(Client):
             self.sources_by_types[source.type.name].append(source)
         return [s._id for s in sources]
 
-    def create_time_series(self, time_series: List[TimeSeries]):
+    def create_time_series(self, time_series: List[Record]):
         for ts in time_series:
             self.time_series[ts.source._id].append(ts)
             self.create_sources([ts.source])
 
     def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
-        TimeSeries]:
+        Record]:
         return self.time_series[source._id]
 
     def get_entity_types(self, _id: AnyStr = None,
@@ -120,12 +120,12 @@ class DummyConsumer(Consumer):
 
 
 class DummyConverter(MessageConverter):
-    def convert(self, messages: List[str]) -> List[TimeSeries]:
+    def convert(self, messages: List[str]) -> List[Record]:
         series = []
         for m in messages:
             m = json.loads(m)
-            series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(),
-                                     random.random()))
+            series.append(Record(datetime.datetime.now(), uuid.uuid4(),
+                                 random.random()))
 
         return series
 
@@ -147,7 +147,7 @@ class AsyncDummyStorage(Storage):
     def __init__(self):
         self.messages = []
 
-    async def write(self, messages: List[TimeSeries]):
+    async def write(self, messages: List[Record]):
         self.messages += messages
 
 
