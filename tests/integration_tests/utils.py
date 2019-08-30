@@ -3,12 +3,12 @@ import subprocess
 import time
 
 
-def docker_compose_up():
-    subprocess.check_call(['docker-compose', 'up', '-d'])
+def docker_compose_up(docker_yaml):
+    subprocess.check_call(['docker-compose', '-f', docker_yaml, 'up', '-d'])
 
 
-def docker_compose_down():
-    subprocess.check_call(['docker-compose', 'down'])
+def docker_compose_down(docker_yaml):
+    subprocess.check_call(['docker-compose', '-f', docker_yaml, 'down'])
 
 
 def try_func(func, sleep, retry, *args, **kwargs):
@@ -34,11 +34,13 @@ def try_func(func, sleep, retry, *args, **kwargs):
     return res
 
 
-def check_docker_logs(service):
-    subprocess.check_output(["docker-compose", "logs", service])
+def check_docker_logs(docker_yaml, service):
+    subprocess.check_output(
+        ["docker-compose", '-f', docker_yaml, "logs", service])
 
 
-def get_tdmq_port():
+def get_service_port(docker_yaml, service, port):
     return subprocess.check_output(
-        ['docker-compose', 'port', 'web', '8000']).strip().split(b':')[
+        ['docker-compose', '-f', docker_yaml, 'port', service,
+         port]).strip().split(b':')[
         -1].decode()

@@ -7,7 +7,7 @@ ingester:
         client:
           class: tdm_ingestion.tdmq.remote.Client
           args:
-            url: http://192.168.1.113:8000
+            url: http://web:8000
         entity_type:
           class: tdm_ingestion.models.Entity_type
           args:
@@ -24,13 +24,11 @@ ingester:
           args:
             base_url: http://ckan:5000
             client:
-              class: tdm_ingestion.http_client.requests.Http
+              class: tdm_ingestion.http_client.requests.Requests
               args: {}
             api_key: tester
         dataset: lisa
         resource: test
 
 
-  process:
-    timeout_s: 20
-    max_records: 10
+  process_forever: false

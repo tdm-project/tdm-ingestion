@@ -1,20 +1,25 @@
 import json
 import logging
+import os
 import time
 
 import requests
 from kafka import KafkaProducer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
-from tests.integration_tests.utils import check_docker_logs, docker_compose_up, \
-    try_func, docker_compose_down, get_tdmq_port
+from tests.integration_tests.utils import \
+    check_docker_logs, docker_compose_up, try_func, \
+    docker_compose_down, get_service_port
 
 logging.basicConfig(level=logging.DEBUG)
+
+DIR = os.path.dirname(os.path.realpath(__file__))
+docker_yaml = os.path.join(DIR, 'docker-compose.yaml')
 
 
 def check_timeseries(base_url, sensor_id, params):
     logging.debug("sensors %s", requests.get(f'{base_url}/sources').json())
-    check_docker_logs('ingester')
-    check_docker_logs('web')
+    check_docker_logs(docker_yaml, 'ingester')
+    check_docker_logs(docker_yaml, 'web')
     r = requests.get(f"{base_url}/sources", params={'id': sensor_id})
     r.raise_for_status()
     tdmq_id = r.json()[0]['tdmq_id']
@@ -42,11 +47,11 @@ def increment_and_wait(counter, wait=5):
 
 
 try:
-    docker_compose_up()
+    docker_compose_up(docker_yaml)
     with open('../../messages/ngsi-weather.json', 'rb') as f:
         data = json.load(f)
 
-    port = get_tdmq_port()
+    port = get_service_port(docker_yaml, 'web', '8000')
     base_url = f'http://localhost:{port}/api/v0.0'
 
     _, _, _, sensor_name = NgsiConverter._get_names(data)
@@ -60,4 +65,4 @@ try:
                  'before': '2100-01-01T00:00:00Z'
              })
 finally:
-    docker_compose_down()
+    docker_compose_down(docker_yaml)
