@@ -17,5 +17,5 @@ test_kafka_consumer: images
 	cd tests/integration_tests/kafka_consumer; IMG=${IMG} CONF=${BACKEND} python integration_test.py
 
 test_ckan: images
-	cd tests/integration_tests/ckan; IMG=${IMG} CONF=${BACKEND} python integration_test.py
+	if [[ ${BACKEND} == 'sync' ]]; then cd tests/integration_tests/ckan; IMG=${IMG} CONF=${BACKEND} python integration_test.py; fi
 
