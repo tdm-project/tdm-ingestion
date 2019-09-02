@@ -26,5 +26,5 @@ class TestTDMQConsumer(unittest.TestCase):
         client = DummyTDMQClient()
         client.create_time_series(time_series)
         consumer = TDMQConsumer(client, sources[0].type, 60,
-                                BucketOperation.avg)
+                                BucketOperation.avg, before=now)
         self.assertEqual(len(consumer.poll()), 1)

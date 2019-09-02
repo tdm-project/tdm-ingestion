@@ -15,6 +15,8 @@ ingester:
             category: 'sensor'
         bucket: 60
         operation: avg
+        after: 2019-01-01T00:00:00+00:00
+        before: 2029-01-01T00:00:00+00:00
 
     storage:
       class: tdm_ingestion.storage.ckan.CkanStorage
