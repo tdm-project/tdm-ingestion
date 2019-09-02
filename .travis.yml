@@ -16,7 +16,7 @@ env:
 
 
 install:
-  - pip install -e .[$CONF]
+  - pip install -e .[$BACKEND]
   - pip install kafka
 
 script:
