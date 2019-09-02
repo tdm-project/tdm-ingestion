@@ -11,8 +11,8 @@ env:
   global:
     - IMG=tdmproject/tdm-ingestion
   matrix:
-    - CONF=sync
-    - CONF=async
+    - BACKEND=sync
+    - BACKEND=async
 
 
 install:
