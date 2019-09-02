@@ -1,7 +1,7 @@
 from typing import List
 
 from confluent_kafka import Consumer as ConfluentKafkaConsumer
-from tdm_ingestion.ingestion import Consumer, Message
+from tdm_ingestion.ingestion import Consumer
 
 
 class KafkaConsumer(Consumer):
@@ -23,6 +23,6 @@ class KafkaConsumer(Consumer):
         self.consumer = ConfluentKafkaConsumer(params)
         self.consumer.subscribe(self.topics)
 
-    def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[Message]:
-        return [Message(m.key(), m.value()) for m in
+    def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[str]:
+        return [m.value() for m in
                 self.consumer.consume(max_records, timeout_s)]

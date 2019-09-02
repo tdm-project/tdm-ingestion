@@ -1,4 +1,3 @@
-
 ingester:
   class: tdm_ingestion.ingestion.BasicIngester
   args:
@@ -10,11 +9,25 @@ ingester:
         auto.offset.reset: beginning
         topics:
           - test
+      #class: tdm_ingestion.consumers.tdmq_consumer.TDMQConsumer
+      #args:
+      #  client:
+      #    class: tdm_ingestion.tdmq.remote.Client
+      #    args:
+      #      url: http://web:8000
+      #  entity_type:
+      #      class: tdm_ingestion.models.Entity_type
+      #      args:
+      #        _id: PointWeatherObserver
+      #        category: 'sensor'
+      #  bucket: 60
+      #  operation: avg
+
     storage:
-      class: tdm_ingestion.storage.base.CachedStorage
+      class: tdm_ingestion.storage.tdmq.CachedStorage
       args:
         client:
-          class: tdm_ingestion.storage.remote_client.Client
+          class: tdm_ingestion.tdmq.remote.Client
           args:
             url: http://web:8000
     converter:

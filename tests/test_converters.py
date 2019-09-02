@@ -3,8 +3,7 @@ import unittest
 
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter, \
     CachedNgsiConverter
-from tdm_ingestion.ingestion import Message
-from tdm_ingestion.models import SensorType, Sensor
+from tdm_ingestion.models import Source
 
 
 class TestNgsiConverter(unittest.TestCase):
@@ -34,13 +33,13 @@ class TestNgsiConverter(unittest.TestCase):
 
     def _test_convert(self, converter):
         timeseries_list = converter.convert(
-            [Message('', json.dumps(TestNgsiConverter.message))])
+            [json.dumps(TestNgsiConverter.message)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].data,
                          {'windDirection': 174.545, 'windSpeed': 0.0})
         self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'),
                          '2018-07-16T20:51:33')
-        self.assertEqual(str(timeseries_list[0].source.name),
+        self.assertEqual(str(timeseries_list[0].source._id),
                          'esp8266-7806085.Davis')
 
     def test_ngsi_convert(self):
@@ -55,7 +54,7 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(len(converter.sensors), 1)
 
         self.assertTrue(
-            isinstance(list(converter.sensors.values())[0], Sensor))
+            isinstance(list(converter.sensors.values())[0], Source))
 
 
 if __name__ == '__main__':

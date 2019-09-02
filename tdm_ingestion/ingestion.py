@@ -1,19 +1,10 @@
 #!/usr/bin/python3
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Any
 
-from tdm_ingestion.models import TimeSeries
+from tdm_ingestion.models import Record
 from tdm_ingestion.utils import import_class
-
-
-class Message:
-    def __init__(self, key: str, value: str):
-        self.key = key
-        self.value = value
-
-    def __repr__(self):
-        return f'key: {self.key}, value {self.value}'
 
 
 class JsonBuildable:
@@ -27,19 +18,19 @@ class Consumer(ABC, JsonBuildable):
 
     @abstractmethod
     def poll(self, timeout_s: int = -1,
-             max_records: int = -1) -> List[Message]:
+             max_records: int = -1) -> List[Any]:
         pass
 
 
 class Storage(ABC, JsonBuildable):
     @abstractmethod
-    def write(self, messages: List[TimeSeries]):
+    def write(self, messages: List[Record]):
         pass
 
 
 class MessageConverter(ABC, JsonBuildable):
     @abstractmethod
-    def convert(self, messages: List[Message]) -> List[TimeSeries]:
+    def convert(self, messages: List[Any]) -> List[Record]:
         pass
 
 
@@ -54,26 +45,33 @@ class Ingester(ABC, JsonBuildable):
 
 
 class BasicIngester(Ingester):
+    # TODO: refactor so that it behaves as a pipeline
     @classmethod
     def create_from_json(cls, json: Dict) -> "Ingester":
         consumer = import_class(json['consumer']['class']).create_from_json(
             json['consumer']['args'])
-
+        logging.debug('consumer %s', consumer)
         storage = import_class(json['storage']['class']).create_from_json(
             json['storage']['args'])
-        converter = import_class(json['converter']['class']).create_from_json(
-            json['converter']['args'])
-        return cls(consumer, storage, converter)
+        if 'converter' in json:
+            converter = import_class(
+                json['converter']['class']).create_from_json(
+                json['converter']['args'])
+            return cls(consumer, storage, converter)
+        return cls(consumer, storage)
 
     def __init__(self, consumer: Consumer, storage: Storage,
-                 converter: MessageConverter):
+                 converter: MessageConverter = None):
         self.consumer = consumer
         self.storage = storage
         self.converter = converter
 
     def process(self, *args, **kwargs):
-        self.storage.write(
-            self.converter.convert(self.consumer.poll(*args, **kwargs)))
+        if self.converter:
+            self.storage.write(
+                self.converter.convert(self.consumer.poll(*args, **kwargs)))
+        else:
+            self.storage.write(self.consumer.poll(*args, **kwargs))
 
     def process_forever(self, *args, **kwargs):
         while True:
@@ -115,6 +113,11 @@ if __name__ == '__main__':
 
         ingester = import_class(conf['ingester']['class']).create_from_json(
             conf['ingester']['args'])
-        ingester_process_args = conf['ingester']['process']
 
-        ingester.process_forever(**ingester_process_args)
+        ingester_process_args = conf['ingester']['process'] \
+            if 'process' in conf['ingester'] else {}
+
+        process_method = ingester.process_forever if \
+            conf['ingester'].get('process_forever', True) else \
+            ingester.process
+        process_method(**ingester_process_args)

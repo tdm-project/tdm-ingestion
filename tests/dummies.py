@@ -3,12 +3,14 @@ import datetime
 import json
 import random
 import uuid
-from typing import List, AnyStr, Dict
+from collections import defaultdict
+from typing import List, AnyStr, Dict, Any, Union
 
-from tdm_ingestion.ingestion import Consumer, Storage, TimeSeries, Message, \
+from tdm_ingestion.ingestion import Consumer, Storage, Record, \
     MessageConverter
-from tdm_ingestion.models import Sensor, SensorType
-from tdm_ingestion.storage.base import Client
+from tdm_ingestion.models import Source, EntityType
+from tdm_ingestion.storage.ckan import CkanClient
+from tdm_ingestion.tdmq import Client
 
 
 class DummyStorage(Storage):
@@ -19,61 +21,73 @@ class DummyStorage(Storage):
     def __init__(self):
         self.messages = []
 
-    def write(self, messages: List[TimeSeries]):
+    def write(self, messages: List[Record]):
         self.messages += messages
 
 
-class DummyClient(Client):
+class DummyTDMQClient(Client):
 
     def __init__(self):
-        self.sensors = {}
-        self.sensor_types = {}
-        self.time_series = []
+        self.sources = {}
+        self.sources_by_types = defaultdict(list)
+        self.entity_types = {}
+        self.time_series = defaultdict(list)
 
     def sources_count(self, query: Dict) -> int:
         try:
-            return len([self.sensors[query['name']]])
+            return len([self.sources[query['name']]])
         except KeyError:
             return 0
 
-    def sensor_types_count(self, query: Dict) -> int:
+    def entity_types_count(self, query: Dict) -> int:
         try:
-            return len([self.sensor_types[query['name']]])
+            return len([self.entity_types[query['name']]])
         except KeyError:
             return 0
 
-    def create_entity_types(self, sensor_types: List[SensorType]) -> List[
+    def create_entity_types(self, sensor_types: List[EntityType]) -> List[
         AnyStr]:
-        self.sensor_types.update({s.name: s for s in sensor_types})
+        self.entity_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
-    def create_sources(self, sensors: List[Sensor]) -> List[AnyStr]:
-        self.sensors.update({s.name: s for s in sensors})
-        return [s.name for s in sensors]
+    def create_sources(self, sources: List[Source]) -> List[AnyStr]:
+        for source in sources:
+            self.sources[source._id] = source
+            self.sources_by_types[source.type.name].append(source)
+        return [s._id for s in sources]
 
-    def create_time_series(self, time_series: List[TimeSeries]):
-        self.time_series += time_series
+    def create_time_series(self, time_series: List[Record]):
+        for ts in time_series:
+            self.time_series[ts.source._id].append(ts)
+            self.create_sources([ts.source])
+
+    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
+        Record]:
+        return self.time_series[source._id]
 
     def get_entity_types(self, _id: AnyStr = None,
-                         query: Dict = None) -> SensorType:
+                         query: Dict = None) -> EntityType:
         """
             only query by name is supported
         """
         k = _id if _id else query['name']
         try:
-            return self.sensor_types[k]
+            return self.entity_types[k]
         except KeyError:
             raise Client.NotFound
 
-    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Sensor:
-        """
-            only query by name is supported
-        """
-        k = _id if _id else query['name']
-        try:
-            return self.sensors[k]
-        except KeyError:
-            raise Client.NotFound
+    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Union[
+        Source, List[Source]]:
+        if _id is None and query is None:
+            return list(self.sources.values())
+        elif _id:
+            try:
+                return self.sources[_id]
+            except KeyError:
+                raise Client.NotFound
+        elif query:
+            if 'entity_type' in query:
+                return self.sources_by_types[query['entity_type']]
 
 
 class DummyConsumer(Consumer):
@@ -101,17 +115,17 @@ class DummyConsumer(Consumer):
         }
     }
 
-    def poll(self, timeout_ms=0, max_records=0) -> List[Message]:
-        return [Message('key', json.dumps(DummyConsumer.message))]
+    def poll(self, timeout_ms=0, max_records=0) -> List[str]:
+        return [json.dumps(DummyConsumer.message)]
 
 
 class DummyConverter(MessageConverter):
-    def convert(self, messages: List[Message]) -> List[TimeSeries]:
+    def convert(self, messages: List[str]) -> List[Record]:
         series = []
         for m in messages:
-            m = json.loads(m.value)
-            series.append(TimeSeries(datetime.datetime.now(), uuid.uuid4(),
-                                     random.random()))
+            m = json.loads(m)
+            series.append(Record(datetime.datetime.now(), uuid.uuid4(),
+                                 random.random()))
 
         return series
 
@@ -120,9 +134,10 @@ class AsyncDummyConsumer(Consumer):
     def __init__(self):
         self.consumer = DummyConsumer()
 
-    async def poll(self, timeout_s: int = -1, max_records: int = -1
-                   ) -> List[Message]:
+    async def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[
+        str]:
         return self.consumer.poll(timeout_s, max_records)
+
 
 class AsyncDummyStorage(Storage):
     @staticmethod
@@ -132,5 +147,18 @@ class AsyncDummyStorage(Storage):
     def __init__(self):
         self.messages = []
 
-    async def write(self, messages: List[TimeSeries]):
+    async def write(self, messages: List[Record]):
         self.messages += messages
+
+
+class DummyCkan(CkanClient):
+    def __init__(self):
+        self.resources = {}
+
+    def create_resource(self, resource: str, dataset: str,
+                        records: List[Dict[str, Any]],
+                        upsert: bool = False) -> None:
+        self.resources[resource] = dict(
+            dataset=dataset,
+            records=records
+        )
