@@ -35,17 +35,18 @@ class RemoteCkan(CkanClient):
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
         logging.debug('create_resource %s %s, %s', resource, dataset, records)
-        fields = [{"id": field} for field in records[0].keys()]
-        data = dict(
-            resource=dict(package_id=dataset, name=resource),
-            fields=fields,
-            records=records
-        )
+        if records:
+            fields = [{"id": field} for field in records[0].keys()]
+            data = dict(
+                resource=dict(package_id=dataset, name=resource),
+                fields=fields,
+                records=records
+            )
 
-        self.client.post(
-            f'{self.base_url}/api/3/action/datastore_create',
-            json=jsons.dumps(data),
-            headers=self.headers)
+            self.client.post(
+                f'{self.base_url}/api/3/action/datastore_create',
+                json=jsons.dumps(data),
+                headers=self.headers)
 
 
 class CkanStorage(Storage):

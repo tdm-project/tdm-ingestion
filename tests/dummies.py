@@ -6,6 +6,7 @@ import uuid
 from collections import defaultdict
 from typing import List, AnyStr, Dict, Any, Union
 
+from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.ingestion import Consumer, Storage, Record, \
     MessageConverter
 from tdm_ingestion.models import Source, EntityType
@@ -162,3 +163,13 @@ class DummyCkan(CkanClient):
             dataset=dataset,
             records=records
         )
+
+
+class DummyHttp(Http):
+    def post(self, url: str, json: Union[List, Dict, str] = None,
+             headers: Dict[str, str] = None) -> Union[List, Dict]:
+        pass
+
+    def get(self, url, params: Union[List, Dict] = None,
+            headers: Dict[str, str] = None) -> Union[List, Dict]:
+        pass

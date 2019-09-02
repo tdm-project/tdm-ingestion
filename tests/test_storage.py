@@ -4,9 +4,9 @@ import unittest
 import jsons
 from tdm_ingestion.models import EntityType, Source, Point, \
     Record
-from tdm_ingestion.storage.ckan import CkanStorage
+from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
-from tests.dummies import DummyTDMQClient, DummyCkan
+from tests.dummies import DummyTDMQClient, DummyCkan, DummyHttp
 
 now = datetime.datetime.now(datetime.timezone.utc)
 sensors_type = [
@@ -102,6 +102,16 @@ class TestCachedStorage(unittest.TestCase):
                                    'value': 1.0}]}}
         )
 
+    def test_write_ckan_empty(self):
+        storage = CkanStorage(
+            DummyCkan(),
+            'lisa',
+            'test')
+        storage.write([])
+
+    def test_ckan_client_write_no_records(self):
+        client = RemoteCkan('base_url', DummyHttp(), 'api_key')
+        client.create_resource('resource', 'dataset', [])
 
 if __name__ == '__main__':
     unittest.main()
