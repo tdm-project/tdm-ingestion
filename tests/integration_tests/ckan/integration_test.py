@@ -5,7 +5,8 @@ import subprocess
 
 import requests
 from tests.integration_tests.utils import \
-    docker_compose_up, get_service_port, docker_compose_down, try_func
+    docker_compose_up, get_service_port, docker_compose_down, try_func, \
+    docker_compose_restart
 
 logging.basicConfig(level=logging.DEBUG)
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -36,6 +37,7 @@ def check_ckan():
     return True
 
 
+
 try:
     docker_compose_up(docker_yaml)
     subprocess.check_call(['./init.sh'])
@@ -48,6 +50,7 @@ try:
     with open('data/records.json') as f:
         requests.post(f'{base_url}/records', json=json.load(f))
 
+    docker_compose_restart(docker_yaml, 'ingester')
     try_func(check_ckan, 2, 10)
 
 finally:

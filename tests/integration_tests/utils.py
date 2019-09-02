@@ -7,6 +7,11 @@ def docker_compose_up(docker_yaml):
     subprocess.check_call(['docker-compose', '-f', docker_yaml, 'up', '-d'])
 
 
+def docker_compose_restart(docker_yaml, service):
+    subprocess.check_call(
+        ['docker-compose', '-f', docker_yaml, 'restart', service])
+
+
 def docker_compose_down(docker_yaml):
     subprocess.check_call(['docker-compose', '-f', docker_yaml, 'down'])
 
