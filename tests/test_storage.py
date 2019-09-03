@@ -1,5 +1,6 @@
-import datetime
 import unittest
+from datetime import datetime, timezone
+from unittest.mock import patch
 
 import jsons
 from tdm_ingestion.models import EntityType, Source, Point, \
@@ -8,7 +9,7 @@ from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
 from tests.dummies import DummyTDMQClient, DummyCkan, DummyHttp
 
-now = datetime.datetime.now(datetime.timezone.utc)
+now = datetime.now(timezone.utc)
 sensors_type = [
     EntityType('st1', 'type1'),
     EntityType('st2', 'type2')
@@ -112,6 +113,18 @@ class TestCachedStorage(unittest.TestCase):
     def test_ckan_client_write_no_records(self):
         client = RemoteCkan('base_url', DummyHttp(), 'api_key')
         client.create_resource('resource', 'dataset', [])
+
+    def test_ckan_resource_name(self):
+        now = datetime.now()
+        with patch('test_storage.datetime') as mock_datetime:
+            mock_datetime.now.return_value = now
+            resource = 'resource-%Y-%m-%d'
+            storage = CkanStorage(
+                DummyCkan(),
+                'dataset',
+                resource)
+        self.assertEqual(storage.resource, now.strftime(resource))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import List, Dict, Any
 
 import jsons
@@ -12,7 +13,8 @@ from tdm_ingestion.utils import import_class
 class CkanClient(ABC):
     @abstractmethod
     def create_resource(self,
-                        resource: str, dataset: str,
+                        resource: str,
+                        dataset: str,
                         records: List[Dict[str, Any]],
                         upsert: bool = False
                         ) -> None:
@@ -65,7 +67,7 @@ class CkanStorage(Storage):
                  resource: str, upsert: bool = False):
         self.client = client
         self.dataset = dataset
-        self.resource = resource
+        self.resource = datetime.now().strftime(resource)
         self.upsert = upsert
 
     def write(self, records: List[Record]):
