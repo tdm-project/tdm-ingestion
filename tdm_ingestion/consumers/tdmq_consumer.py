@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict, Union, Tuple
 
 from tdm_ingestion.ingestion import Consumer
 from tdm_ingestion.models import EntityType
@@ -14,7 +14,34 @@ class BucketOperation(Enum):
     count = 'count'
 
 
+class TimeDelta(Enum):
+    one_hour = 'one_hour'
+    one_day = 'one_day'
+
+    def get_before_after(self, time: datetime = None) -> Tuple[
+        datetime, datetime]:
+        now = time or datetime.utcnow()
+        if self.value == 'one_hour':
+            after = (now - timedelta(hours=1)).replace(
+                minute=0,
+                second=0,
+                microsecond=0)
+            before = after + timedelta(minutes=59, seconds=59,
+                                       microseconds=999999)
+        else:
+            after = (now - timedelta(days=1)).replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+            before = after + timedelta(
+                hours=23, minutes=59, seconds=59,
+                microseconds=999999)
+        return before, after
+
+
 class TDMQConsumer(Consumer):
+
     @classmethod
     def create_from_json(cls, json: Dict):
         json = json or {}
@@ -22,8 +49,14 @@ class TDMQConsumer(Consumer):
         return cls(
             import_class(client['class']).create_from_json(client['args']),
             EntityType(**json['entity_type']['args']),
-            json['bucket'],
-            json['operation']
+            json.get('bucket'),
+            json.get('operation'),
+            json.get('before'),
+            json.get('after'),
+            TimeDelta(json['time_from_now']
+                      ) if 'time_from_now' in json else
+            None
+
         )
 
     def __init__(self,
@@ -32,13 +65,22 @@ class TDMQConsumer(Consumer):
                  bucket: float = None,
                  operation: BucketOperation = None,
                  before: Union[datetime, str] = None,
-                 after: Union[datetime, str] = None):
+                 after: Union[datetime, str] = None,
+                 time_from_now: TimeDelta = None
+                 ):
         self.client = client
         self.entity_type = entity_type
         self.bucket = bucket
         self.operation = operation
         self.after = after
         self.before = before
+        if time_from_now:
+            self.before, self.after = time_from_now.get_before_after()
+
+        else:
+            self.after = after
+            self.before = before
+
         if self.bucket:
             assert self.operation is not None
 
