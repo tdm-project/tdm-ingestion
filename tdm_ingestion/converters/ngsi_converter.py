@@ -14,9 +14,12 @@ class NgsiConverter(MessageConverter):
     non_properties = {'latitude', 'longitude', 'timestamp', 'dateObserved',
                       'location'}
     to_skip = {'dateObserved', 'location', 'latitude', 'longitude'}
-    fiware_service_path_to_sensor_type = {'/cagliari/edge/meteo': EntityType(
-        'WeatherObserver', 'Station'
-    )}
+    fiware_service_path_to_sensor_type = {
+        '/cagliari/edge/meteo': EntityType('WeatherObserver', 'Station'),
+        '/cagliari/edge/energy': EntityType('EnergyConsumptionMonitor',
+                                            'Station'),
+
+    }
 
     @staticmethod
     def get_fiware_service_path(msg: Dict):
