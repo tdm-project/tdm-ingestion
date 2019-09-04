@@ -20,6 +20,11 @@ class CkanClient(ABC):
                         ) -> None:
         pass
 
+    def delete_resource(self, resource_id: str):
+        pass
+
+    def get_dataset_info(self, dataset: str) -> Dict:
+        pass
 
 class RemoteCkan(CkanClient):
     @classmethod
@@ -33,11 +38,32 @@ class RemoteCkan(CkanClient):
         self.client = client
         self.headers = {'Authorization': api_key}
 
+    def delete_resource(self, resource_id: str):
+        logging.debug('deleteing resource %s', resource_id)
+        self.client.post(
+            f'{self.base_url}/api/3/action/resource_delete',
+            headers=self.headers,
+            json=jsons.dumps(dict(id=resource_id))
+        )
+
+    def get_dataset_info(self, dataset: str) -> Dict:
+        return self.client.get(
+            f'{self.base_url}/api/3/action/package_show',
+            headers=self.headers,
+            params=dict(id=dataset)
+        )['result']
+
     def create_resource(self, resource: str, dataset: str,
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
         logging.debug('create_resource %s %s, %s', resource, dataset, records)
         if records:
+            if upsert:
+                logging.debug('upsert is true, remove resource first')
+                for r in self.get_dataset_info(dataset)['resources']:
+                    if r['name'] == resource:
+                        self.delete_resource(r['id'])
+
             fields = [{"id": field} for field in records[0].keys()]
             data = dict(
                 resource=dict(package_id=dataset, name=resource),
@@ -60,7 +86,7 @@ class CkanStorage(Storage):
                 client['args']),
             json['dataset'],
             json['resource'],
-            json.get('upsert', None)
+            json.get('upsert', False)
         )
 
     def __init__(self, client: CkanClient, dataset: str,
@@ -81,4 +107,4 @@ class CkanStorage(Storage):
                 },
                 **ts.data
             }
-            for ts in records])
+            for ts in records], upsert=self.upsert)
