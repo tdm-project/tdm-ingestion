@@ -13,5 +13,5 @@ setup(
         'sync': ['confluent-kafka'],
         'async': ['aiokafka', 'aiohttp']
     },
-    scripts=['tdm_ingestion/ingestion.py']
+    scripts=['scripts/kafka_ingestion.py']
 )

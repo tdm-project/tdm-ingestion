@@ -1,8 +1,10 @@
+import logging
 from typing import List
 
 from confluent_kafka import Consumer as ConfluentKafkaConsumer
 from tdm_ingestion.ingestion import Consumer
 
+logger = logging.getLogger(__name__)
 
 class KafkaConsumer(Consumer):
 
@@ -20,6 +22,7 @@ class KafkaConsumer(Consumer):
             'group.id': group_id
         }
         params.update(kwargs)
+        logger.debug('creating consumer with params %s', params)
         self.consumer = ConfluentKafkaConsumer(params)
         self.consumer.subscribe(self.topics)
 
