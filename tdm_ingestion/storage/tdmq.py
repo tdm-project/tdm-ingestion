@@ -21,9 +21,10 @@ class CachedStorage(BaseStorage):
         return CachedStorage(
             import_class(client['class']).create_from_json(client['args']))
 
-    def _idempotent_create(self, obj: Union[EntityType, Source]):
+    def _idempotent_create(self, obj: Source):
         if obj._id not in self._cache:
-            if self.client.sources_count(query={'name': obj._id}) <= 0:
+            logging.debug('querying if source %s exists', obj._id)
+            if self.client.sources_count(query={'id': obj._id}) <= 0:
                 self.client.create_sources([obj])
             self._cache.add(obj._id)
 
