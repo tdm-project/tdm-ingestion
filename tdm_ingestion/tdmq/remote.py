@@ -40,6 +40,7 @@ class Client(BaseClient):
                               Model.list_to_json(sensors))
 
     def create_time_series(self, time_series: List[Record]):
+        logging.debug('creating timeseries %s', time_series)
         return self.http.post(self.records_url,
                               Model.list_to_json(time_series))
 
@@ -79,10 +80,10 @@ class Client(BaseClient):
             self.http.get(f'{self.sources_url}', params=query)]
 
     def sources_count(self, query):
-        return len(self.http.get(self.sources_url, params=query)) > 0
+        return len(self.http.get(self.sources_url, params=query))
 
     def entity_types_count(self, query: Dict):
-        return len(self.http.get(self.entity_types_url, params=query)) > 0
+        return len(self.http.get(self.entity_types_url, params=query))
 
 
 class AsyncClient(Client):
