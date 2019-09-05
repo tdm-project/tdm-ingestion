@@ -29,7 +29,8 @@ if __name__ == '__main__':
     parser.add_argument('--ckan_api_key', dest='ckan_api_key', required=True)
     parser.add_argument('--ckan_dataset', dest='ckan_dataset', required=True)
     parser.add_argument('--ckan_resource', dest='ckan_resource', required=True)
-    parser.add_argument('--upsert', dest='upsert', default=False)
+    parser.add_argument('--upsert', dest='upsert', default=False,
+                        action='store_true')
 
     args = parser.parse_args()
     logging_level = logging.DEBUG if args.debug else logging.INFO
