@@ -25,6 +25,7 @@ class KafkaConsumer(Consumer):
         logger.debug('creating consumer with params %s', params)
         self.consumer = ConfluentKafkaConsumer(params)
         self.consumer.subscribe(self.topics)
+        logger.debug('subscribed to topics %s', topics)
 
     def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[str]:
         return [m.value() for m in
