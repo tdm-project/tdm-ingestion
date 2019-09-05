@@ -44,9 +44,9 @@ class RefMeasure(Measure):
 
 
 class EntityType(Model):
-    def __init__(self, _id: str, category: str):
+    def __init__(self, _id: str, category: str = None):
         self.name = _id
-        self.category = category or ["sensor"]
+        self.category = category or "sensor"
 
     def __repr__(self):
         return f'SensorType {self.name}'
