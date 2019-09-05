@@ -22,7 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('--before', dest='before')
     parser.add_argument('--after', dest='after')
     parser.add_argument('--entity_type', dest='entity_type', required=True,
-                        choices=['PointWeatherObserver'])
+                        choices=['PointWeatherObserver', 'WeatherObserver',
+                                 'EnergyConsumptionMonitor'])
 
     parser.add_argument('--ckan_url', dest='ckan_url', required=True)
     parser.add_argument('--ckan_api_key', dest='ckan_api_key', required=True)
