@@ -42,7 +42,7 @@ if __name__ == '__main__':
         before, after = TimeDelta(args.time_delta_before).get_before_after()
     else:
         before, after = args.before, args.after
-    assert args.before or args.after
+    assert before or after
 
     consumer = TDMQConsumer(
         Client(args.tdmq_url),
