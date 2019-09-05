@@ -45,9 +45,6 @@ services:
     environment:
       CONF: ${CONF} #sync or async
 
-    volumes:
-      - "./sync-conf.yaml:/data/sync-conf.yaml"
-      - "./async-conf.yaml:/data/async-conf.yaml"
     command:
       - kafka_ingestion.py
       - -d
