@@ -12,7 +12,7 @@ env:
     - IMG=tdmproject/tdm-ingestion
   matrix:
     - BACKEND=sync
-    - BACKEND=async
+#    - BACKEND=async
 
 
 install:

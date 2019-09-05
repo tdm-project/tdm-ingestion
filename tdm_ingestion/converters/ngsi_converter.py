@@ -96,12 +96,11 @@ class NgsiConverter(MessageConverter):
         for m in messages:
             try:
                 m_dict = json.loads(m)
-            except json.decoder.JSONDecodeError:
-                logging.error('skipping message %s, error while jsondecoding',
-                              m)
+                timeseries_list.append(self._create_models(m_dict))
+            except Exception as ex:
+                logging.error('exception %s with message %s', ex, m)
                 continue
 
-            timeseries_list.append(self._create_models(m_dict))
 
         return timeseries_list
 

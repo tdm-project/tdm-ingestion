@@ -11,8 +11,8 @@ from tdm_ingestion.tdmq.base import Client as BaseClient
 
 class Client(BaseClient):
 
-    def __init__(self, http_client: Http, url, api_version='v0.0'):
-        self.http = http_client
+    def __init__(self, url: str, http_client: Http = None, api_version='v0.0'):
+        self.http = http_client or Requests()
         self.url = url
         logging.debug("url %s", self.url)
         self.api_version = api_version

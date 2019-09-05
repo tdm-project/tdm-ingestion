@@ -25,11 +25,28 @@ services:
     environment:
       CONF: ${CONF} #sync or async
 
-    volumes:
-      - "./sync-conf.yaml:/data/sync-conf.yaml"
     command:
-      - -d
-      - /data/${CONF}-conf.yaml
+      - ckan_ingestion.py
+      - --tdmq_url
+      - http://web:8000
+      - --bucket
+      - '60'
+      - --op
+      - avg
+      - --after
+      - '2019-01-01T00:00:00+00:00'
+      - --before
+      - '2029-01-01T00:00:00+00:00'
+      - --entity_type
+      - PointWeatherObserver
+      - --ckan_url
+      - http://ckan:5000
+      - --ckan_api_key
+      - tester
+      - --ckan_dataset
+      - lisa
+      - --ckan_resource
+      - test
 
     restart: on-failure
 

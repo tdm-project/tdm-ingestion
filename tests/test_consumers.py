@@ -33,7 +33,7 @@ class TestTDMQConsumer(unittest.TestCase):
 
 class TestTimeDelta(unittest.TestCase):
     def test_get_before_after_one_hour(self):
-        td = TimeDelta('one_hour')
+        td = TimeDelta.one_hour
         time = datetime.datetime(year=2000, day=1, month=12, hour=0, minute=0)
         before, after = td.get_before_after(time)
         self.assertEqual(before.year, 2000)
@@ -49,7 +49,7 @@ class TestTimeDelta(unittest.TestCase):
         self.assertEqual(after.minute, 0)
 
     def test_get_before_after_one_day(self):
-        td = TimeDelta('one_day')
+        td = TimeDelta('1d')
         time = datetime.datetime(year=2000, day=1, month=12, hour=0, minute=0)
         before, after = td.get_before_after(time)
         self.assertEqual(before.year, 2000)

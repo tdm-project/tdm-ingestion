@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Any, Dict, Union, Tuple
+from typing import List, Dict, Union, Tuple
 
 from tdm_ingestion.ingestion import Consumer
-from tdm_ingestion.models import EntityType
+from tdm_ingestion.models import EntityType, Record
 from tdm_ingestion.tdmq import Client
 from tdm_ingestion.utils import import_class
 
@@ -15,13 +15,13 @@ class BucketOperation(Enum):
 
 
 class TimeDelta(Enum):
-    one_hour = 'one_hour'
-    one_day = 'one_day'
+    one_hour = '1h'
+    one_day = '1d'
 
     def get_before_after(self, time: datetime = None) -> Tuple[
         datetime, datetime]:
         now = time or datetime.utcnow()
-        if self.value == 'one_hour':
+        if self == TimeDelta.one_hour:
             after = (now - timedelta(hours=1)).replace(
                 minute=0,
                 second=0,
@@ -52,11 +52,7 @@ class TDMQConsumer(Consumer):
             json.get('bucket'),
             json.get('operation'),
             json.get('before'),
-            json.get('after'),
-            TimeDelta(json['time_from_now']
-                      ) if 'time_from_now' in json else
-            None
-
+            json.get('after')
         )
 
     def __init__(self,
@@ -65,8 +61,7 @@ class TDMQConsumer(Consumer):
                  bucket: float = None,
                  operation: BucketOperation = None,
                  before: Union[datetime, str] = None,
-                 after: Union[datetime, str] = None,
-                 time_from_now: TimeDelta = None
+                 after: Union[datetime, str] = None
                  ):
         self.client = client
         self.entity_type = entity_type
@@ -74,17 +69,13 @@ class TDMQConsumer(Consumer):
         self.operation = operation
         self.after = after
         self.before = before
-        if time_from_now:
-            self.before, self.after = time_from_now.get_before_after()
-
-        else:
-            self.after = after
-            self.before = before
+        self.after = after
+        self.before = before
 
         if self.bucket:
             assert self.operation is not None
 
-    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[Any]:
+    def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[Record]:
         sources = self.client.get_sources(
             query={'entity_type': self.entity_type.name})
         res = []

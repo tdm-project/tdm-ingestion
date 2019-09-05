@@ -45,11 +45,15 @@ services:
     environment:
       CONF: ${CONF} #sync or async
 
-    volumes:
-      - "./sync-conf.yaml:/data/sync-conf.yaml"
-      - "./async-conf.yaml:/data/async-conf.yaml"
     command:
-       - -d
-       - /data/${CONF}-conf.yaml
+      - kafka_ingestion.py
+      - -d
+      - --bootstrap_server
+      - kafka:29092
+      - --topics
+      - test
+      - --from_beginning
+      - --tdmq_url
+      - http://web:8000
 
     restart: on-failure

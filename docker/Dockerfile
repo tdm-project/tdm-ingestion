@@ -5,4 +5,4 @@ COPY ./tdm_ingestion_dist /tdm
 WORKDIR /tdm
 RUN pip install --upgrade pip && \
     pip install -e .[$BACKEND]
-ENTRYPOINT ["ingestion.py"]
+#ENTRYPOINT ["ingestion.py"]
