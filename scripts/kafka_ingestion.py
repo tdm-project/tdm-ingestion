@@ -3,7 +3,6 @@ import logging
 
 from tdm_ingestion.consumers.confluent_kafka_consumer import KafkaConsumer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
-from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.storage.tdmq import CachedStorage
 from tdm_ingestion.tdmq.remote import Client
 
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     consumer = KafkaConsumer(args.bootstrap_server.split(','),
                              args.topics.split(','),
                              **kwargs)
-    tdmq = CachedStorage(Client(Requests(), args.tdmq_url))
+    tdmq = CachedStorage(Client(args.tdmq_url))
     converter = NgsiConverter()
 
     while True:
