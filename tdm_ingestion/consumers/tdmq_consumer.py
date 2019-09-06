@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union
 
 from tdm_ingestion.ingestion import Consumer
 from tdm_ingestion.models import EntityType, Record
@@ -12,32 +12,6 @@ class BucketOperation(Enum):
     avg = 'avg'
     sum = 'sum'
     count = 'count'
-
-
-class TimeDelta(Enum):
-    one_hour = '1h'
-    one_day = '1d'
-
-    def get_before_after(self, time: datetime = None) -> Tuple[
-        datetime, datetime]:
-        now = time or datetime.utcnow()
-        if self == TimeDelta.one_hour:
-            after = (now - timedelta(hours=1)).replace(
-                minute=0,
-                second=0,
-                microsecond=0)
-            before = after + timedelta(minutes=59, seconds=59,
-                                       microseconds=999999)
-        else:
-            after = (now - timedelta(days=1)).replace(
-                hour=0,
-                minute=0,
-                second=0,
-                microsecond=0)
-            before = after + timedelta(
-                hours=23, minutes=59, seconds=59,
-                microseconds=999999)
-        return before, after
 
 
 class TDMQConsumer(Consumer):

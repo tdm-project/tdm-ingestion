@@ -2,9 +2,10 @@ import datetime
 import unittest
 
 from tdm_ingestion.consumers.tdmq_consumer import TDMQConsumer, \
-    BucketOperation, TimeDelta
+    BucketOperation
 from tdm_ingestion.models import EntityType, Source, Point, \
     Record
+from tdm_ingestion.utils import TimeDelta
 from tests.dummies import DummyTDMQClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
@@ -49,7 +50,7 @@ class TestTimeDelta(unittest.TestCase):
         self.assertEqual(after.minute, 0)
 
     def test_get_before_after_one_day(self):
-        td = TimeDelta('1d')
+        td = TimeDelta.one_day
         time = datetime.datetime(year=2000, day=1, month=12, hour=0, minute=0)
         before, after = td.get_before_after(time)
         self.assertEqual(before.year, 2000)
