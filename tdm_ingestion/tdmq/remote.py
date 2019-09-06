@@ -5,8 +5,8 @@ from typing import Dict, List, Union, Any
 
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.http_client.requests import Requests
-from tdm_ingestion.models import EntityType, Model, Record, Source, Point
 from tdm_ingestion.tdmq.base import Client as BaseClient
+from tdm_ingestion.tdmq.models import EntityType, Record, Source, Point, Model
 
 
 class Client(BaseClient):
@@ -23,11 +23,6 @@ class Client(BaseClient):
         self.records_url = os.path.join(self.url,
                                         f'api/{api_version}/records')
 
-    @staticmethod
-    def create_from_json(json: Dict):
-        logging.debug("building Client with %s", json)
-        # TODO works only with Requests client
-        return Client(Requests(), json['url'])
 
     def create_entity_types(self, sensor_types: List[EntityType]
                             ) -> List[str]:

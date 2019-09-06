@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 import jsons
-from tdm_ingestion.models import EntityType, Source, Point, \
-    Record
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
+from tdm_ingestion.tdmq.models import EntityType, Source, Point, \
+    Record
 from tdm_ingestion.utils import DateTimeFormatter
 from tests.dummies import DummyTDMQClient, DummyCkan, DummyHttp
 

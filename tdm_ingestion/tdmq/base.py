@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
 
-from tdm_ingestion.models import EntityType, Source, Record
+from tdm_ingestion.tdmq.models import EntityType, Source, Record
 
 
 class Client(ABC):

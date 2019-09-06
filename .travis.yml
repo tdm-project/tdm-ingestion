@@ -10,13 +10,13 @@ services:
 env:
   global:
     - IMG=tdmproject/tdm-ingestion
-  matrix:
-    - BACKEND=sync
+#  matrix:
+#    - BACKEND=sync
 #    - BACKEND=async
 
 
 install:
-  - pip install -e .[$BACKEND]
+  - pip install -e .[confluent]
   - pip install kafka
 
 script:

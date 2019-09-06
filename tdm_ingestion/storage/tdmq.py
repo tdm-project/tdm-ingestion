@@ -2,15 +2,13 @@ import logging
 from typing import List, Dict, Type
 from typing import Union, Set
 
-from tdm_ingestion.ingestion import Record
-from tdm_ingestion.ingestion import Storage as BaseStorage
-from tdm_ingestion.models import EntityType, Source
 from tdm_ingestion.tdmq.base import Client
+from tdm_ingestion.tdmq.models import EntityType, Source, Record
 from tdm_ingestion.tdmq.remote import AsyncClient
 from tdm_ingestion.utils import import_class
 
 
-class CachedStorage(BaseStorage):
+class CachedStorage:
     def __init__(self, client: Client):
         self.client = client
         self._cache: Set = set()
@@ -35,7 +33,7 @@ class CachedStorage(BaseStorage):
             self.client.create_time_series(time_series)
 
 
-class AsyncCachedStorage(BaseStorage):
+class AsyncCachedStorage:
     # FIXME duplicated code
     def __init__(self, client: AsyncClient):
         self.client = client
