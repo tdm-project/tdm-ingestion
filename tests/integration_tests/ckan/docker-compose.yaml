@@ -22,11 +22,9 @@ services:
     depends_on:
       - web
       - ckan
-    environment:
-      CONF: ${CONF} #sync or async
 
     command:
-      - ckan_ingestion.py
+      - tdmq_ckan_ingestion.py
       - --tdmq_url
       - http://web:8000
       - --bucket

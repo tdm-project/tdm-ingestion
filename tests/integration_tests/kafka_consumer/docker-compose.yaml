@@ -42,11 +42,9 @@ services:
     depends_on:
       - web
       - kafka
-    environment:
-      CONF: ${CONF} #sync or async
 
     command:
-      - kafka_ingestion.py
+      - kafka_tdmq_ingestion.py
       - -d
       - --bootstrap_server
       - kafka:29092

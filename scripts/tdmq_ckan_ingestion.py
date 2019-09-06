@@ -2,8 +2,8 @@ import logging
 
 from tdm_ingestion.consumers.tdmq_consumer import TDMQConsumer
 from tdm_ingestion.http_client.requests import Requests
-from tdm_ingestion.models import EntityType
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
+from tdm_ingestion.tdmq.models import EntityType
 from tdm_ingestion.tdmq.remote import Client
 from tdm_ingestion.utils import TimeDelta, DateTimeFormatter
 
@@ -55,15 +55,17 @@ if __name__ == '__main__':
 
     consumer = TDMQConsumer(
         Client(args.tdmq_url),
-        EntityType(args.entity_type),
-        args.bucket, args.operation,
-        before, after
+
     )
     storage = CkanStorage(
         RemoteCkan(args.ckan_url, Requests(), args.ckan_api_key))
 
     storage.write(
-        consumer.poll(),
+        consumer.poll(
+            EntityType(args.entity_type),
+            args.bucket, args.operation,
+            before, after
+        ),
         args.ckan_dataset,
         resource_name,
         args.upsert)
