@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 import jsons
 from tdm_ingestion.http_client.base import Http
-from tdm_ingestion.models import Record
+from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
 
 

@@ -2,11 +2,12 @@ import logging
 from typing import List
 
 from confluent_kafka import Consumer as ConfluentKafkaConsumer
-from tdm_ingestion.ingestion import Consumer
+from tdm_ingestion.consumers.base import BaseKafkaConsumer
 
 logger = logging.getLogger(__name__)
 
-class KafkaConsumer(Consumer):
+
+class KafkaConsumer(BaseKafkaConsumer):
 
     def __init__(self,
                  bootstrap_servers: List[str],

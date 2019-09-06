@@ -3,7 +3,7 @@ import unittest
 
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter, \
     CachedNgsiConverter
-from tdm_ingestion.models import Source
+from tdm_ingestion.tdmq.models import Source
 
 
 class TestNgsiConverter(unittest.TestCase):

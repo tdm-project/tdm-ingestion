@@ -3,7 +3,7 @@ import unittest
 
 from tdm_ingestion.consumers.tdmq_consumer import TDMQConsumer, \
     BucketOperation
-from tdm_ingestion.models import EntityType, Source, Point, \
+from tdm_ingestion.tdmq.models import EntityType, Source, Point, \
     Record
 from tdm_ingestion.utils import TimeDelta
 from tests.dummies import DummyTDMQClient
@@ -27,9 +27,10 @@ class TestTDMQConsumer(unittest.TestCase):
     def test_poll(self):
         client = DummyTDMQClient()
         client.create_time_series(time_series)
-        consumer = TDMQConsumer(client, sources[0].type, 60,
-                                BucketOperation.avg, before=now)
-        self.assertEqual(len(consumer.poll()), 1)
+        consumer = TDMQConsumer(client)
+        self.assertEqual(len(consumer.poll(sources[0].type, 60,
+                                           BucketOperation.avg, before=now)),
+                         1)
 
 
 class TestTimeDelta(unittest.TestCase):

@@ -5,12 +5,11 @@ import re
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
-from tdm_ingestion.ingestion import MessageConverter
-from tdm_ingestion.models import Record, Geometry, Point, \
+from tdm_ingestion.tdmq.models import Record, Geometry, Point, \
     EntityType, Source
 
 
-class NgsiConverter(MessageConverter):
+class NgsiConverter:
     non_properties = {'latitude', 'longitude', 'timestamp', 'dateObserved',
                       'location'}
     to_skip = {'dateObserved', 'location', 'latitude', 'longitude'}
@@ -100,8 +99,6 @@ class NgsiConverter(MessageConverter):
             except Exception as ex:
                 logging.error('exception %s with message %s', ex, m)
                 continue
-
-
         return timeseries_list
 
     @staticmethod

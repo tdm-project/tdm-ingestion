@@ -1,23 +1,18 @@
 import datetime
-import datetime
 import json
 import random
 import uuid
 from collections import defaultdict
 from typing import List, AnyStr, Dict, Any, Union
 
+from tdm_ingestion.consumers.base import BaseKafkaConsumer
 from tdm_ingestion.http_client.base import Http
-from tdm_ingestion.ingestion import Consumer, Storage, Record, \
-    MessageConverter
-from tdm_ingestion.models import Source, EntityType
 from tdm_ingestion.storage.ckan import CkanClient
 from tdm_ingestion.tdmq import Client
+from tdm_ingestion.tdmq.models import Source, EntityType, Record
 
 
-class DummyStorage(Storage):
-    @staticmethod
-    def create_from_json(json: Dict) -> "Storage":
-        raise NotImplementedError
+class DummyTDMQStorage:
 
     def __init__(self):
         self.messages = []
@@ -91,7 +86,7 @@ class DummyTDMQClient(Client):
                 return self.sources_by_types[query['entity_type']]
 
 
-class DummyConsumer(Consumer):
+class DummyKafkaConsumer(BaseKafkaConsumer):
     message = {
         "headers": [{"fiware-service": "tdm"},
                     {"fiware-servicePath": "/cagliari/edge/meteo"},
@@ -120,7 +115,7 @@ class DummyConsumer(Consumer):
         return [json.dumps(DummyConsumer.message)]
 
 
-class DummyConverter(MessageConverter):
+class DummyConverter:
     def convert(self, messages: List[str]) -> List[Record]:
         series = []
         for m in messages:
@@ -129,27 +124,6 @@ class DummyConverter(MessageConverter):
                                  random.random()))
 
         return series
-
-
-class AsyncDummyConsumer(Consumer):
-    def __init__(self):
-        self.consumer = DummyConsumer()
-
-    async def poll(self, timeout_s: int = -1, max_records: int = -1) -> List[
-        str]:
-        return self.consumer.poll(timeout_s, max_records)
-
-
-class AsyncDummyStorage(Storage):
-    @staticmethod
-    def create_from_json(json: Dict) -> "Storage":
-        raise NotImplementedError
-
-    def __init__(self):
-        self.messages = []
-
-    async def write(self, messages: List[Record]):
-        self.messages += messages
 
 
 class DummyCkan(CkanClient):
