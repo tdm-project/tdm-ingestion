@@ -1,11 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import timedelta, datetime
 from typing import List, Dict, Any
 
 import jsons
 from tdm_ingestion.http_client.base import Http
-from tdm_ingestion.ingestion import Storage
 from tdm_ingestion.models import Record
 from tdm_ingestion.utils import import_class
 
@@ -25,6 +24,7 @@ class CkanClient(ABC):
 
     def get_dataset_info(self, dataset: str) -> Dict:
         pass
+
 
 class RemoteCkan(CkanClient):
     @classmethod
@@ -77,27 +77,30 @@ class RemoteCkan(CkanClient):
                 headers=self.headers)
 
 
-class CkanStorage(Storage):
-    @classmethod
-    def create_from_json(cls, json: Dict):
-        client = json['client']
-        return cls(
-            import_class(client['class']).create_from_json(
-                client['args']),
-            json['dataset'],
-            json['resource'],
-            json.get('upsert', False)
-        )
+class Formatter(ABC):
+    @abstractmethod
+    def format(self, name):
+        pass
 
-    def __init__(self, client: CkanClient, dataset: str,
-                 resource: str, upsert: bool = False):
+
+class DateTimeFormatter(Formatter):
+    def __init__(self, time_delta: timedelta = None):
+        self.time_delta = time_delta or timedelta()
+
+    def format(self, name):
+        return (datetime.now() - self.time_delta).strftime(name)
+
+
+class CkanStorage:
+    def __init__(self, client: CkanClient):
         self.client = client
-        self.dataset = dataset
-        self.resource = datetime.now().strftime(resource)
-        self.upsert = upsert
 
-    def write(self, records: List[Record]):
-        self.client.create_resource(self.resource, self.dataset, [
+    def write(self,
+              records: List[Record],
+              dataset: str,
+              resource: str,
+              upsert: bool = False):
+        self.client.create_resource(resource, dataset, [
             {
                 **{
                     'station': ts.source._id,
@@ -107,4 +110,4 @@ class CkanStorage(Storage):
                 },
                 **ts.data
             }
-            for ts in records], upsert=self.upsert)
+            for ts in records], upsert=upsert)
