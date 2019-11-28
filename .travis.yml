@@ -17,7 +17,7 @@ env:
 
 install:
   - pip install -e .[confluent]
-  - pip install kafka
+  - pip install -r requirements
 
 script:
   - cd tests
