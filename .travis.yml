@@ -17,7 +17,7 @@ env:
 
 install:
   - pip install -e .[confluent]
-  - pip install -r requirements
+  - pip install -r kafka-python==1.4.7
 
 script:
   - cd tests
