@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 
 cache: pip
 
@@ -17,7 +17,7 @@ env:
 
 install:
   - pip install -e .[confluent]
-  - pip install -r kafka-python==1.4.7
+  - pip install kafka-python==1.4.7
 
 script:
   - cd tests
