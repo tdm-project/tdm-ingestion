@@ -23,7 +23,6 @@ class Client(BaseClient):
         self.records_url = os.path.join(self.url,
                                         f'api/{api_version}/records')
 
-
     def create_entity_types(self, sensor_types: List[EntityType]
                             ) -> List[str]:
         return self.http.post(self.entity_types_url,
@@ -39,20 +38,17 @@ class Client(BaseClient):
         return self.http.post(self.records_url,
                               Model.list_to_json(time_series))
 
-    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
-        Record]:
+    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[Record]:
 
         records: List[Record] = []
-        time_series = self.http.get(
-            f'{self.sources_url}/{source.tdmq_id}/timeseries',
-            params=query)
+        time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
+                                    params=query)
         logging.debug('time_series %s', time_series)
         for idx, time in enumerate(time_series['coords']['time']):
             date_time = datetime.datetime.utcfromtimestamp(time)
             records.append(Record(date_time, source, {data: value_list[idx]
                                                       for data, value_list in
-                                                      time_series[
-                                                          'data'].items()}))
+                                                      time_series['data'].items()}))
 
         return records
 
@@ -71,8 +67,7 @@ class Client(BaseClient):
             type=EntityType(s['entity_type'], s['entity_category']),
             geometry=Point(s['default_footprint']['coordinates'][1],
                            s['default_footprint']['coordinates'][0])
-        ) for s in
-            self.http.get(f'{self.sources_url}', params=query)]
+        ) for s in self.http.get(f'{self.sources_url}', params=query)]
 
     def sources_count(self, query):
         return len(self.http.get(self.sources_url, params=query))

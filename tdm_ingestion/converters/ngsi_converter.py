@@ -3,10 +3,11 @@ import json
 import logging
 import re
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from json import JSONDecodeError
+from typing import Dict, List, Tuple
 
-from tdm_ingestion.tdmq.models import Record, Geometry, Point, \
-    EntityType, Source
+from tdm_ingestion.tdmq.models import (EntityType, Geometry, Point, Record,
+                                       Source)
 
 
 class NgsiConverter:
@@ -19,14 +20,15 @@ class NgsiConverter:
                                             'Station'),
 
     }
+    message_id_regex = re.compile(
+        r'(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)'
+        r'\.(?P<Sensor>[a-zA-Z0-9_-]+)'
+    )
 
     @staticmethod
     def get_fiware_service_path(msg: Dict):
         for header in msg['headers']:
-            # FIXME: do we want the keys to only have fiware-servicePath? 
-            # Otherwise, why not "fiware-servicePath" in header or EAFP
-            
-            if header.keys() == {"fiware-servicePath"}:
+            if "fiware-servicePath" in header.keys():
                 return header["fiware-servicePath"]
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
 
@@ -36,19 +38,17 @@ class NgsiConverter:
         for attr in msg['body']['attributes']:
             if attr['name'] in {'latitude', 'longitude'}:
                 geom[attr['name']] = float(attr['value'])
-        return Point(geom['latitude'], geom['longitude'])
+        try:
+            return Point(geom['latitude'], geom['longitude'])
+        except KeyError:
+            raise RuntimeError("missing latitude and/or longitude")
 
     @staticmethod
     def _get_names(msg: Dict) -> Tuple[str, str, str, str]:
-        # FIXME: compile it in __init__
-        p = re.compile(
-            r'(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)'
-            r'\.(?P<Sensor>[a-zA-Z0-9_-]+)')
+        match = NgsiConverter.message_id_regex.search(msg['body']['id'])
 
-        if p:
-            st_type, node_name, station_name, st_name = p.search(
-                msg['body']['id']).groups()
-
+        if match:
+            st_type, node_name, station_name, st_name = match.groups()
             sensor_name = '{}.{}'.format(station_name, st_name)
             return node_name, st_name, st_type, sensor_name
         else:
@@ -60,8 +60,7 @@ class NgsiConverter:
         return Source(sensor_name, sensor_type, geometry, properties)
 
     def _create_models(self, msg: Dict) -> Record:
-        _, _, _, sensor_name = self._get_names(
-            msg)
+        _, _, _, sensor_name = self._get_names(msg)
 
         properties = self._get_properties(msg)
         geometry = self._get_geometry(msg)
@@ -81,14 +80,12 @@ class NgsiConverter:
                     try:
                         records[name] = float(value)
                     except ValueError:
-                        logging.error(
-                            "cannot convert to float %s = %s", name, value)
+                        logging.error("cannot convert to float %s = %s", name, value)
 
         sensor_type = self.fiware_service_path_to_sensor_type[
-            self.get_fiware_service_path(msg)]
-        sensor = self._create_sensor(f"{sensor_name}",
-                                     sensor_type,
-                                     geometry, properties)
+            self.get_fiware_service_path(msg)
+        ]
+        sensor = self._create_sensor(f"{sensor_name}", sensor_type, geometry, properties)
 
         return Record(time, sensor, records)
 
@@ -100,8 +97,11 @@ class NgsiConverter:
             try:
                 m_dict = json.loads(m)
                 timeseries_list.append(self._create_models(m_dict))
-            except Exception as ex:
-                logging.error('exception %s with message %s', ex, m)
+            except JSONDecodeError:
+                logging.error('exception decoding message %s', m)
+                continue
+            except RuntimeError:
+                logging.error('exception occurred with message %s', m)
                 continue
         return timeseries_list
 
