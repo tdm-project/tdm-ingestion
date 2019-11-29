@@ -11,8 +11,8 @@ images:
 tests: test_kafka test_ckan
 
 test_kafka: images
-	cd tests/integration_tests/kafka_consumer; IMG=${IMG} python integration_test.py
+	cd tests/integration/kafka_consumer; IMG=${IMG} python integration_test.py
 
 test_ckan: images
-	cd tests/integration_tests/ckan; IMG=${IMG} python integration_test.py
+	cd tests/integration/ckan; IMG=${IMG} python integration_test.py
 

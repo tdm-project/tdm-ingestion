@@ -21,6 +21,7 @@ install:
 script:
   - cd tests
   - nosetests unit/ --with-coverage --cover-package tdm_ingestion
+  - cd -
   - make tests
 
 deploy:

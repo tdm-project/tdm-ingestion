@@ -4,7 +4,7 @@ import os
 import subprocess
 
 import requests
-from tests.integration_tests.utils import \
+from tests.integration.utils import \
     docker_compose_up, get_service_port, docker_compose_down, try_func, \
     docker_compose_restart
 

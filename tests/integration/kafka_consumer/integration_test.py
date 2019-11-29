@@ -6,7 +6,7 @@ import time
 import requests
 from kafka import KafkaProducer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
-from tests.integration_tests.utils import \
+from tests.integration.utils import \
     check_docker_logs, docker_compose_up, try_func, \
     docker_compose_down, get_service_port
 
