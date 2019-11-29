@@ -8,7 +8,7 @@ from tdm_ingestion.storage.tdmq import CachedStorage
 from tdm_ingestion.tdmq.models import EntityType, Source, Point, \
     Record
 from tdm_ingestion.utils import DateTimeFormatter
-from tests.dummies import DummyTDMQClient, DummyCkan, DummyHttp
+from tests.unit.dummies import DummyTDMQClient, DummyCkan, DummyHttp
 
 now = datetime.now(timezone.utc)
 sensors_type = [
@@ -114,7 +114,7 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_resource_name(self):
         now = datetime.now()
-        with patch('test_storage.datetime') as mock_datetime:
+        with patch('tests.unit.test_storage.datetime') as mock_datetime:
             mock_datetime.now.return_value = now
             resource = 'resource-%Y-%m-%d'
             resource_formatted = DateTimeFormatter().format(resource)

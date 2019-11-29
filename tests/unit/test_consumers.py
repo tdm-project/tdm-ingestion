@@ -6,7 +6,7 @@ from tdm_ingestion.consumers.tdmq_consumer import TDMQConsumer, \
 from tdm_ingestion.tdmq.models import EntityType, Source, Point, \
     Record
 from tdm_ingestion.utils import TimeDelta
-from tests.dummies import DummyTDMQClient
+from .dummies import DummyTDMQClient
 
 now = datetime.datetime.now(datetime.timezone.utc)
 entity_types = [

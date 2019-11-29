@@ -112,7 +112,7 @@ class DummyKafkaConsumer(BaseKafkaConsumer):
     }
 
     def poll(self, timeout_ms=0, max_records=0) -> List[str]:
-        return [json.dumps(DummyConsumer.message)]
+        return [json.dumps(self.message)]
 
 
 class DummyConverter:

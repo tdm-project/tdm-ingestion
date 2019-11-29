@@ -23,6 +23,9 @@ class NgsiConverter:
     @staticmethod
     def get_fiware_service_path(msg: Dict):
         for header in msg['headers']:
+            # FIXME: do we want the keys to only have fiware-servicePath? 
+            # Otherwise, why not "fiware-servicePath" in header or EAFP
+            
             if header.keys() == {"fiware-servicePath"}:
                 return header["fiware-servicePath"]
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
@@ -37,6 +40,7 @@ class NgsiConverter:
 
     @staticmethod
     def _get_names(msg: Dict) -> Tuple[str, str, str, str]:
+        # FIXME: compile it in __init__
         p = re.compile(
             r'(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)'
             r'\.(?P<Sensor>[a-zA-Z0-9_-]+)')
@@ -56,11 +60,11 @@ class NgsiConverter:
         return Source(sensor_name, sensor_type, geometry, properties)
 
     def _create_models(self, msg: Dict) -> Record:
-        node_name, st_name, st_type, sensor_name = NgsiConverter._get_names(
+        _, _, _, sensor_name = self._get_names(
             msg)
 
         properties = self._get_properties(msg)
-        geometry = NgsiConverter._get_geometry(msg)
+        geometry = self._get_geometry(msg)
 
         records: Dict = {}
         time = None
@@ -78,7 +82,7 @@ class NgsiConverter:
                         records[name] = float(value)
                     except ValueError:
                         logging.error(
-                            f"cannot convert to float {name} = {value}")
+                            "cannot convert to float %s = %s", name, value)
 
         sensor_type = self.fiware_service_path_to_sensor_type[
             self.get_fiware_service_path(msg)]
