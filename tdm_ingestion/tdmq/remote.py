@@ -1,15 +1,17 @@
 import datetime
 import logging
 import os
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
+
+from requests.exceptions import HTTPError
 
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.tdmq.base import Client as BaseClient
-from tdm_ingestion.tdmq.models import EntityType, Record, Source, Point, Model
-
+from tdm_ingestion.tdmq.models import EntityType, Model, Point, Record, Source
 
 logger = logging.getLogger(__name__)
+
 
 class Client(BaseClient):
 
@@ -27,18 +29,27 @@ class Client(BaseClient):
 
     def create_entity_types(self, sensor_types: List[EntityType]) -> List[str]:
         logger.debug('create_entity_types %s', Model.list_to_json(sensor_types))
-        return self.http.post(self.entity_types_url,
-                              Model.list_to_json(sensor_types))
+        try:
+            return self.http.post(self.entity_types_url,
+                                  Model.list_to_json(sensor_types))
+        except HTTPError:
+            logger.error('error response from server')
 
     def create_sources(self, sensors: List[Source]) -> List[str]:
         logger.debug('create_sources %s', Model.list_to_json(sensors))
-        return self.http.post(self.sources_url,
-                              Model.list_to_json(sensors))
+        try:
+            return self.http.post(self.sources_url,
+                                  Model.list_to_json(sensors))
+        except HTTPError:
+            logger.error('error response from server')
 
     def create_time_series(self, time_series: List[Record]):
         logger.debug('creating timeseries %s', time_series)
-        return self.http.post(self.records_url,
-                              Model.list_to_json(time_series))
+        try:
+            return self.http.post(self.records_url,
+                                  Model.list_to_json(time_series))
+        except HTTPError:
+            logger.error('error response from server')
 
     def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[Record]:
         records: List[Record] = []
@@ -53,26 +64,45 @@ class Client(BaseClient):
 
         return records
 
-    def get_entity_types(self, _id: str = None, query: Dict = None
+    def get_entity_types(self, id_: str = None, query: Dict = None
                          ) -> Union[EntityType, List[EntityType]]:
         raise NotImplementedError
 
-    def get_sources(self, _id: str = None, query: Dict = None
+    def get_sources(self, id_: str = None, query: Dict = None
                     ) -> Union[Source, List[Source]]:
-        if _id:
-            return Source(**self.http.get(f'{self.sources_url}/{_id}'))
-        return [Source(_id=s['external_id'],
-                       tdmq_id=s['tdmq_id'],
-                       type=EntityType(s['entity_type'], s['entity_category']),
-                       geometry=Point(s['default_footprint']['coordinates'][1],
-                                      s['default_footprint']['coordinates'][0])
-                       ) for s in self.http.get(f'{self.sources_url}', params=query)]
+        if id_:
+            try:
+                source_data = self.http.get(f'{self.sources_url}/{id_}')
+                return Source(id_=source_data['external_id'],
+                              tdmq_id=source_data['tdmq_id'],
+                              type_=EntityType(source_data['entity_type'], source_data['entity_category']),
+                              geometry=Point(source_data['default_footprint']['coordinates'][1],
+                                             source_data['default_footprint']['coordinates'][0]))
+            except HTTPError:
+                logger.debug("error getting source from server")
+                return None
+        try:
+            return [Source(id_=s['external_id'],
+                           tdmq_id=s['tdmq_id'],
+                           type_=EntityType(s['entity_type'], s['entity_category']),
+                           geometry=Point(s['default_footprint']['coordinates'][1],
+                                          s['default_footprint']['coordinates'][0])
+                           ) for s in self.http.get(f'{self.sources_url}', params=query)]
+        except HTTPError:
+            logger.debug("error getting sources from server")
+            return None
 
-    def sources_count(self, query):
-        return len(self.http.get(self.sources_url, params=query))
+    def sources_count(self, query: Dict = None):
+        try:
+            return len(self.http.get(self.sources_url, params=query))
+        except HTTPError:
+            return None
 
-    def entity_types_count(self, query: Dict):
-        return len(self.http.get(self.entity_types_url, params=query))
+    def entity_types_count(self, query: Dict = None):
+        try:
+            return len(self.http.get(self.entity_types_url, params=query))
+        except HTTPError:
+            return None
 
 
 class AsyncClient(Client):

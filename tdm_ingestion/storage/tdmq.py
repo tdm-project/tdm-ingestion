@@ -22,11 +22,11 @@ class CachedStorage:
             import_class(client['class']).create_from_json(client['args']))
 
     def _idempotent_create_source(self, obj: Source):
-        if obj._id not in self._cache:
-            logger.debug('querying if source %s exists', obj._id)
-            if self.client.sources_count(query={'id': obj._id}) <= 0:
+        if obj.id_ not in self._cache:
+            logger.debug('querying if source %s exists', obj.id_)
+            if self.client.sources_count(query={'id': obj.id_}) <= 0:
                 self.client.create_sources([obj])
-            self._cache.add(obj._id)
+            self._cache.add(obj.id_)
 
     def write(self, time_series: List[Record]):
         if time_series:
@@ -49,8 +49,8 @@ class AsyncCachedStorage:
             import_class(client['class']).create_from_json(client['args']))
 
     async def _idempotent_create(self, obj: Union[EntityType, Source]):
-        if obj._id not in self._cache[obj.__class__]:
-            query = {'name': obj._id}
+        if obj.id_ not in self._cache[obj.__class__]:
+            query = {'name': obj.id_}
             if isinstance(obj, Source):
                 count_method = self.client.sources_count
                 create_method = self.client.create_sources
@@ -60,12 +60,12 @@ class AsyncCachedStorage:
 
             if await count_method(query=query) <= 0:
                 await create_method([obj])
-            self._cache[obj.__class__].add(obj._id)
+            self._cache[obj.__class__].add(obj.id_)
 
     async def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
-                logger.debug(f"try create sensor  for ts {ts}")
+                logger.debug("try create sensor  for ts %s", ts)
                 await self._idempotent_create(ts.source)
 
             await self.client.create_time_series(time_series)

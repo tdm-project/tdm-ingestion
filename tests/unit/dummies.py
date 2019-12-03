@@ -47,37 +47,37 @@ class DummyTDMQClient(Client):
 
     def create_sources(self, sensors: List[Source]) -> List[AnyStr]:
         for sensor in sensors:
-            self.sources[sensor._id] = sensor
+            self.sources[sensor.id_] = sensor
             self.sources_by_types[sensor.type.name].append(sensor)
-        return [s._id for s in sensors]
+        return [s.id_ for s in sensors]
 
     def create_time_series(self, time_series: List[Record]):
         for ts in time_series:
-            self.time_series[ts.source._id].append(ts)
+            self.time_series[ts.source.id_].append(ts)
             # self.create_sources([ts.source])
 
     def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
             Record]:
-        return self.time_series[source._id]
+        return self.time_series[source.id_]
 
-    def get_entity_types(self, _id: AnyStr = None,
+    def get_entity_types(self, id_: AnyStr = None,
                          query: Dict = None) -> EntityType:
         """
             only query by name is supported
         """
-        k = _id if _id else query['name']
+        k = id_ if id_ else query['name']
         try:
             return self.entity_types[k]
         except KeyError:
             raise Client.NotFound
 
-    def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Union[
+    def get_sources(self, id_: AnyStr = None, query: Dict = None) -> Union[
             Source, List[Source]]:
-        if _id is None and query is None:
+        if id_ is None and query is None:
             return list(self.sources.values())
-        elif _id:
+        elif id_:
             try:
-                return self.sources[_id]
+                return self.sources[id_]
             except KeyError:
                 raise Client.NotFound
         elif query:

@@ -103,7 +103,7 @@ class CkanStorage:
         self.client.create_resource(resource, dataset, [
             {
                 **{
-                    'station': ts.source._id,
+                    'station': ts.source.id_,
                     'type': ts.source.type.category,
                     'date': ts.time,
                     'location': f'{ts.source.geometry.latitude},{ts.source.geometry.longitude}'

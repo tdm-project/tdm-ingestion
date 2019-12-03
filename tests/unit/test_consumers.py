@@ -26,6 +26,7 @@ time_series = [
 class TestTDMQConsumer(unittest.TestCase):
     def test_poll(self):
         client = DummyTDMQClient()
+        client.create_sources(sources) # FIXME: check this
         client.create_time_series(time_series)
         consumer = TDMQConsumer(client)
         self.assertEqual(len(consumer.poll(sources[0].type, 60,

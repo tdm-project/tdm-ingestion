@@ -41,7 +41,7 @@ class TestNgsiConverter(unittest.TestCase):
                          {'windDirection': 174.545, 'windSpeed': 0.0})
         self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'),
                          '2018-07-16T20:51:33')
-        self.assertEqual(str(timeseries_list[0].source._id),
+        self.assertEqual(str(timeseries_list[0].source.id_),
                          'esp8266-7806085.Davis')
 
     def _test_convert_error(self, message):
