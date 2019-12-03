@@ -1,14 +1,17 @@
+import logging
 import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
 import jsons
+
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
-from tdm_ingestion.tdmq.models import EntityType, Source, Point, \
-    Record
+from tdm_ingestion.tdmq.models import EntityType, Point, Record, Source
 from tdm_ingestion.utils import DateTimeFormatter
-from tests.unit.dummies import DummyTDMQClient, DummyCkan, DummyHttp
+from tests.unit.dummies import DummyCkan, DummyHttp, DummyTDMQClient
+
+logger = logging.getLogger('tdm_ingestion')
 
 now = datetime.now(timezone.utc)
 sensors_type = [
@@ -27,14 +30,22 @@ time_series = [
 
 class TestCachedStorage(unittest.TestCase):
 
-    def test_write_no_data(self):
+    def test_write_no_preloaded_data(self):
+        """
+        Tests writing Records when no data are preloaded in the client
+        """
         client = DummyTDMQClient()
+        # check that clients has no sources yet
+        self.assertEqual(len(client.sources), 0)
         storage = CachedStorage(client)
         storage.write(time_series)
 
+        # check that the client sources are the same as the test sensors
+        self.assertEqual(len(client.sources), 2)
         self.assertEqual(jsons.dumps(sensors),
                          jsons.dumps(client.sources.values()))
 
+        # check that the time series in the client are the same as the test values
         actual_time_series = []
         for ts_list in client.time_series.values():
             actual_time_series.extend(ts_list)
@@ -42,7 +53,12 @@ class TestCachedStorage(unittest.TestCase):
                          jsons.dumps(actual_time_series))
 
     def test_write_sensors_type_pre_loaded(self):
+        """
+        Tests writing time_series when the client has already loaded the entity types. In this case the entity types won't be 
+        """
+        # Why are we testing entity types? storage.write doesn't try to create them if they don't exist
         client = DummyTDMQClient()
+        self.assertEqual(len(client.entity_types), 0)
         client.create_entity_types(sensors_type)
 
         storage = CachedStorage(client)
@@ -61,6 +77,9 @@ class TestCachedStorage(unittest.TestCase):
                          jsons.dumps(actual_time_series))
 
     def test_write_all_data_preloaded(self):
+        """
+        Tests that, when entity types and sources are already created, the storage writes only the time_series
+        """
         client = DummyTDMQClient()
 
         client.create_entity_types(sensors_type)
@@ -80,12 +99,12 @@ class TestCachedStorage(unittest.TestCase):
             actual_time_series.extend(ts_list)
 
         self.assertEqual(jsons.dumps(time_series),
-                         jsons.dumps(actual_time_series)
-                         )
+                         jsons.dumps(actual_time_series))
+
+class TestCkanStorage(unittest.TestCase):
 
     def test_write_ckan(self):
-        storage = CkanStorage(
-            DummyCkan())
+        storage = CkanStorage(DummyCkan())
 
         storage.write(time_series, 'lisa', 'test')
         self.assertEqual(

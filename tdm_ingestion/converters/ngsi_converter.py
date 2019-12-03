@@ -10,6 +10,8 @@ from tdm_ingestion.tdmq.models import (EntityType, Geometry, Point, Record,
                                        Source)
 
 
+logger = logging.getLogger(__name__)
+
 class NgsiConverter:
     non_properties = {'latitude', 'longitude', 'timestamp', 'dateObserved',
                       'location'}
@@ -70,8 +72,7 @@ class NgsiConverter:
         for attr in msg['body']['attributes']:
             name = attr['name']
             value = attr['value']
-            if value is not None and str(
-                    value).strip() and name not in self.to_skip:
+            if value is not None and str(value).strip() and name not in self.to_skip:
                 if name == 'timestamp':
                     time = datetime.datetime.fromtimestamp(
                         float(value), datetime.timezone.utc
@@ -80,7 +81,7 @@ class NgsiConverter:
                     try:
                         records[name] = float(value)
                     except ValueError:
-                        logging.error("cannot convert to float %s = %s", name, value)
+                        logger.error("cannot convert to float %s = %s", name, value)
 
         sensor_type = self.fiware_service_path_to_sensor_type[
             self.get_fiware_service_path(msg)
@@ -91,17 +92,17 @@ class NgsiConverter:
 
     def convert(self, messages: List[str]) -> List[Record]:
 
-        logging.debug("messages %s", len(messages))
+        logger.debug("messages %s", len(messages))
         timeseries_list: List = []
         for m in messages:
             try:
                 m_dict = json.loads(m)
                 timeseries_list.append(self._create_models(m_dict))
             except JSONDecodeError:
-                logging.error('exception decoding message %s', m)
+                logger.error('exception decoding message %s', m)
                 continue
             except RuntimeError:
-                logging.error('exception occurred with message %s', m)
+                logger.error('exception occurred with message %s', m)
                 continue
         return timeseries_list
 

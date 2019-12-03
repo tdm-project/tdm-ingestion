@@ -8,6 +8,8 @@ from tdm_ingestion.tdmq.remote import AsyncClient
 from tdm_ingestion.utils import import_class
 
 
+logger = logging.getLogger(__name__)
+logger.debug(__name__)
 class CachedStorage:
     def __init__(self, client: Client):
         self.client = client
@@ -19,9 +21,9 @@ class CachedStorage:
         return CachedStorage(
             import_class(client['class']).create_from_json(client['args']))
 
-    def _idempotent_create(self, obj: Source):
+    def _idempotent_create_source(self, obj: Source):
         if obj._id not in self._cache:
-            logging.debug('querying if source %s exists', obj._id)
+            logger.debug('querying if source %s exists', obj._id)
             if self.client.sources_count(query={'id': obj._id}) <= 0:
                 self.client.create_sources([obj])
             self._cache.add(obj._id)
@@ -29,7 +31,7 @@ class CachedStorage:
     def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
-                self._idempotent_create(ts.source)
+                self._idempotent_create_source(ts.source)
             self.client.create_time_series(time_series)
 
 
@@ -63,7 +65,7 @@ class AsyncCachedStorage:
     async def write(self, time_series: List[Record]):
         if time_series:
             for ts in time_series:
-                logging.debug(f"try create sensor  for ts {ts}")
+                logger.debug(f"try create sensor  for ts {ts}")
                 await self._idempotent_create(ts.source)
 
             await self.client.create_time_series(time_series)

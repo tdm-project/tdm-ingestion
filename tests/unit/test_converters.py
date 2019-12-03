@@ -1,10 +1,12 @@
 import json
+import logging
 import unittest
 
-from tdm_ingestion.converters.ngsi_converter import NgsiConverter, \
-    CachedNgsiConverter
+from tdm_ingestion.converters.ngsi_converter import (CachedNgsiConverter,
+                                                     NgsiConverter)
 from tdm_ingestion.tdmq.models import Source
 
+logger = logging.getLogger('test_tdm_ingestion')
 
 class TestNgsiConverter(unittest.TestCase):
     message = {
@@ -34,6 +36,7 @@ class TestNgsiConverter(unittest.TestCase):
     def _test_convert(self, converter):
         timeseries_list = converter.convert([json.dumps(self.message)])
         self.assertEqual(len(timeseries_list), 1)
+        logger.debug(timeseries_list[0].to_json())
         self.assertEqual(timeseries_list[0].data,
                          {'windDirection': 174.545, 'windSpeed': 0.0})
         self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -52,7 +55,7 @@ class TestNgsiConverter(unittest.TestCase):
         self._test_convert(NgsiConverter())
 
     def test_json_decode_error(self):
-        self._test_convert_error('(a)')
+        self._test_convert_error(['(a)'])
 
     def test_runtime_error_wrong_id(self):
         message = {

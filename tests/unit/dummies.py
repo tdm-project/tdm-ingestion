@@ -41,24 +41,23 @@ class DummyTDMQClient(Client):
         except KeyError:
             return 0
 
-    def create_entity_types(self, sensor_types: List[EntityType]) -> List[
-        AnyStr]:
+    def create_entity_types(self, sensor_types: List[EntityType]) -> List[AnyStr]:
         self.entity_types.update({s.name: s for s in sensor_types})
         return [s.name for s in sensor_types]
 
-    def create_sources(self, sources: List[Source]) -> List[AnyStr]:
-        for source in sources:
-            self.sources[source._id] = source
-            self.sources_by_types[source.type.name].append(source)
-        return [s._id for s in sources]
+    def create_sources(self, sensors: List[Source]) -> List[AnyStr]:
+        for sensor in sensors:
+            self.sources[sensor._id] = sensor
+            self.sources_by_types[sensor.type.name].append(sensor)
+        return [s._id for s in sensors]
 
     def create_time_series(self, time_series: List[Record]):
         for ts in time_series:
             self.time_series[ts.source._id].append(ts)
-            self.create_sources([ts.source])
+            # self.create_sources([ts.source])
 
     def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[
-        Record]:
+            Record]:
         return self.time_series[source._id]
 
     def get_entity_types(self, _id: AnyStr = None,
@@ -73,7 +72,7 @@ class DummyTDMQClient(Client):
             raise Client.NotFound
 
     def get_sources(self, _id: AnyStr = None, query: Dict = None) -> Union[
-        Source, List[Source]]:
+            Source, List[Source]]:
         if _id is None and query is None:
             return list(self.sources.values())
         elif _id:
