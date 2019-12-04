@@ -44,20 +44,25 @@ class Client(BaseClient):
             logger.error('error response from server')
 
     def create_time_series(self, time_series: List[Record]):
-        logger.debug('creating timeseries %s', time_series)
+        logger.debug('creating timeseries %s', Model.list_to_json(time_series))
         try:
             return self.http.post(self.records_url,
                                   Model.list_to_json(time_series))
         except HTTPError:
             logger.error('error response from server')
 
-    def get_time_series(self, source: Source, query: Dict[str, Any]) -> List[Record]:
+    def get_time_series(self, source: Source, query: Dict[str, Any] = None) -> List[Record]:
+        try:
+            time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
+                                        params=query)
+        except HTTPError:
+            logger.error('error response from server')
+            return None
+            
         records: List[Record] = []
-        time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
-                                    params=query)
         logger.debug('time_series %s', time_series)
         for idx, time in enumerate(time_series['coords']['time']):
-            date_time = datetime.datetime.utcfromtimestamp(time)
+            date_time = datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
             records.append(Record(date_time, source, {data: value_list[idx]
                                                       for data, value_list in
                                                       time_series['data'].items()}))

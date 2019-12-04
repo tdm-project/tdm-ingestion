@@ -17,12 +17,12 @@ SENSORS_TYPE = [
     EntityType("st2", "cat2")
 ]
 SENSORS = [
-    Source("s1", SENSORS_TYPE[0], Point(0, 1), ["temp"]),
-    Source("s2", SENSORS_TYPE[1], Point(2, 3), ["temp"])
+    Source("s1", SENSORS_TYPE[0], Point(0, 1), ["temperature"], "4d9ae10d-df9b-546c-a586-925e1e9ec049"),
+    Source("s2", SENSORS_TYPE[1], Point(2, 3), ["humidity"], "6eb57b7e-43a3-5ad7-a4d1-d1ec54bb5520")
 ]
 TIME_SERIES = [
-    Record(now, SENSORS[0], {"value": 0.0}),
-    Record(now, SENSORS[1], {"value": 1.0})
+    Record(now, SENSORS[0], {"temperature": 14.0}),
+    Record(now, SENSORS[1], {"humidity": 95.0})
 ]
 # the dictionary returned from the tdmq polystore rest api
 REST_SOURCE = {
@@ -37,7 +37,24 @@ REST_SOURCE = {
     "entity_category": SENSORS_TYPE[0].category,
     "external_id": SENSORS[0].id_,
     "stationary": True,
-    "tdmq_id": "4d9ae10d-df9b-546c-a586-925e1e9ec049"
+    "tdmq_id": SENSORS[0].tdmq_id
+}
+
+REST_TIME_SERIES = {
+    "bucket": None,
+    "coords": {
+        "footprint": [None],
+        "time": [datetime.timestamp(TIME_SERIES[0].time)]
+    },
+    "data": {
+        "temperature": [14.0]
+    },
+    "default_footprint": {
+        "coordinates": [4.823, 5.166],
+        "type": "Point"
+    },
+    "shape": [],
+    "tdmq_id": SENSORS[0].tdmq_id
 }
 
 logger = logging.getLogger("tdm_ingestion")
@@ -131,7 +148,7 @@ class TestRemoteClient(unittest.TestCase):
         )
 
         client = Client(self.url)
-        httpretty.register_uri(httpretty.GET, f'{client.sources_url}/{REST_SOURCE["tdmq_id"]}',
+        httpretty.register_uri(httpretty.GET, f'{client.sources_url}/{SENSORS[0].tdmq_id}',
                                body=jsons.dumps(REST_SOURCE), match_querystring=False)
 
         res = client.get_sources(REST_SOURCE["tdmq_id"])
@@ -163,6 +180,9 @@ class TestRemoteClient(unittest.TestCase):
 
     @httpretty.activate
     def test_get_sources_error(self):
+        """
+        Tests error handling when server returns an error
+        """
         client = Client(self.url)
         httpretty.register_uri(httpretty.GET, client.sources_url, status=400, match_querystring=False)
         httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].id_}", status=400, match_querystring=False)
@@ -175,7 +195,9 @@ class TestRemoteClient(unittest.TestCase):
 
     @httpretty.activate
     def test_get_sources_count(self):
-
+        """
+        Tests source count
+        """
         client = Client(self.url)
         httpretty.register_uri(httpretty.GET, client.sources_url,
                                body=jsons.dumps([REST_SOURCE]), match_querystring=False)
@@ -185,10 +207,63 @@ class TestRemoteClient(unittest.TestCase):
 
     @httpretty.activate
     def test_get_sources_count_error(self):
+        """
+        Tests get sources count error
+        """
         client = Client(self.url)
         httpretty.register_uri(httpretty.GET, client.sources_url, status=400)
 
         res = client.sources_count()
+        self.assertIsNone(res)
+
+    @httpretty.activate
+    def test_get_time_series(self):
+        """
+        Tests getting all time series of a source
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].tdmq_id}/timeseries",
+                               body=jsons.dumps(REST_TIME_SERIES), match_querystring=False)
+
+        res = client.get_time_series(SENSORS[0])
+
+        expected_records = [TIME_SERIES[0]]
+        self.assertEqual([s.to_json() for s in res],
+                         [s.to_json() for s in expected_records])
+
+    @httpretty.activate
+    def test_get_time_series_with_query(self):
+        """
+        Tests getting all time series of a source
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].tdmq_id}/timeseries",
+                               body=jsons.dumps(REST_TIME_SERIES), match_querystring=False)
+
+        # params values are not important
+        params = {
+            "after": now,
+            "before": now,
+            "op": "sum",
+            "fields": "temperature"
+        }
+        res = client.get_time_series(SENSORS[0], query=params)
+
+        expected_records = [TIME_SERIES[0]]
+        self.assertEqual([s.to_json() for s in res],
+                         [s.to_json() for s in expected_records])
+
+    @httpretty.activate
+    def test_get_time_series_error(self):
+        """
+        Tests getting all time series of a source
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].tdmq_id}/timeseries",
+                               status=400)
+
+        res = client.get_time_series(SENSORS[0])
+
         self.assertIsNone(res)
 
 
