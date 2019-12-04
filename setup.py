@@ -8,7 +8,7 @@ setup(
     version=version,
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['requests==2.22.0', 'pyaml==19.4.1', 'jsons==1.0.0', 'stringcase==1.2.0'],
+    install_requires=['requests==2.22.0', 'pyaml==19.4.1', 'jsons==1.0.0', 'stringcase==1.2.0', 'httpretty==0.9.7'],
     extras_require={
         'confluent': ['confluent-kafka==1.2.0'],
     },

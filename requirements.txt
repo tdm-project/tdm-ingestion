@@ -1,6 +1,7 @@
 certifi==2019.11.28
 chardet==3.0.4
 confluent-kafka==1.2.0
+httpretty==0.9.7
 idna==2.8
 jsons==1.0.0
 kafka-python==1.4.7

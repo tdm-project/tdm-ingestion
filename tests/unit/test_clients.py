@@ -1,11 +1,9 @@
 import logging
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch
 
 import httpretty
 import jsons
-import requests
 from requests.exceptions import HTTPError
 
 from tdm_ingestion.http_client.requests import Requests
@@ -48,94 +46,82 @@ logger = logging.getLogger("tdm_ingestion")
 class TestRemoteClient(unittest.TestCase):
 
     def setUp(self):
-        # FIXME the url should be impossible to reach
-        self.url = "http://localhost"
+        self.url = "http://foo.bar"
 
-    def _get_dummy_http_client(self, res, method):
-        assert method in ("post", "get")
-        dummy_http_client = Requests()
-        if res == HTTPError:
-            setattr(dummy_http_client, method, Mock(side_effect=res))
-        else:
-            setattr(dummy_http_client, method, Mock(return_value=res))
-        return dummy_http_client
-
+    @httpretty.activate
     def test_create_entity_types(self):
         """
         Tests correct client answer
         """
         expected_response = [s.name for s in SENSORS_TYPE]
 
-        dummy_http_client = self._get_dummy_http_client(expected_response, "post")
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.entity_types_url, body=jsons.dumps(expected_response))
 
-        client = Client(self.url, dummy_http_client)
         res = client.create_entity_types(SENSORS_TYPE)
-
         self.assertEqual(res, expected_response)
 
+    @httpretty.activate
     def test_create_entity_types_error(self):
         """
         Tests that when an error occurs it returns None
         """
-        dummy_http_client = self._get_dummy_http_client(HTTPError, "post")
-
-        client = Client(self.url, dummy_http_client)
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.entity_types_url, status=400)
         res = client.create_entity_types(SENSORS_TYPE)
 
         self.assertIsNone(res)
 
+    @httpretty.activate
     def test_create_sources(self):
         """
         Tests correct client answer
         """
         expected_response = [s.id_ for s in SENSORS]
-        dummy_http_client = self._get_dummy_http_client(expected_response, "post")
 
-        client = Client(self.url, dummy_http_client)
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.sources_url, body=jsons.dumps(expected_response))
+
         res = client.create_sources(SENSORS)
-
         self.assertEqual(res, expected_response)
 
+    @httpretty.activate
     def test_create_source_error(self):
         """
         Tests that when an error occurs it returns None
         """
-        dummy_http_client = self._get_dummy_http_client(HTTPError, "post")
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.sources_url, status=400)
 
-        client = Client(self.url, dummy_http_client)
         res = client.create_sources(SENSORS)
-
         self.assertIsNone(res)
 
+    @httpretty.activate
     def test_create_time_series(self):
         expected_response = jsons.dumps(TIME_SERIES)
-        dummy_http_client = self._get_dummy_http_client(expected_response, "post")
 
-        client = Client(self.url, dummy_http_client)
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.records_url, body=jsons.dumps(expected_response))
+
         res = client.create_time_series(TIME_SERIES)
-
         self.assertEqual(res, expected_response)
 
+    @httpretty.activate
     def test_create_time_series_error(self):
         """
         Tests that when an error occurs it returns None
         """
-        dummy_http_client = self._get_dummy_http_client(HTTPError, "post")
-
-        client = Client(self.url, dummy_http_client)
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.records_url, status=400)
         res = client.create_time_series(TIME_SERIES)
 
         self.assertIsNone(res)
 
+    @httpretty.activate
     def test_get_source_by_id(self):
         """
         Tests getting a source using the tdmq id
         """
-        dummy_http_client = self._get_dummy_http_client(REST_SOURCE, "get")
-
-        client = Client(self.url, dummy_http_client)
-        res = client.get_sources(REST_SOURCE["tdmq_id"])
-
         expected_source = Source(
             id_=REST_SOURCE["external_id"],
             type_=EntityType(REST_SOURCE["entity_type"], REST_SOURCE["entity_category"]),
@@ -143,17 +129,24 @@ class TestRemoteClient(unittest.TestCase):
             controlled_properties=None,
             tdmq_id=REST_SOURCE["tdmq_id"]
         )
-        logger.debug(res.to_json())
-        logger.debug(expected_source.to_json())
+
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, f'{client.sources_url}/{REST_SOURCE["tdmq_id"]}',
+                               body=jsons.dumps(REST_SOURCE), match_querystring=False)
+
+        res = client.get_sources(REST_SOURCE["tdmq_id"])
+
         self.assertEqual(res.to_json(), expected_source.to_json())
 
+    @httpretty.activate
     def test_get_all_sources(self):
         """
-        Tests getting a source using the tdmq id
+        Tests getting all sources
         """
-        dummy_http_client = self._get_dummy_http_client([REST_SOURCE], "get")
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, client.sources_url,
+                               body=jsons.dumps([REST_SOURCE]), match_querystring=False)
 
-        client = Client(self.url, dummy_http_client)
         res = client.get_sources()
 
         expected_sources = [
@@ -168,27 +161,33 @@ class TestRemoteClient(unittest.TestCase):
         self.assertEqual([s.to_json() for s in res],
                          [s.to_json() for s in expected_sources])
 
+    @httpretty.activate
     def test_get_sources_error(self):
-        dummy_http_client = self._get_dummy_http_client(HTTPError, "get")
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, client.sources_url, status=400, match_querystring=False)
+        httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].id_}", status=400, match_querystring=False)
 
-        client = Client(self.url, dummy_http_client)
         res = client.get_sources(SENSORS[0].id_)
         self.assertIsNone(res)
 
         res = client.get_sources()
         self.assertIsNone(res)
 
+    @httpretty.activate
     def test_get_sources_count(self):
-        dummy_http_client = self._get_dummy_http_client([REST_SOURCE], "get")
 
-        client = Client(self.url, dummy_http_client)
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, client.sources_url,
+                               body=jsons.dumps([REST_SOURCE]), match_querystring=False)
+
         res = client.sources_count()
         self.assertEqual(res, 1)
 
+    @httpretty.activate
     def test_get_sources_count_error(self):
-        dummy_http_client = self._get_dummy_http_client(HTTPError, "get")
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.GET, client.sources_url, status=400)
 
-        client = Client(self.url, dummy_http_client)
         res = client.sources_count()
         self.assertIsNone(res)
 
@@ -208,7 +207,7 @@ class TestRequestsHttpClient(unittest.TestCase):
         headers = {"Authorization": "Bearer 123"}
         response_body = {"bar": "foo"}
 
-        def request_callback(request, _, response_headers): 
+        def request_callback(request, _, response_headers):
             self.assertEqual(jsons.loads(request.body), {"foo": "bar"})
             self.assertEqual(request.headers.get("Content-Type"), headers["Content-Type"])
             self.assertEqual(request.headers.get("Authorization"), headers["Authorization"])
@@ -217,7 +216,7 @@ class TestRequestsHttpClient(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, self.url, body=request_callback)
 
         res = r.post(url=self.url, data=body, headers=headers)
-        self.assertEqual(res.json(), body)
+        self.assertEqual(res, response_body)
 
     @httpretty.activate
     def test_post_error(self):
@@ -243,7 +242,8 @@ class TestRequestsHttpClient(unittest.TestCase):
         response_body = {"bar": "foo"}
 
         def request_callback(request, _, response_headers):
-            self.assertEqual(request.params, params)
+            logger.debug(request.querystring)
+            self.assertEqual(request.querystring, {"foo": ["bar"]})
             self.assertEqual(request.headers.get("Authorization"), headers['Authorization'])
             return [200, response_headers, jsons.dumps(response_body)]
 
