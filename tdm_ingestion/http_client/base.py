@@ -4,7 +4,7 @@ from typing import Union, List, Dict
 
 class Http(ABC):
     @abstractmethod
-    def post(self, url: str, json: Union[List, Dict, str] = None,
+    def post(self, url: str, data: Union[List, Dict, str] = None,
              headers: Dict[str, str] = None
              ) -> Union[List, Dict]:
         pass

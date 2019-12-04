@@ -12,12 +12,12 @@ class AioHttp(Http):
     def __init__(self):
         self.session = aiohttp.ClientSession()
 
-    async def post(self, url: str, json: Union[List, Dict, str] = None,
+    async def post(self, url: str, data: Union[List, Dict, str] = None,
                    headers: Dict[str, str] = None
                    ) -> Union[List, Dict]:
-        json = json or {}
-        logger.debug("doing POST with url %s and json %s", url, json)
-        r = await self.session.post(url, data=json,
+        data = data or {}
+        logger.debug("doing POST with url %s and json %s", url, data)
+        r = await self.session.post(url, data=data,
                                     headers={
                                         'content-type': 'application/json'}
                                     )

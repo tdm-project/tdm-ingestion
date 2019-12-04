@@ -1,9 +1,11 @@
 import logging
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+import httpretty
 import jsons
+import requests
 from requests.exceptions import HTTPError
 
 from tdm_ingestion.http_client.requests import Requests
@@ -26,19 +28,19 @@ TIME_SERIES = [
 ]
 # the dictionary returned from the tdmq polystore rest api
 REST_SOURCE = {
-        "default_footprint": {
-            "coordinates": [
-                SENSORS[0].geometry.latitude,
-                SENSORS[0].geometry.longitude
-            ],
-            "type": "Point"
-        },
-        "entity_type": SENSORS_TYPE[0].name,
-        "entity_category": SENSORS_TYPE[0].category,
-        "external_id": SENSORS[0].id_,
-        "stationary": True,
-        "tdmq_id": "4d9ae10d-df9b-546c-a586-925e1e9ec049"
-    }
+    "default_footprint": {
+        "coordinates": [
+            SENSORS[0].geometry.latitude,
+            SENSORS[0].geometry.longitude
+        ],
+        "type": "Point"
+    },
+    "entity_type": SENSORS_TYPE[0].name,
+    "entity_category": SENSORS_TYPE[0].category,
+    "external_id": SENSORS[0].id_,
+    "stationary": True,
+    "tdmq_id": "4d9ae10d-df9b-546c-a586-925e1e9ec049"
+}
 
 logger = logging.getLogger("tdm_ingestion")
 
@@ -137,7 +139,7 @@ class TestRemoteClient(unittest.TestCase):
         expected_source = Source(
             id_=REST_SOURCE["external_id"],
             type_=EntityType(REST_SOURCE["entity_type"], REST_SOURCE["entity_category"]),
-            geometry=Point(*REST_SOURCE["default_footprint"]["coordinates"][::-1]),  # for some strange reason the points are inverted 
+            geometry=Point(*REST_SOURCE["default_footprint"]["coordinates"][::-1]),  # for some strange reason the points are inverted
             controlled_properties=None,
             tdmq_id=REST_SOURCE["tdmq_id"]
         )
@@ -163,7 +165,7 @@ class TestRemoteClient(unittest.TestCase):
                 tdmq_id=REST_SOURCE["tdmq_id"]
             )
         ]
-        self.assertEqual([s.to_json() for s in res], 
+        self.assertEqual([s.to_json() for s in res],
                          [s.to_json() for s in expected_sources])
 
     def test_get_sources_error(self):
@@ -189,3 +191,75 @@ class TestRemoteClient(unittest.TestCase):
         client = Client(self.url, dummy_http_client)
         res = client.sources_count()
         self.assertIsNone(res)
+
+
+class TestRequestsHttpClient(unittest.TestCase):
+
+    def setUp(self):
+        self.url = "http://foo.bar"
+
+    @httpretty.activate
+    def test_post_success(self):
+        """
+        Tests successfull POST http call
+        """
+        r = Requests()
+        body = {"foo": "bar"}
+        headers = {"Authorization": "Bearer 123"}
+        response_body = {"bar": "foo"}
+
+        def request_callback(request, _, response_headers): 
+            self.assertEqual(jsons.loads(request.body), {"foo": "bar"})
+            self.assertEqual(request.headers.get("Content-Type"), headers["Content-Type"])
+            self.assertEqual(request.headers.get("Authorization"), headers["Authorization"])
+            return [201, response_headers, jsons.dumps(response_body)]
+
+        httpretty.register_uri(httpretty.POST, self.url, body=request_callback)
+
+        res = r.post(url=self.url, data=body, headers=headers)
+        self.assertEqual(res.json(), body)
+
+    @httpretty.activate
+    def test_post_error(self):
+        """
+        Tests that when an http error occurs on POST method, it raises HTTPError
+        """
+        for status in list(range(400, 419)) + list(range(500, 512)):
+            httpretty.register_uri(httpretty.POST, self.url, status=status)
+
+            r = Requests()
+            body = {"attr": "value"}
+            headers = {"Authorization": "Bearer 123"}
+            self.assertRaises(HTTPError, r.post, url=self.url, data=body, headers=headers)
+
+    @httpretty.activate
+    def test_get_success(self):
+        """
+        Tests successfull POST http call
+        """
+        r = Requests()
+        params = {"foo": "bar"}
+        headers = {"Authorization": "Bearer 123"}
+        response_body = {"bar": "foo"}
+
+        def request_callback(request, _, response_headers):
+            self.assertEqual(request.params, params)
+            self.assertEqual(request.headers.get("Authorization"), headers['Authorization'])
+            return [200, response_headers, jsons.dumps(response_body)]
+
+        httpretty.register_uri(httpretty.GET, self.url, body=request_callback)
+
+        res = r.get(url=self.url, params=params, headers=headers)
+        self.assertEqual(res, response_body)
+
+    @httpretty.activate
+    def test_get_error(self):
+        """
+        Tests that when an http error occurs on GET method, it raises HTTPError
+        """
+        for status in list(range(400, 419)) + list(range(500, 512)):
+            httpretty.register_uri(httpretty.GET, self.url, status=status)
+
+            r = Requests()
+            params = {"attr": "value"}
+            self.assertRaises(HTTPError, r.get, url=self.url, params=params)
