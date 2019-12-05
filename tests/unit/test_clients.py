@@ -283,10 +283,10 @@ class TestRequestsHttpClient(unittest.TestCase):
         response_body = {"bar": "foo"}
 
         def request_callback(request, _, response_headers):
-            self.assertEqual(jsons.loads(request.body), {"foo": "bar"})
-            self.assertEqual(request.headers.get("Content-Type"), headers["Content-Type"])
+            self.assertEqual(request.body, b"foo=bar")
+            self.assertEqual(request.headers.get("content-type"), headers["content-type"])
             self.assertEqual(request.headers.get("Authorization"), headers["Authorization"])
-            return [201, response_headers, jsons.dumps(response_body)]
+            return [200, response_headers, jsons.dumps(response_body)]
 
         httpretty.register_uri(httpretty.POST, self.url, body=request_callback)
 

@@ -1,3 +1,5 @@
+
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import List, Union
@@ -5,6 +7,8 @@ from typing import List, Union
 from tdm_ingestion.tdmq import Client
 from tdm_ingestion.tdmq.models import EntityType, Record
 
+
+logger = logging.getLogger(__name__)
 
 class BucketOperation(Enum):
     avg = 'avg'
@@ -27,8 +31,11 @@ class TDMQConsumer:
         if bucket:
             assert operation is not None
 
+        logger.debug("getting sources from tdmq")
         sources = self.client.get_sources(
             query={'entity_type': entity_type.name})
+        if sources is not None:
+            logger.debug("found %s", len(sources))
 
         res = []
         params = {}
@@ -45,6 +52,7 @@ class TDMQConsumer:
                 isinstance(before, datetime) else before
 
         for source in sources:
+            logger.debug("getting time series for source %s", source.id_)
             res += self.client.get_time_series(
                 source,
                 params

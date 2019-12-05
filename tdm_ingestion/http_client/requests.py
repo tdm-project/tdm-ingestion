@@ -14,9 +14,10 @@ class Requests(Http):
              ) -> Union[List, Dict]:
         data = data or {}
         headers = headers or {}
-        headers['Content-Type'] = 'application/json'
-        logger.debug("doing POST with url %s and json %s and headers %s", url, json, headers)
-        r = requests.post(url, data=json.dumps(data), headers=headers)
+        headers['content-type'] = 'application/json'
+        logger.debug("doing POST with url %s and json %s and headers %s", url, data, headers)
+        r = requests.post(url, data=data, headers=headers)
+        logger.debug("Response from server is %s", r.status_code)
         r.raise_for_status()
         return r.json()
 

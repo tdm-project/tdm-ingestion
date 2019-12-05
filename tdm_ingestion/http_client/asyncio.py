@@ -5,7 +5,6 @@ import aiohttp
 from tdm_ingestion.http_client.base import Http
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class AioHttp(Http):
