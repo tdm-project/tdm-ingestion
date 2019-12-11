@@ -17,14 +17,12 @@ class CachedStorage:
     @classmethod
     def create_from_json(cls, json: Dict):
         client = json['client']
-        return CachedStorage(
-            import_class(client['class']).create_from_json(client['args']))
+        return CachedStorage(import_class(client['class']).create_from_json(client['args']))
 
     def _idempotent_create_source(self, obj: Source):
         if obj.id_ not in self._cache:
-            logger.debug('querying if source %s exists', obj.id_)
-            if self.client.sources_count(query={'id': obj.id_}) <= 0:
-                self.client.create_sources([obj])
+            logger.debug('creating the source with id: %s', obj.id_)
+            self.client.create_sources([obj]) # it fails if the source already exists
             self._cache.add(obj.id_)
 
     def write(self, time_series: List[Record]):

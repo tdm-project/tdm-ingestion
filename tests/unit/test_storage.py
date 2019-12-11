@@ -29,7 +29,7 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(TIME_SERIES)
 
         # check that the client sources are the same as the test sensors
-        self.assertEqual(len(client.sources), 2)
+        self.assertEqual(len(client.sources), len(SENSORS))
         self.assertEqual(jsons.dumps(SENSORS),
                          jsons.dumps(client.sources.values()))
 
@@ -42,7 +42,7 @@ class TestCachedStorage(unittest.TestCase):
 
     def test_write_sensors_type_pre_loaded(self):
         """
-        Tests writing time_series when the client has already loaded the entity types. In this case the entity types won't be 
+        Tests writing time_series when the client has already loaded the entity types. In this case the entity types won't be created
         """
         # Why are we testing entity types? storage.write doesn't try to create them if they don't exist
         client = DummyTDMQClient()

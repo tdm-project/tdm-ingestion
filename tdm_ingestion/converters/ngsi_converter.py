@@ -30,7 +30,7 @@ class NgsiConverter:
     @staticmethod
     def get_fiware_service_path(msg: Dict):
         for header in msg["headers"]:
-            if "fiware-servicePath" in header.keys():
+            if "fiware-servicePath" in header:
                 return header["fiware-servicePath"]
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
 

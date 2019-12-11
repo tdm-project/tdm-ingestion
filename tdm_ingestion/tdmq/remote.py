@@ -30,31 +30,34 @@ class Client(BaseClient):
         try:
             return self.http.post(self.entity_types_url,
                                   Model.list_to_json(sensor_types))
-        except HTTPError:
-            logger.error('error response from server')
+        except HTTPError as e:
+            logger.error('error response from server with status code %s', e.response.status_code)
 
     def create_sources(self, sensors: List[Source]) -> List[str]:
         logger.debug('create_sources %s', Model.list_to_json(sensors))
         try:
             return self.http.post(self.sources_url,
                                   Model.list_to_json(sensors))
-        except HTTPError:
-            logger.error('error response from server')
+        except HTTPError as e:
+            logger.error('error response from server with status code %s', e.response.status_code)
+            return None
 
     def create_time_series(self, time_series: List[Record]):
         logger.debug('creating timeseries %s', Model.list_to_json(time_series))
         try:
             return self.http.post(self.records_url,
                                   Model.list_to_json(time_series))
-        except HTTPError:
-            logger.error('error response from server')
+        except HTTPError as e:
+            logger.error('error response from server with status code %s', e.response.status_code)
+            return None
+
 
     def get_time_series(self, source: Source, query: Dict[str, Any] = None) -> List[Record]:
         try:
             time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
                                         params=query)
-        except HTTPError:
-            logger.error('error response from server')
+        except HTTPError as e:
+            logger.error('error response from server with status code %s', e.response.status_code)
             return None
 
         records: List[Record] = []
@@ -73,6 +76,7 @@ class Client(BaseClient):
 
     def get_sources(self, id_: str = None, query: Dict = None
                     ) -> Union[Source, List[Source]]:
+        logger.debug("getting sources from server")
         if id_:
             try:
                 source_data = self.http.get(f'{self.sources_url}/{id_}')
@@ -81,8 +85,8 @@ class Client(BaseClient):
                               type_=EntityType(source_data['entity_type'], source_data['entity_category']),
                               geometry=Point(source_data['default_footprint']['coordinates'][1],
                                              source_data['default_footprint']['coordinates'][0]))
-            except HTTPError:
-                logger.debug("error getting source from server")
+            except HTTPError as e:
+                logger.error('error response from server with status code %s', e.response.status_code)
                 return None
         try:
             return [Source(id_=s['external_id'],
@@ -91,8 +95,8 @@ class Client(BaseClient):
                            geometry=Point(s['default_footprint']['coordinates'][1],
                                           s['default_footprint']['coordinates'][0])
                            ) for s in self.http.get(f'{self.sources_url}', params=query)]
-        except HTTPError:
-            logger.debug("error getting sources from server")
+        except HTTPError as e:
+            logger.error('error response from server with status code %s', e.response.status_code)
             return None
 
     def sources_count(self, query: Dict = None):
