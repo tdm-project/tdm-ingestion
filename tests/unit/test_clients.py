@@ -1,6 +1,6 @@
 import logging
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import httpretty
 import jsons
@@ -198,8 +198,8 @@ class TestRemoteClient(unittest.TestCase):
 
         # params values are not important
         params = {
-            "after": now,
-            "before": now,
+            "after": datetime.now(),
+            "before": datetime.now() + timedelta(hours=1),
             "op": "sum",
             "fields": "temperature"
         }

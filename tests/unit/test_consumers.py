@@ -14,7 +14,7 @@ from tdm_ingestion.utils import TimeDelta
 
 from .data import REST_SOURCE, REST_TIME_SERIES, SENSORS, TIME_SERIES
 from .dummies import (DummyConfluentConsumerCorrectMessages,
-                      DummyConfluentConsumerErrorMessages, DummyKafkaMessage)
+                      DummyConfluentConsumerErrorMessages)
 
 
 class TestTDMQConsumer(unittest.TestCase):
@@ -153,7 +153,7 @@ class TestConfluentKafkaConsumer(unittest.TestCase):
 class TestTimeDelta(unittest.TestCase):
     def test_get_before_after_one_hour(self):
         td = TimeDelta.one_hour
-        time = datetime.datetime(year=2000, day=1, month=12, hour=0, minute=0)
+        time = datetime(year=2000, day=1, month=12, hour=0, minute=0)
         before, after = td.get_before_after(time)
         self.assertEqual(before.year, 2000)
         self.assertEqual(before.day, 30)
@@ -169,7 +169,7 @@ class TestTimeDelta(unittest.TestCase):
 
     def test_get_before_after_one_day(self):
         td = TimeDelta.one_day
-        time = datetime.datetime(year=2000, day=1, month=12, hour=0, minute=0)
+        time = datetime(year=2000, day=1, month=12, hour=0, minute=0)
         before, after = td.get_before_after(time)
         self.assertEqual(before.year, 2000)
         self.assertEqual(before.day, 30)
