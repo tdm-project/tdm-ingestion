@@ -29,7 +29,7 @@ class TDMQConsumer:
              after: Union[datetime, str] = None) -> List[Record]:
 
         if bucket is not None:
-            assert operation is not None, "operation cannot be None is bucket is specified"
+            assert operation is not None, "operation cannot be None if bucket is specified"
 
         logger.debug("getting sources from tdmq")
         sources = self.client.get_sources(query={'entity_type': entity_type.name})
