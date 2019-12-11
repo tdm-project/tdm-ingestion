@@ -13,23 +13,23 @@ from tdm_ingestion.tdmq.models import (EntityType, Geometry, Point, Record,
 logger = logging.getLogger(__name__)
 
 class NgsiConverter:
-    non_properties = {'latitude', 'longitude', 'timestamp', 'dateObserved',
-                      'location'}
-    to_skip = {'dateObserved', 'location', 'latitude', 'longitude'}
+    non_properties = {"latitude", "longitude", "timestamp", "dateObserved",
+                      "location"}
+    to_skip = {"dateObserved", "location", "latitude", "longitude"}
     fiware_service_path_to_sensor_type = {
-        '/cagliari/edge/meteo': EntityType('WeatherObserver', 'Station'),
-        '/cagliari/edge/energy': EntityType('EnergyConsumptionMonitor',
-                                            'Station'),
+        "/cagliari/edge/meteo": EntityType("WeatherObserver", "Station"),
+        "/cagliari/edge/energy": EntityType("EnergyConsumptionMonitor",
+                                            "Station"),
 
     }
     message_id_regex = re.compile(
-        r'(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)'
-        r'\.(?P<Sensor>[a-zA-Z0-9_-]+)'
+        r"(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)"
+        r"\.(?P<Sensor>[a-zA-Z0-9_-]+)"
     )
 
     @staticmethod
     def get_fiware_service_path(msg: Dict):
-        for header in msg['headers']:
+        for header in msg["headers"]:
             if "fiware-servicePath" in header.keys():
                 return header["fiware-servicePath"]
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
@@ -37,24 +37,33 @@ class NgsiConverter:
     @staticmethod
     def _get_geometry(msg: dict) -> Geometry:
         geom = {}
-        for attr in msg['body']['attributes']:
-            if attr['name'] in {'latitude', 'longitude'}:
-                geom[attr['name']] = float(attr['value'])
+        for attr in msg["body"]["attributes"]:
+            if attr["name"] in {"latitude", "longitude"}:
+                geom[attr["name"]] = float(attr["value"])
         try:
-            return Point(geom['latitude'], geom['longitude'])
+            return Point(geom["latitude"], geom["longitude"])
         except KeyError:
             raise RuntimeError("missing latitude and/or longitude")
 
     @staticmethod
     def _get_names(msg: Dict) -> Tuple[str, str, str, str]:
-        match = NgsiConverter.message_id_regex.search(msg['body']['id'])
+        """
+        Extract from msg["body"]["id"] information regarding sensor type (e.g., "WeatherObserved"),
+        node name (e.g. Edge-CFA703F4), station name (e.g., ) and sensor name
+        """
+        match = NgsiConverter.message_id_regex.search(msg["body"]["id"])
 
         if match:
             st_type, node_name, station_name, st_name = match.groups()
-            sensor_name = '{}.{}'.format(station_name, st_name)
+            sensor_name = "{}.{}".format(station_name, st_name)
             return node_name, st_name, st_type, sensor_name
         else:
             raise RuntimeError(f'invalid id {msg["body"]["id"]}')
+
+    @staticmethod
+    def _get_properties(msg: Dict) -> List[str]:
+        return [attr["name"] for attr in msg["body"]["attributes"]
+                if attr["name"] not in NgsiConverter.non_properties]
 
     def _create_sensor(self, sensor_name: str, sensor_type: EntityType,
                        geometry: Geometry,
@@ -69,11 +78,11 @@ class NgsiConverter:
 
         records: Dict = {}
         time = None
-        for attr in msg['body']['attributes']:
-            name = attr['name']
-            value = attr['value']
+        for attr in msg["body"]["attributes"]:
+            name = attr["name"]
+            value = attr["value"]
             if value is not None and str(value).strip() and name not in self.to_skip:
-                if name == 'timestamp':
+                if name == "timestamp":
                     time = datetime.datetime.fromtimestamp(
                         float(value), datetime.timezone.utc
                     )
@@ -99,17 +108,12 @@ class NgsiConverter:
                 m_dict = json.loads(m)
                 timeseries_list.append(self._create_models(m_dict))
             except JSONDecodeError:
-                logger.error('exception decoding message %s', m)
+                logger.error("exception decoding message %s", m)
                 continue
             except RuntimeError:
-                logger.error('exception occurred with message %s', m)
+                logger.error("exception occurred with message %s", m)
                 continue
         return timeseries_list
-
-    @staticmethod
-    def _get_properties(msg: Dict) -> List[str]:
-        return [attr['name'] for attr in msg['body']['attributes']
-                if attr['name'] not in NgsiConverter.non_properties]
 
 
 class CachedNgsiConverter(NgsiConverter):

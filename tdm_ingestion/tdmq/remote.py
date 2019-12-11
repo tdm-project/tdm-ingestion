@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 from typing import Any, Dict, List, Union
+from urllib.parse import urljoin
 
 from requests.exceptions import HTTPError
 
@@ -20,12 +21,9 @@ class Client(BaseClient):
         self.url = url
         logger.debug("tdmq url %s", self.url)
         self.api_version = api_version
-        self.entity_types_url = os.path.join(self.url,
-                                             f'api/{api_version}/entity_types')
-        self.sources_url = os.path.join(self.url,
-                                        f'api/{api_version}/sources')
-        self.records_url = os.path.join(self.url,
-                                        f'api/{api_version}/records')
+        self.entity_types_url = urljoin(self.url, f'api/{api_version}/entity_types')
+        self.sources_url = urljoin(self.url, f'api/{api_version}/sources')
+        self.records_url = urljoin(self.url, f'api/{api_version}/records')
 
     def create_entity_types(self, sensor_types: List[EntityType]) -> List[str]:
         logger.debug('create_entity_types %s', Model.list_to_json(sensor_types))
@@ -58,7 +56,7 @@ class Client(BaseClient):
         except HTTPError:
             logger.error('error response from server')
             return None
-            
+
         records: List[Record] = []
         logger.debug('time_series %s', time_series)
         for idx, time in enumerate(time_series['coords']['time']):

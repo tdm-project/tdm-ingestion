@@ -37,6 +37,7 @@ class TestNgsiConverter(unittest.TestCase):
         timeseries_list = converter.convert([json.dumps(self.message)])
         self.assertEqual(len(timeseries_list), 1)
         logger.debug(timeseries_list[0].to_json())
+        print(timeseries_list[0].to_json())
         self.assertEqual(timeseries_list[0].data,
                          {'windDirection': 174.545, 'windSpeed': 0.0})
         self.assertEqual(timeseries_list[0].time.strftime('%Y-%m-%dT%H:%M:%S'),

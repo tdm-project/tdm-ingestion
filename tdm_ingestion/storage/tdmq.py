@@ -1,15 +1,14 @@
 import logging
-from typing import List, Dict, Type
-from typing import Union, Set
+from typing import Dict, List, Set, Type, Union
 
 from tdm_ingestion.tdmq.base import Client
-from tdm_ingestion.tdmq.models import EntityType, Source, Record
+from tdm_ingestion.tdmq.models import EntityType, Record, Source
 from tdm_ingestion.tdmq.remote import AsyncClient
 from tdm_ingestion.utils import import_class
 
-
 logger = logging.getLogger(__name__)
 logger.debug(__name__)
+
 class CachedStorage:
     def __init__(self, client: Client):
         self.client = client

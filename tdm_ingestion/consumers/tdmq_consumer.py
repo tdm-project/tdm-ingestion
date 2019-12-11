@@ -28,16 +28,17 @@ class TDMQConsumer:
              before: Union[datetime, str] = None,
              after: Union[datetime, str] = None) -> List[Record]:
 
-        if bucket:
-            assert operation is not None
+        if bucket is not None:
+            assert operation is not None, "operation cannot be None is bucket is specified"
 
         logger.debug("getting sources from tdmq")
-        sources = self.client.get_sources(
-            query={'entity_type': entity_type.name})
+        sources = self.client.get_sources(query={'entity_type': entity_type.name})
         if sources is not None:
             logger.debug("found %s", len(sources))
+        else:
+            return []
 
-        res = []
+        records = []
         params = {}
         if bucket is not None:
             params['bucket'] = bucket
@@ -53,8 +54,10 @@ class TDMQConsumer:
 
         for source in sources:
             logger.debug("getting time series for source %s", source.id_)
-            res += self.client.get_time_series(
+            times_series = self.client.get_time_series(
                 source,
                 params
             )
-        return res
+            if times_series is not None:
+                records += times_series
+        return records
