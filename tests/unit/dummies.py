@@ -3,13 +3,13 @@ import json
 import random
 import uuid
 from collections import defaultdict
-from typing import List, AnyStr, Dict, Any, Union
+from typing import Any, AnyStr, Dict, List, Union
 
 from tdm_ingestion.consumers.base import BaseKafkaConsumer
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.storage.ckan import CkanClient
 from tdm_ingestion.tdmq import Client
-from tdm_ingestion.tdmq.models import Source, EntityType, Record
+from tdm_ingestion.tdmq.models import EntityType, Record, Source
 
 
 class DummyTDMQStorage:
@@ -85,33 +85,62 @@ class DummyTDMQClient(Client):
                 return self.sources_by_types[query['entity_type']]
 
 
-class DummyKafkaConsumer(BaseKafkaConsumer):
-    message = {
-        "headers": [{"fiware-service": "tdm"},
-                    {"fiware-servicePath": "/cagliari/edge/meteo"},
-                    {"timestamp": 1531774294021}],
-        "body": {
-            "attributes": [
-                {"name": "barometricPressure", "type": "float", "value": " "},
-                {"name": "dateObserved", "type": "String",
-                 "value": "2018-07-16T20:51:33+00:00"},
-                {"name": "location", "type": "geo:point",
-                 "value": "39.2479168, 9.1329701"},
-                {"name": "timestamp", "type": "Integer",
-                 "value": "1531774293"},
-                {"name": "windDirection", "type": "Float", "value": "174.545"},
-                {"name": "windSpeed", "type": "Float", "value": "0.000"},
-                {"name": "latitude", "type": "string", "value": "39.2479168"},
-                {"name": "longitude", "type": "string", "value": "9.1329701"}
-            ],
-            "type": "WeatherObserved",
-            "isPattern": "false",
-            "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
-        }
-    }
+class DummyKafkaMessage:
+    def __init__(self, value, error=None):
+        self._value = value
+        self._error = error
 
-    def poll(self, timeout_ms=0, max_records=0) -> List[str]:
-        return [json.dumps(self.message)]
+    def value(self):
+        return self._value
+
+    def error(self):
+        return self._error
+
+
+class DummyKafkaError:
+    pass
+
+
+class DummyConfluentConsumer:
+
+    def __init__(self, value, error, *args, **kwargs):
+        self.messages = [DummyKafkaMessage(value, error)]
+
+    def consume(self, timeout_s=0, max_records=0) -> List[str]:
+        return self.messages
+
+    def subscribe(self, topics):
+        pass
+
+
+class DummyConfluentConsumerCorrectMessages(DummyConfluentConsumer):
+    def __init__(self, *args, **kwargs):
+        correct_message = {
+            "headers": [{"fiware-service": "tdm"},
+                        {"fiware-servicePath": "/cagliari/edge/meteo"},
+                        {"timestamp": 1531774294021}],
+            "body": {
+                "attributes": [
+                    {"name": "barometricPressure", "type": "float", "value": " "},
+                    {"name": "dateObserved", "type": "String", "value": "2018-07-16T20:51:33+00:00"},
+                    {"name": "location", "type": "geo:point", "value": "39.2479168, 9.1329701"},
+                    {"name": "timestamp", "type": "Integer", "value": "1531774293"},
+                    {"name": "windDirection", "type": "Float", "value": "174.545"},
+                    {"name": "windSpeed", "type": "Float", "value": "0.000"},
+                    {"name": "latitude", "type": "string", "value": "39.2479168"},
+                    {"name": "longitude", "type": "string", "value": "9.1329701"}
+                ],
+                "type": "WeatherObserved",
+                "isPattern": "false",
+                "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+            }
+        }
+        super(DummyConfluentConsumerCorrectMessages, self).__init__(correct_message, None, *args, **kwargs)
+
+
+class DummyConfluentConsumerErrorMessages(DummyConfluentConsumer):
+    def __init__(self, *args, **kwargs):
+        super(DummyConfluentConsumerErrorMessages, self).__init__(None, DummyKafkaError(), *args, **kwargs)
 
 
 class DummyConverter:

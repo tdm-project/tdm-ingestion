@@ -1,33 +1,20 @@
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from urllib.parse import urljoin
 
 import httpretty
 import jsons
+from confluent_kafka import KafkaError
 
+from tdm_ingestion.consumers.confluent_kafka_consumer import KafkaConsumer
 from tdm_ingestion.consumers.tdmq_consumer import BucketOperation, TDMQConsumer
-from tdm_ingestion.tdmq.models import EntityType, Point, Record, Source
 from tdm_ingestion.tdmq.remote import Client
 from tdm_ingestion.utils import TimeDelta
 
-from .data import (REST_SOURCE, REST_TIME_SERIES, SENSORS, SENSORS_TYPE,
-                   TIME_SERIES)
-from .dummies import DummyTDMQClient
-
-# now = datetime.datetime.now(datetime.timezone.utc)
-# entity_types = [
-#     EntityType('st1', 'type1'),
-#     EntityType('st2', 'type2')
-# ]
-# sources = [
-#     Source('s1', entity_types[0], Point(0, 0), ['temp']),
-#     Source('s2', entity_types[1], Point(1, 1), ['temp'])
-# ]
-# time_series = [
-#     Record(now, sources[0], {'value': 0.0}),
-#     Record(now, sources[1], {'value': 1.0})
-# ]
+from .data import REST_SOURCE, REST_TIME_SERIES, SENSORS, TIME_SERIES
+from .dummies import (DummyConfluentConsumerCorrectMessages,
+                      DummyConfluentConsumerErrorMessages, DummyKafkaMessage)
 
 
 class TestTDMQConsumer(unittest.TestCase):
@@ -125,6 +112,42 @@ class TestTDMQConsumer(unittest.TestCase):
             "after": after.isoformat()
         }
         client.get_time_series.assert_called_with(SENSORS[0], expected_params)
+
+
+class TestConfluentKafkaConsumer(unittest.TestCase):
+    def test_poll(self):
+        """
+        Tests correct message poll
+        """
+        with patch('tdm_ingestion.consumers.confluent_kafka_consumer.ConfluentKafkaConsumer', DummyConfluentConsumerCorrectMessages) as ckc:
+            consumer = KafkaConsumer(["foo.bar"], "foo")
+            messages = consumer.poll()
+            self.assertEqual(messages, [ckc().messages[0].value()])
+
+    def test_poll_message_error(self):
+        """
+        Tests that, if message.error() is not None, the message is ignored
+        """
+        with patch('tdm_ingestion.consumers.confluent_kafka_consumer.ConfluentKafkaConsumer', DummyConfluentConsumerErrorMessages):
+            consumer = KafkaConsumer(["foo.bar"], "foo")
+            messages = consumer.poll()
+            self.assertEqual(messages, [])
+
+    def test_poll_exception(self):
+        """
+        Tests that, if an exception occurs consuming messages, empty list is returned
+        """
+        with patch('tdm_ingestion.consumers.confluent_kafka_consumer.ConfluentKafkaConsumer') as ckc:
+            ckc().consumer = Mock(side_effetct=KafkaError)
+            consumer = KafkaConsumer(["foo.bar"], "foo")
+            messages = consumer.poll()
+            self.assertEqual(messages, [])
+
+        with patch('tdm_ingestion.consumers.confluent_kafka_consumer.ConfluentKafkaConsumer') as ckc:
+            ckc().consumer = Mock(side_effetct=RuntimeError)
+            consumer = KafkaConsumer(["foo.bar"], "foo")
+            messages = consumer.poll()
+            self.assertEqual(messages, [])
 
 
 class TestTimeDelta(unittest.TestCase):
