@@ -3,11 +3,12 @@ from typing import Dict, List, Set, Type, Union
 
 from tdm_ingestion.tdmq.base import Client
 from tdm_ingestion.tdmq.models import EntityType, Record, Source
-from tdm_ingestion.tdmq.remote import AsyncClient
+from tdm_ingestion.tdmq.remote import AsyncClient, DuplicatedEntryError, GenericHttpError
 from tdm_ingestion.utils import import_class
 
 logger = logging.getLogger(__name__)
 logger.debug(__name__)
+
 
 class CachedStorage:
     def __init__(self, client: Client):
@@ -22,14 +23,24 @@ class CachedStorage:
     def _idempotent_create_source(self, obj: Source):
         if obj.id_ not in self._cache:
             logger.debug('creating the source with id: %s', obj.id_)
-            self.client.create_sources([obj]) # it fails if the source already exists
-            self._cache.add(obj.id_)
+            try:
+                self.client.create_sources([obj])
+            except DuplicatedEntryError:
+                self._cache.add(obj.id_)
+            except GenericHttpError:
+                logger.debug("error occurred creating the source")
+                return False
+            return True
 
     def write(self, time_series: List[Record]):
         if time_series:
+            ts_to_write = []
             for ts in time_series:
-                self._idempotent_create_source(ts.source)
-            self.client.create_time_series(time_series)
+                if self._idempotent_create_source(ts.source) is True:
+                    # Only if the source was created correctly or if it was already present the time series will be written
+                    ts_to_write.append(ts)
+            if len(ts_to_write) > 0:
+                self.client.create_time_series(ts_to_write)
 
 
 class AsyncCachedStorage:

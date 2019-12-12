@@ -14,6 +14,27 @@ from tdm_ingestion.tdmq.models import EntityType, Model, Point, Record, Source
 logger = logging.getLogger(__name__)
 
 
+class GenericHttpError(Exception):
+    """
+    Generic exception raised when an error occurs performing an HttpRequest
+    """
+
+
+class DuplicatedEntryError(GenericHttpError):
+    """
+    Exception to raise when a POST request fails because of duplicated entry
+    """
+
+
+def raise_exception(status_code):
+    """
+    Raise an exception based on status code in input
+    """
+    if status_code == 409:
+        raise DuplicatedEntryError
+    raise GenericHttpError
+
+
 class Client(BaseClient):
 
     def __init__(self, url: str, http_client: Http = None, api_version='v0.0'):
@@ -28,37 +49,33 @@ class Client(BaseClient):
     def create_entity_types(self, sensor_types: List[EntityType]) -> List[str]:
         logger.debug('create_entity_types %s', Model.list_to_json(sensor_types))
         try:
-            return self.http.post(self.entity_types_url,
-                                  Model.list_to_json(sensor_types))
+            return self.http.post(self.entity_types_url, Model.list_to_json(sensor_types))
         except HTTPError as e:
             logger.error('error response from server with status code %s', e.response.status_code)
+            raise_exception(e.response.status_code)
 
     def create_sources(self, sensors: List[Source]) -> List[str]:
         logger.debug('create_sources %s', Model.list_to_json(sensors))
         try:
-            return self.http.post(self.sources_url,
-                                  Model.list_to_json(sensors))
+            return self.http.post(self.sources_url, Model.list_to_json(sensors))
         except HTTPError as e:
             logger.error('error response from server with status code %s', e.response.status_code)
-            return None
+            raise_exception(e.response.status_code)
 
     def create_time_series(self, time_series: List[Record]):
         logger.debug('creating timeseries %s', Model.list_to_json(time_series))
         try:
-            return self.http.post(self.records_url,
-                                  Model.list_to_json(time_series))
+            return self.http.post(self.records_url, Model.list_to_json(time_series))
         except HTTPError as e:
             logger.error('error response from server with status code %s', e.response.status_code)
-            return None
-
+            raise_exception(e.response.status_code)
 
     def get_time_series(self, source: Source, query: Dict[str, Any] = None) -> List[Record]:
         try:
-            time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries',
-                                        params=query)
+            time_series = self.http.get(f'{self.sources_url}/{source.tdmq_id}/timeseries', params=query)
         except HTTPError as e:
             logger.error('error response from server with status code %s', e.response.status_code)
-            return None
+            raise_exception(e.response.status_code)
 
         records: List[Record] = []
         logger.debug('time_series %s', time_series)
@@ -87,7 +104,7 @@ class Client(BaseClient):
                                              source_data['default_footprint']['coordinates'][0]))
             except HTTPError as e:
                 logger.error('error response from server with status code %s', e.response.status_code)
-                return None
+                raise_exception(e.response.status_code)
         try:
             return [Source(id_=s['external_id'],
                            tdmq_id=s['tdmq_id'],
@@ -97,20 +114,19 @@ class Client(BaseClient):
                            ) for s in self.http.get(f'{self.sources_url}', params=query)]
         except HTTPError as e:
             logger.error('error response from server with status code %s', e.response.status_code)
-            return None
+            raise_exception(e.response.status_code)
 
     def sources_count(self, query: Dict = None):
         try:
             return len(self.http.get(self.sources_url, params=query))
-        except HTTPError:
-            return None
+        except HTTPError as e:
+            raise_exception(e.response.status_code)
 
     def entity_types_count(self, query: Dict = None):
         try:
             return len(self.http.get(self.entity_types_url, params=query))
-        except HTTPError:
-            return None
-
+        except HTTPError as e:
+            raise_exception(e.response.status_code)
 
 class AsyncClient(Client):
 

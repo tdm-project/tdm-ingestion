@@ -25,6 +25,9 @@ class TestTDMQConsumer(unittest.TestCase):
 
     @httpretty.activate
     def test_poll(self):
+        """
+        Tests correct message polls
+        """
         httpretty.register_uri(httpretty.GET, self.sources_url,
                                body=jsons.dumps([REST_SOURCE]), match_querystring=False)
 

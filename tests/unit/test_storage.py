@@ -1,17 +1,18 @@
 import logging
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
+import httpretty
 import jsons
 
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
+from tdm_ingestion.tdmq.remote import Client
 from tdm_ingestion.utils import DateTimeFormatter
 from tests.unit.dummies import DummyCkan, DummyHttp, DummyTDMQClient
 
-from .data import (REST_SOURCE, REST_TIME_SERIES, SENSORS, SENSORS_TYPE,
-                   TIME_SERIES)
+from .data import SENSORS, SENSORS_TYPE, TIME_SERIES
 
 logger = logging.getLogger('tdm_ingestion')
 
@@ -30,16 +31,30 @@ class TestCachedStorage(unittest.TestCase):
 
         # check that the client sources are the same as the test sensors
         self.assertEqual(len(client.sources), len(SENSORS))
-        self.assertEqual(jsons.dumps(SENSORS),
-                         jsons.dumps(client.sources.values()))
+        self.assertEqual(jsons.dumps(SENSORS), jsons.dumps(client.sources.values()))
 
         # check that the time series in the client are the same as the test values
         actual_time_series = []
         for ts_list in client.time_series.values():
             actual_time_series.extend(ts_list)
-        self.assertEqual(jsons.dumps(TIME_SERIES),
-                         jsons.dumps(actual_time_series))
+        self.assertEqual(jsons.dumps(TIME_SERIES), jsons.dumps(actual_time_series))
 
+    @httpretty.activate
+    def test_write_no_time_series_when_source_creation_fails(self):
+        """
+        Tests writing Records when no data are preloaded in the client
+        """
+
+        client = Client("http://foo.url/")
+        client.create_time_series = Mock()
+
+        httpretty.register_uri(httpretty.POST, client.sources_url, status=400)
+
+        storage = CachedStorage(client)
+        storage.write(TIME_SERIES)
+
+        client.create_time_series.assert_not_called()
+    
     def test_write_sensors_type_pre_loaded(self):
         """
         Tests writing time_series when the client has already loaded the entity types. In this case the entity types won't be created
@@ -52,17 +67,13 @@ class TestCachedStorage(unittest.TestCase):
         storage = CachedStorage(client)
         storage.write(TIME_SERIES)
 
-        self.assertEqual(jsons.dumps(SENSORS_TYPE),
-                         jsons.dumps(client.entity_types.values()))
-
-        self.assertEqual(jsons.dumps(SENSORS),
-                         jsons.dumps(client.sources.values()))
+        self.assertEqual(jsons.dumps(SENSORS_TYPE), jsons.dumps(client.entity_types.values()))
+        self.assertEqual(jsons.dumps(SENSORS), jsons.dumps(client.sources.values()))
 
         actual_time_series = []
         for ts_list in client.time_series.values():
             actual_time_series.extend(ts_list)
-        self.assertEqual(jsons.dumps(TIME_SERIES),
-                         jsons.dumps(actual_time_series))
+        self.assertEqual(jsons.dumps(TIME_SERIES), jsons.dumps(actual_time_series))
 
     def test_write_all_data_preloaded(self):
         """
@@ -76,18 +87,15 @@ class TestCachedStorage(unittest.TestCase):
         storage = CachedStorage(client)
         storage.write(TIME_SERIES)
 
-        self.assertEqual(jsons.dumps(SENSORS_TYPE),
-                         jsons.dumps(client.entity_types.values()))
-
-        self.assertEqual(jsons.dumps(SENSORS),
-                         jsons.dumps(client.sources.values()))
+        self.assertEqual(jsons.dumps(SENSORS_TYPE), jsons.dumps(client.entity_types.values()))
+        self.assertEqual(jsons.dumps(SENSORS), jsons.dumps(client.sources.values()))
 
         actual_time_series = []
         for ts_list in client.time_series.values():
             actual_time_series.extend(ts_list)
 
-        self.assertEqual(jsons.dumps(TIME_SERIES),
-                         jsons.dumps(actual_time_series))
+        self.assertEqual(jsons.dumps(TIME_SERIES), jsons.dumps(actual_time_series))
+
 
 class TestCkanStorage(unittest.TestCase):
 
@@ -96,16 +104,16 @@ class TestCkanStorage(unittest.TestCase):
 
         storage.write(TIME_SERIES, 'lisa', 'test')
         expected_result = {'test': {'dataset': 'lisa',
-                      'records': [{'date': TIME_SERIES[0].time,
-                                   'location': '0,1',
-                                   'station': 's1',
-                                   'type': 'cat1',
-                                   'temperature': TIME_SERIES[0].data['temperature']},
-                                  {'date': TIME_SERIES[1].time,
-                                   'location': '2,3',
-                                   'station': 's2',
-                                   'type': 'cat2',
-                                   'humidity': TIME_SERIES[1].data['humidity']}]}}
+                                    'records': [{'date': TIME_SERIES[0].time,
+                                                 'location': '0,1',
+                                                 'station': 's1',
+                                                 'type': 'cat1',
+                                                 'temperature': TIME_SERIES[0].data['temperature']},
+                                                {'date': TIME_SERIES[1].time,
+                                                 'location': '2,3',
+                                                 'station': 's2',
+                                                 'type': 'cat2',
+                                                 'humidity': TIME_SERIES[1].data['humidity']}]}}
         self.assertDictEqual(storage.client.resources, expected_result)
 
     def test_write_ckan_empty(self):

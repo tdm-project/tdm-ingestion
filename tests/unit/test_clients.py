@@ -1,6 +1,6 @@
 import logging
 import unittest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import httpretty
 import jsons
@@ -8,9 +8,11 @@ from requests.exceptions import HTTPError
 
 from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.tdmq.models import EntityType, Point, Source
-from tdm_ingestion.tdmq.remote import Client
+from tdm_ingestion.tdmq.remote import (Client, DuplicatedEntryError,
+                                       GenericHttpError)
 
-from .data import SENSORS, SENSORS_TYPE, TIME_SERIES, REST_SOURCE, REST_TIME_SERIES
+from .data import (REST_SOURCE, REST_TIME_SERIES, SENSORS, SENSORS_TYPE,
+                   TIME_SERIES)
 
 logger = logging.getLogger("tdm_ingestion")
 
@@ -36,13 +38,12 @@ class TestRemoteClient(unittest.TestCase):
     @httpretty.activate
     def test_create_entity_types_error(self):
         """
-        Tests that when an error occurs it returns None
+        Tests that when an error occurs it raises GenericError
         """
         client = Client(self.url)
         httpretty.register_uri(httpretty.POST, client.entity_types_url, status=400)
 
-        res = client.create_entity_types(SENSORS_TYPE)
-        self.assertIsNone(res)
+        self.assertRaises(GenericHttpError, client.create_entity_types, SENSORS_TYPE)
 
     @httpretty.activate
     def test_create_sources(self):
@@ -58,15 +59,22 @@ class TestRemoteClient(unittest.TestCase):
         self.assertEqual(res, expected_response)
 
     @httpretty.activate
-    def test_create_source_error(self):
+    def test_create_source_generic_error(self):
         """
-        Tests that when an error occurs it returns None
+        Tests that when an error occurs it raises GenericError
         """
         client = Client(self.url)
         httpretty.register_uri(httpretty.POST, client.sources_url, status=400)
+        self.assertRaises(GenericHttpError, client.create_sources, SENSORS)
 
-        res = client.create_sources(SENSORS)
-        self.assertIsNone(res)
+    @httpretty.activate
+    def test_create_source_duplicate_entry_error(self):
+        """
+        Tests that when a duplicate error occurs it raises DuplicatedEntryError
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.sources_url, status=409)
+        self.assertRaises(DuplicatedEntryError, client.create_sources, SENSORS)
 
     @httpretty.activate
     def test_create_time_series(self):
@@ -81,13 +89,12 @@ class TestRemoteClient(unittest.TestCase):
     @httpretty.activate
     def test_create_time_series_error(self):
         """
-        Tests that when an error occurs it returns None
+        Tests that when an error occurs it raises GenericError
         """
         client = Client(self.url)
         httpretty.register_uri(httpretty.POST, client.records_url, status=400)
-        
-        res = client.create_time_series(TIME_SERIES)
-        self.assertIsNone(res)
+
+        self.assertRaises(GenericHttpError, client.create_time_series, TIME_SERIES)
 
     @httpretty.activate
     def test_get_source_by_id(self):
@@ -135,17 +142,14 @@ class TestRemoteClient(unittest.TestCase):
     @httpretty.activate
     def test_get_sources_error(self):
         """
-        Tests error handling when server returns an error
+        Tests that when an error occurs it raises GenericError
         """
         client = Client(self.url)
         httpretty.register_uri(httpretty.GET, client.sources_url, status=400, match_querystring=False)
         httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].id_}", status=400, match_querystring=False)
 
-        res = client.get_sources(SENSORS[0].id_)
-        self.assertIsNone(res)
-
-        res = client.get_sources()
-        self.assertIsNone(res)
+        self.assertRaises(GenericHttpError, client.get_sources, SENSORS[0].id_)
+        self.assertRaises(GenericHttpError, client.get_sources)
 
     @httpretty.activate
     def test_get_sources_count(self):
@@ -162,13 +166,12 @@ class TestRemoteClient(unittest.TestCase):
     @httpretty.activate
     def test_get_sources_count_error(self):
         """
-        Tests get sources count error
+        Tests that when an error occurs it raises GenericError
         """
         client = Client(self.url)
         httpretty.register_uri(httpretty.GET, client.sources_url, status=400)
 
-        res = client.sources_count()
-        self.assertIsNone(res)
+        self.assertRaises(GenericHttpError, client.sources_count)
 
     @httpretty.activate
     def test_get_time_series(self):
@@ -216,8 +219,7 @@ class TestRemoteClient(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, f"{client.sources_url}/{SENSORS[0].tdmq_id}/timeseries",
                                status=400)
 
-        res = client.get_time_series(SENSORS[0])
-        self.assertIsNone(res)
+        self.assertRaises(GenericHttpError, client.get_time_series, SENSORS[0])
 
 
 class TestRequestsHttpClient(unittest.TestCase):

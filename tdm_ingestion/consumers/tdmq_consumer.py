@@ -6,7 +6,7 @@ from typing import List, Union
 
 from tdm_ingestion.tdmq import Client
 from tdm_ingestion.tdmq.models import EntityType, Record
-
+from tdm_ingestion.tdmq.remote import GenericHttpError
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +32,10 @@ class TDMQConsumer:
             assert operation is not None, "operation cannot be None if bucket is specified"
 
         logger.debug("getting sources from tdmq")
-        sources = self.client.get_sources(query={'entity_type': entity_type.name})
-        if sources is not None:
-            logger.debug("found %s", len(sources))
-        else:
+        try:
+            sources = self.client.get_sources(query={'entity_type': entity_type.name})
+        except GenericHttpError:
+            logger.debug("error getting sources from tdmq server")
             return []
 
         records = []
@@ -54,10 +54,10 @@ class TDMQConsumer:
 
         for source in sources:
             logger.debug("getting time series for source %s", source.id_)
-            times_series = self.client.get_time_series(
-                source,
-                params
-            )
-            if times_series is not None:
+            try:
+                times_series = self.client.get_time_series(source, params)
+            except GenericHttpError:
+                logger.debug("error getting time series from tdmq server")
+            else:
                 records += times_series
         return records
