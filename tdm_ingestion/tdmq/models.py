@@ -44,8 +44,8 @@ class RefMeasure(Measure):
 
 
 class EntityType(Model):
-    def __init__(self, _id: str, category: str = None):
-        self.name = _id
+    def __init__(self, name: str, category: str = None):
+        self.name = name
         self.category = category or "sensor"
 
     def __repr__(self):
@@ -75,24 +75,24 @@ class Point(Geometry):
 
 class Source(Model):
     def __init__(self,
-                 _id: str = None,
-                 type: EntityType = None,
+                 id_: str = None,
+                 type_: EntityType = None,
                  geometry: Geometry = None,
                  controlled_properties: List[str] = None,
                  tdmq_id: str = None):
-        self._id = _id
-        self.type = type
+        self.id_ = id_
+        self.type = type_
         self.geometry = geometry
         self.controlled_properties = controlled_properties
         self.tdmq_id = tdmq_id
 
     def __repr__(self):
-        return f'Sensor {self._id} of {repr(self.type)}'
+        return f'Sensor {self.id_} of {repr(self.type)}'
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(
-            id=self._id,
-            alias=self._id,
+            id=self.id_,
+            alias=self.id_,
             entity_type=self.type.name,
             entity_category="Station",
             default_footprint=self.geometry.to_json(False),
@@ -114,6 +114,6 @@ class Record(Model):
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
-        dct["source"] = self.source._id
+        dct["source"] = self.source.id_
         camel_cased = to_camel_case_dict(dct)
         return jsonify(camel_cased) if serialize else camel_cased

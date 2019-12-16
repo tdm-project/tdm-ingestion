@@ -6,6 +6,8 @@ from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 from tdm_ingestion.storage.tdmq import CachedStorage
 from tdm_ingestion.tdmq.remote import Client
 
+logger = logging.getLogger('tdm_ingestion.kafka_tdms_ingestion')
+
 if __name__ == '__main__':
     import argparse
 
@@ -23,10 +25,8 @@ if __name__ == '__main__':
     parser.add_argument('--tdmq_url', dest='tdmq_url', required=True)
 
     args = parser.parse_args()
-    logging_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(level=logging_level)
 
-    logging.info('running with args %s', args.__dict__)
+    logger.info('running with args %s', args.__dict__)
 
     kwargs = {}
     if args.from_beginning:

@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 
 cache: pip
 
@@ -14,14 +14,13 @@ env:
 #    - BACKEND=sync
 #    - BACKEND=async
 
-
 install:
   - pip install -e .[confluent]
-  - pip install kafka
+  - pip install kafka-python==1.4.7
 
 script:
   - cd tests
-  - python -m unittest
+  - nosetests unit/ --with-coverage --cover-package tdm_ingestion
   - cd -
   - make tests
 

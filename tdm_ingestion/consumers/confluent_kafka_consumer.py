@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from confluent_kafka import Consumer as ConfluentKafkaConsumer
+from confluent_kafka import Consumer as ConfluentKafkaConsumer, KafkaError
 from tdm_ingestion.consumers.base import BaseKafkaConsumer
 
 logger = logging.getLogger(__name__)
@@ -9,11 +9,8 @@ logger = logging.getLogger(__name__)
 
 class KafkaConsumer(BaseKafkaConsumer):
 
-    def __init__(self,
-                 bootstrap_servers: List[str],
-                 topics: List[str],
-                 group_id: str = 'tdm_ingestion', **kwargs
-                 ):
+    def __init__(self, bootstrap_servers: List[str],
+                 topics: List[str], group_id: str = 'tdm_ingestion', **kwargs):
         self.bootstrap_servers = ','.join(bootstrap_servers)
         self.topics = topics
         self.group_id = group_id
@@ -29,5 +26,9 @@ class KafkaConsumer(BaseKafkaConsumer):
         logger.debug('subscribed to topics %s', topics)
 
     def poll(self, timeout_s: int = -1, max_records: int = 1) -> List[str]:
-        return [m.value() for m in
-                self.consumer.consume(max_records, timeout_s)]
+        try:
+            messages = self.consumer.consume(max_records, timeout_s)
+        except (RuntimeError, KafkaError):
+            logger.debug("error consuming messages")
+            return []
+        return [m.value() for m in messages if m.error() is None]

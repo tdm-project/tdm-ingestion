@@ -54,12 +54,9 @@ if __name__ == '__main__':
         before, after = args.before, args.after
         resource_name = args.ckan_resource
 
-    consumer = TDMQConsumer(
-        Client(args.tdmq_url),
+    consumer = TDMQConsumer(Client(args.tdmq_url))
 
-    )
-    storage = CkanStorage(
-        RemoteCkan(args.ckan_url, Requests(), args.ckan_api_key))
+    storage = CkanStorage(RemoteCkan(args.ckan_url, Requests(), args.ckan_api_key))
 
     storage.write(
         consumer.poll(

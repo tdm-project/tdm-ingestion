@@ -18,7 +18,7 @@ def docker_compose_down(docker_yaml):
 
 def try_func(func, sleep, retry, *args, **kwargs):
     """
-   func must return True or a similiar value
+    func must return True or a similiar value
     """
     passed = False
     counter = 0
@@ -34,8 +34,7 @@ def try_func(func, sleep, retry, *args, **kwargs):
         counter += 1
         time.sleep(sleep)
     if not passed:
-        raise RuntimeError('func % failed with args %s kwargs %s', func, args,
-                           kwargs)
+        raise RuntimeError(f'func {func} failed with args {args} kwargs {kwargs}', func, args, kwargs)
     return res
 
 

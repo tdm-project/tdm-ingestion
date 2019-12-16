@@ -8,6 +8,7 @@ from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
 
+logger = logging.getLogger(__name__)
 
 class CkanClient(ABC):
     @abstractmethod
@@ -39,11 +40,11 @@ class RemoteCkan(CkanClient):
         self.headers = {'Authorization': api_key}
 
     def delete_resource(self, resource_id: str):
-        logging.debug('deleteing resource %s', resource_id)
+        logger.debug('deleting resource %s', resource_id)
         self.client.post(
             f'{self.base_url}/api/3/action/resource_delete',
             headers=self.headers,
-            json=jsons.dumps(dict(id=resource_id))
+            data=jsons.dumps(dict(id=resource_id))
         )
 
     def get_dataset_info(self, dataset: str) -> Dict:
@@ -56,10 +57,10 @@ class RemoteCkan(CkanClient):
     def create_resource(self, resource: str, dataset: str,
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
-        logging.debug('create_resource %s %s, %s', resource, dataset, records)
+        logger.debug('create_resource %s %s, %s', resource, dataset, records)
         if records:
             if upsert:
-                logging.debug('upsert is true, remove resource first')
+                logger.debug('upsert is true, remove resource first')
                 for r in self.get_dataset_info(dataset)['resources']:
                     if r['name'] == resource:
                         self.delete_resource(r['id'])
@@ -73,7 +74,7 @@ class RemoteCkan(CkanClient):
 
             self.client.post(
                 f'{self.base_url}/api/3/action/datastore_create',
-                json=jsons.dumps(data),
+                data=jsons.dumps(data),
                 headers=self.headers)
 
 
@@ -103,7 +104,7 @@ class CkanStorage:
         self.client.create_resource(resource, dataset, [
             {
                 **{
-                    'station': ts.source._id,
+                    'station': ts.source.id_,
                     'type': ts.source.type.category,
                     'date': ts.time,
                     'location': f'{ts.source.geometry.latitude},{ts.source.geometry.longitude}'

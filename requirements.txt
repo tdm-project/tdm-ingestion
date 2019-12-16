@@ -1,0 +1,13 @@
+certifi==2019.11.28
+chardet==3.0.4
+confluent-kafka==1.2.0
+httpretty==0.9.7
+idna==2.8
+jsons==1.0.0
+kafka-python==1.4.7
+pyaml==19.4.1
+PyYAML==5.1.2
+requests==2.22.0
+stringcase==1.2.0
+typish==1.2.0
+urllib3==1.25.7

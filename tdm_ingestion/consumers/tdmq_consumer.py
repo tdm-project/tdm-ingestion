@@ -1,10 +1,14 @@
+
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import List, Union
 
 from tdm_ingestion.tdmq import Client
 from tdm_ingestion.tdmq.models import EntityType, Record
+from tdm_ingestion.tdmq.remote import GenericHttpError
 
+logger = logging.getLogger(__name__)
 
 class BucketOperation(Enum):
     avg = 'avg'
@@ -24,13 +28,17 @@ class TDMQConsumer:
              before: Union[datetime, str] = None,
              after: Union[datetime, str] = None) -> List[Record]:
 
-        if bucket:
-            assert operation is not None
+        if bucket is not None:
+            assert operation is not None, "operation cannot be None if bucket is specified"
 
-        sources = self.client.get_sources(
-            query={'entity_type': entity_type.name})
+        logger.debug("getting sources from tdmq")
+        try:
+            sources = self.client.get_sources(query={'entity_type': entity_type.name})
+        except GenericHttpError:
+            logger.debug("error getting sources from tdmq server")
+            return []
 
-        res = []
+        records = []
         params = {}
         if bucket is not None:
             params['bucket'] = bucket
@@ -45,8 +53,11 @@ class TDMQConsumer:
                 isinstance(before, datetime) else before
 
         for source in sources:
-            res += self.client.get_time_series(
-                source,
-                params
-            )
-        return res
+            logger.debug("getting time series for source %s", source.id_)
+            try:
+                times_series = self.client.get_time_series(source, params)
+            except GenericHttpError:
+                logger.debug("error getting time series from tdmq server")
+            else:
+                records += times_series
+        return records
