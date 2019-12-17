@@ -1,125 +1,235 @@
-{
-    "headers": [
-        {
-            "fiware-service": "tdm"
-        },
-        {
-            "fiware-servicePath": "/cagliari/edge/meteo"
-        },
-        {
-            "timestamp": 1531774294021
-        }
-    ],
-    "body": {
-        "attributes": [
+[
+    {
+        "headers": [
             {
-                "name": "CO",
-                "type": "float",
-                "value": " "
+                "fiware-service": "tdm"
             },
             {
-                "name": "NO",
-                "type": "float",
-                "value": " "
+                "fiware-servicePath": "/cagliari/edge/meteo"
             },
             {
-                "name": "NO2",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "NOx",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "PM10",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "PM2.5",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "SO2",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "altitude",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "barometricPressure",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "dateObserved",
-                "type": "String",
-                "value": "2018-07-16T20:51:33+00:00"
-            },
-            {
-                "name": "illuminance",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "infraredLight",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "location",
-                "type": "geo:point",
-                "value": "39.2479168, 9.1329701"
-            },
-            {
-                "name": "precipitation",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "relativeHumidity",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "temperature",
-                "type": "float",
-                "value": " "
-            },
-            {
-                "name": "timestamp",
-                "type": "Integer",
-                "value": "1531774293"
-            },
-            {
-                "name": "windDirection",
-                "type": "Float",
-                "value": "174.545"
-            },
-            {
-                "name": "windSpeed",
-                "type": "Float",
-                "value": "0.000"
-            },
-            {
-                "name": "latitude",
-                "type": "string",
-                "value": "39.2479168"
-            },
-            {
-                "name": "longitude",
-                "type": "string",
-                "value": "9.1329701"
+                "timestamp": 1531774294021
             }
         ],
-        "type": "WeatherObserved",
-        "isPattern": "false",
-        "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+        "body": {
+            "attributes": [
+                {
+                    "name": "CO",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "NO",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "NO2",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "NOx",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "PM10",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "PM2.5",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "SO2",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "altitude",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "barometricPressure",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "dateObserved",
+                    "type": "String",
+                    "value": "2018-07-16T20:51:33+00:00"
+                },
+                {
+                    "name": "illuminance",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "infraredLight",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "location",
+                    "type": "geo:point",
+                    "value": "39.2479168, 9.1329701"
+                },
+                {
+                    "name": "precipitation",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "relativeHumidity",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "temperature",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "timestamp",
+                    "type": "Integer",
+                    "value": "1531774293"
+                },
+                {
+                    "name": "windDirection",
+                    "type": "Float",
+                    "value": "174.545"
+                },
+                {
+                    "name": "windSpeed",
+                    "type": "Float",
+                    "value": "0.000"
+                },
+                {
+                    "name": "latitude",
+                    "type": "string",
+                    "value": "39.2479168"
+                },
+                {
+                    "name": "longitude",
+                    "type": "string",
+                    "value": "9.1329701"
+                }
+            ],
+            "type": "WeatherObserved",
+            "isPattern": "false",
+            "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+        }
+    },
+    {
+        "headers": [
+            {
+                "fiware-service": "tdm"
+            },
+            {
+                "fiware-servicePath": "/cagliari/edge/energy"
+            },
+            {
+                "timestamp": 1576513999532
+            }
+        ],
+        "body": {
+            "attributes": [
+                {
+                    "name": "TimeInstant",
+                    "type": "ISO8601",
+                    "value": "2019-12-16T16:33:19.433Z"
+                },
+                {
+                    "name": "apparentPower",
+                    "type": "Float",
+                    "value": "0",
+                    "metadatas": [
+                        {
+                            "name": "TimeInstant",
+                            "type": "ISO8601",
+                            "value": "2019-12-16T16:33:19.433Z"
+                        }
+                    ]
+                },
+                {
+                    "name": "consumedEnergy",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "current",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "dateObserved",
+                    "type": "String",
+                    "value": "2019-12-16T16:33:19+00:00",
+                    "metadatas": [
+                        {
+                            "name": "TimeInstant",
+                            "type": "ISO8601",
+                            "value": "2019-12-16T16:33:19.433Z"
+                        }
+                    ]
+                },
+                {
+                    "name": "frequency",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "location",
+                    "type": "geo:point",
+                    "value": "0, 0"
+                },
+                {
+                    "name": "powerFactor",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "realPower",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "timestamp",
+                    "type": "Integer",
+                    "value": "1576513999",
+                    "metadatas": [
+                        {
+                            "name": "TimeInstant",
+                            "type": "ISO8601",
+                            "value": "2019-12-16T16:33:19.433Z"
+                        }
+                    ]
+                },
+                {
+                    "name": "voltage",
+                    "type": "Float",
+                    "value": " "
+                },
+                {
+                    "name": "rssi",
+                    "type": "string",
+                    "value": "-32",
+                    "metadatas": [
+                        {
+                            "name": "TimeInstant",
+                            "type": "ISO8601",
+                            "value": "2019-12-16T16:33:19.433Z"
+                        }
+                    ]
+                }
+            ],
+            "type": "EnergyMonitor",
+            "isPattern": "false",
+            "id": "EnergyMonitor:Edge-65B526BA.emontx3-08.L3"
+        }
     }
-}
+]
