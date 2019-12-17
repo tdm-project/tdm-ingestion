@@ -50,22 +50,20 @@ def increment_and_wait(counter, wait=5):
 try:
     docker_compose_up(docker_yaml)
     with open(os.path.join(DIR, '../../messages/ngsi-weather.json'), 'rb') as f:
-        data = json.load(f)
-    logger.debug("Data to send %s", data)
+        messages  = json.load(f)
+    logger.debug("Data to send %s", messages )
 
     port = get_service_port(docker_yaml, 'web', '8000')
     base_url = f'http://localhost:{port}/api/v0.0'
+    for message in messages:
+        sensor_name = NgsiConverter._get_sensor_name(message)
 
-    _, _, _, sensor_name = NgsiConverter._get_names(data)
-
-    sensor_name = f'{sensor_name}'
-
-    try_func(send_message, 1, 10, None, 'test', data)
-    try_func(check_timeseries, 1, 10, base_url, sensor_name,
-             {
-                 'after': '2000-01-01T00:00:00Z',
-                 'before': '2100-01-01T00:00:00Z'
-             })
+        try_func(send_message, 1, 10, None, 'test', message)
+        try_func(check_timeseries, 1, 10, base_url, sensor_name,
+                {
+                    'after': '2000-01-01T00:00:00Z',
+                    'before': '2100-01-01T00:00:00Z'
+                })
 finally:
     docker_compose_down(docker_yaml)
     pass
