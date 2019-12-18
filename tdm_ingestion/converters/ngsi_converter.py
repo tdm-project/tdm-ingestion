@@ -21,10 +21,13 @@ class NgsiConverter:
     """
 
     non_properties = {"dateObserved", "location"}
+    # Legacy attributes replaced by "location"
+    _to_ignore = {"latitude", "longitude"}
 
     fiware_service_path_to_sensor_type = {
         "/cagliari/edge/meteo": EntityType("WeatherObserver", "Station"),
         "/cagliari/edge/energy": EntityType("EnergyConsumptionMonitor", "Station"),
+        "/cagliari/edge/device": EntityType("DeviceStatus", "Station"),
     }
 
     #: Maps the ngsi attribute types of to python types
@@ -40,7 +43,8 @@ class NgsiConverter:
     _attrs_mapper = {
         'timestamp': lambda v: datetime.datetime.fromtimestamp(int(v), datetime.timezone.utc),
         'dateObserved': isoparse,
-        'rssi': int
+        'rssi': int,
+        'dewpoint': float
     }
 
     _message_id_regex = re.compile(
@@ -92,7 +96,8 @@ class NgsiConverter:
         geometry = None
         for attr in msg["body"]["attributes"]:
             name, value, type_ = attr["name"], attr["value"], attr["type"]
-            if value is not None and str(value).strip():
+            if value is not None and str(value).strip() and not name in self._to_ignore:
+                # First check for a converter for the attribute 
                 try:
                     converter = self._attrs_mapper[name]
                 except KeyError:
