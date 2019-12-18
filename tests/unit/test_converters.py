@@ -7,7 +7,7 @@ from tdm_ingestion.converters.ngsi_converter import (CachedNgsiConverter,
                                                      NgsiConverter)
 from tdm_ingestion.tdmq.models import Source
 
-logger = logging.getLogger('test_tdm_ingestion')
+logger = logging.getLogger("test_tdm_ingestion")
 
 
 class TestNgsiConverter(unittest.TestCase):
@@ -54,36 +54,81 @@ class TestNgsiConverter(unittest.TestCase):
             }
         }
         self.in_energy_msg = {
-            'headers': [
-                {'fiware-service': 'tdm'},
-                {'fiware-servicePath': '/cagliari/edge/energy'},
-                {'timestamp': 1576513999532}
+            "headers": [
+                {"fiware-service": "tdm"},
+                {"fiware-servicePath": "/cagliari/edge/energy"},
+                {"timestamp": 1576513999532}
             ],
-            'body': {
-                'type': 'EnergyMonitor',
-                'isPattern': 'false',
-                'id': 'EnergyMonitor:Edge-65B526BA.emontx3-08.L3',
-                'attributes': [
-                    {'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'},
-                    {'name': 'apparentPower', 'type': 'Float', 'value': ' ',
-                     'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
-                    },
-                    {'name': 'consumedEnergy', 'type': 'Float', 'value': '2.5'},
-                    {'name': 'current', 'type': 'Float', 'value': ' '},
-                    {'name': 'dateObserved', 'type': 'String', 'value': '2019-12-16T16:33:19+00:00',
-                     'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
-                    },
-                    {'name': 'frequency', 'type': 'Float', 'value': ' '},
-                    {'name': 'location', 'type': 'geo:point', 'value': '0, 0'},
-                    {'name': 'powerFactor', 'type': 'Float', 'value': '0.4'},
-                    {'name': 'realPower', 'type': 'Float', 'value': '100'},
-                    {'name': 'timestamp', 'type': 'Integer', 'value': '1576513999',
-                     'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
-                    },
-                    {'name': 'voltage', 'type': 'Float', 'value': ' '},
-                    {'name': 'rssi', 'type': 'string', 'value': '-36',
-                     'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
-                    }
+            "body": {
+                "type": "EnergyMonitor",
+                "isPattern": "false",
+                "id": "EnergyMonitor:Edge-65B526BA.emontx3-08.L3",
+                "attributes": [
+                    {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"},
+                    {"name": "apparentPower", "type": "Float", "value": " ",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
+                     },
+                    {"name": "consumedEnergy", "type": "Float", "value": "2.5"},
+                    {"name": "current", "type": "Float", "value": " "},
+                    {"name": "dateObserved", "type": "String", "value": "2019-12-16T16:33:19+00:00",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
+                     },
+                    {"name": "frequency", "type": "Float", "value": " "},
+                    {"name": "location", "type": "geo:point", "value": "0, 0"},
+                    {"name": "powerFactor", "type": "Float", "value": "0.4"},
+                    {"name": "realPower", "type": "Float", "value": "100"},
+                    {"name": "timestamp", "type": "Integer", "value": "1576513999",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
+                     },
+                    {"name": "voltage", "type": "Float", "value": " "},
+                    {"name": "rssi", "type": "string", "value": "-36",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
+                     }
+                ]
+            }
+        }
+        self.in_device_msg = {
+            "headers": [
+                {"fiware-service": "tdm"},
+                {"fiware-servicePath": "/cagliari/edge/device"},
+                {"timestamp": 1576677906834}
+            ],
+            "body": {
+                "type": "DeviceStatus",
+                "isPattern": "false",
+                "id": "DeviceStatus:Edge-28DC5A97.EDGE.HTU21D",
+                "attributes": [
+                    {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"},
+                    {"name": "atmosphericPressure", "type": "Float", "value": " "},
+                    {"name": "cpuCount", "type": "Integer", "value": " "},
+                    {"name": "dateObserved", "type": "String", "value": "2019-12-18T14:05:05+00:00",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "diskFree", "type": "Float", "value": " "},
+                    {"name": "diskTotal", "type": "Float", "value": " "},
+                    {"name": "humidity", "type": "Float", "value": "47.48968505859375",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "illuminance", "type": "Float", "value": " "},
+                    {"name": "kernelRelease", "type": "String", "value": " "},
+                    {"name": "kernelVersion", "type": "String", "value": " "},
+                    {"name": "lastBoot", "type": "String", "value": " "},
+                    {"name": "location", "type": "geo:point", "value": "0, 0",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "memoryFree", "type": "Float", "value": " "},
+                    {"name": "memoryTotal", "type": "Float", "value": " "},
+                    {"name": "operatingSystem", "type": "String", "value": " "},
+                    {"name": "swapFree", "type": "Float", "value": " "},
+                    {"name": "swapTotal", "type": "Float", "value": " "},
+                    {"name": "systemArchitecture", "type": "String", "value": " "},
+                    {"name": "temperature", "type": "Float", "value": "20.578688964843742",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "timestamp", "type": "Integer", "value": "1576677905",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "latitude", "type": "string", "value": "0",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "longitude", "type": "string", "value": "0",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
+                    {"name": "dewpoint", "type": "string", "value": "9.088586800582902",
+                     "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]}
                 ]
             }
         }
@@ -113,6 +158,18 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "emontx3-08.L3")
 
+    def _test_convert_device(self, converter):
+        timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
+        self.assertEqual(len(timeseries_list), 1)
+        self.assertEqual(timeseries_list[0].data, {
+            "humidity": 47.48968505859375, 
+            "temperature": 20.578688964843742, 
+            "dewpoint": 9.088586800582902,
+            "TimeInstant": isoparse("2019-12-18T14:05:06.823Z"),
+        })
+        self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-18T14:05:05Z")
+        self.assertEqual(str(timeseries_list[0].source.id_), "EDGE.HTU21D")
+
     def _test_convert_error(self, message):
         timeseries_list = NgsiConverter().convert(message)
         self.assertEqual(len(timeseries_list), 0)
@@ -126,8 +183,11 @@ class TestNgsiConverter(unittest.TestCase):
     def test_convert_energy(self):
         self._test_convert_energy(NgsiConverter())
 
+    def test_convert_device(self):
+        self._test_convert_device(NgsiConverter())
+
     def test_json_decode_error(self):
-        self._test_convert_error(['(a)'])
+        self._test_convert_error(["(a)"])
 
     def test_runtime_error_wrong_id(self):
         self.in_weather_msg["body"]["id"] = "WrongId"
@@ -160,5 +220,5 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertTrue(isinstance(list(converter.sensors.values())[0], Source))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
