@@ -47,7 +47,7 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "SO2", "type": "Float", "value": " "},
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"},
                     {"name": "altitude", "type": "Float", "value": " "},
-                    {"name": "rssi", "type": "string", "value": " ",
+                    {"name": "rssi", "type": "string", "value": "-36",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"}]
                      }
                 ]
@@ -81,7 +81,7 @@ class TestNgsiConverter(unittest.TestCase):
                      'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
                     },
                     {'name': 'voltage', 'type': 'Float', 'value': ' '},
-                    {'name': 'rssi', 'type': 'string', 'value': ' ', 
+                    {'name': 'rssi', 'type': 'string', 'value': '-36',
                      'metadatas': [{'name': 'TimeInstant', 'type': 'ISO8601', 'value': '2019-12-16T16:33:19.433Z'}]
                     }
                 ]
@@ -95,6 +95,7 @@ class TestNgsiConverter(unittest.TestCase):
             "windDirection": 174.545,
             "windSpeed": 20.0,
             "TimeInstant": isoparse("2019-12-16T16:31:34.943Z"),
+            "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:31:34Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "esp8266-7806085.Davis")
@@ -107,6 +108,7 @@ class TestNgsiConverter(unittest.TestCase):
             "powerFactor": 0.4,
             "realPower": 100.0,
             "TimeInstant": isoparse("2019-12-16T16:33:19.433Z"),
+            "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "emontx3-08.L3")
