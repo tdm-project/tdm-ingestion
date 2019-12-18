@@ -28,7 +28,7 @@ class NgsiConverter:
     }
 
     #: Maps the ngsi attribute types of to python types
-    type_mapper = {
+    _type_mapper = {
         'String': str,
         'Float': float,
         'Integer': int,
@@ -36,7 +36,14 @@ class NgsiConverter:
         'ISO8601': isoparse
     }
 
-    message_id_regex = re.compile(
+    #: Maps the attributes with a specific handler. It has priority higher than type
+    _attrs_mapper = {
+        'timestamp': lambda v: datetime.datetime.fromtimestamp(int(v), datetime.timezone.utc),
+        'dateObserved': isoparse,
+        'rssi': int
+    }
+
+    _message_id_regex = re.compile(
         r"(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)\.(?P<Sensor>[a-zA-Z0-9_-]+)"
     )
 
@@ -49,17 +56,10 @@ class NgsiConverter:
                 pass
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
 
-    def _get_timestamp(self, value):
-        return datetime.datetime.fromtimestamp(int(value), datetime.timezone.utc)
-
     @staticmethod
-    def _get_sensor_name(msg: Dict) -> Tuple[str, str, str, str]:
-        """
-        Extract from msg["body"]["id"] information regarding sensor type (e.g., "WeatherObserved"),
-        node name (e.g. Edge-CFA703F4), station name (e.g., ) and sensor name
-        """
+    def _get_sensor_name(msg: Dict) -> str:
         try:
-            match = NgsiConverter.message_id_regex.search(msg["body"]["id"])
+            match = NgsiConverter._message_id_regex.search(msg["body"]["id"])
         except KeyError:
             raise RuntimeError(f'invalid id {msg["body"]["id"]}')
         else:
@@ -70,12 +70,23 @@ class NgsiConverter:
 
         raise RuntimeError(f'invalid id {msg["body"]["id"]}')
 
+    def _get_sensor_type(self, msg: Dict) -> str:
+        try:
+            service_path = self._get_fiware_service_path(msg)
+            return self.fiware_service_path_to_sensor_type[service_path]
+        except KeyError:
+            raise RuntimeError(f'invalid message type {service_path}')
+
+
     @staticmethod
     def _create_sensor(sensor_name: str, sensor_type: EntityType, geometry: Geometry,
                        properties: List[str]) -> Source:
         return Source(sensor_name, sensor_type, geometry, properties)
 
     def _create_record(self, msg: Dict) -> Record:
+        sensor_name = self._get_sensor_name(msg)
+        sensor_type = self._get_sensor_type(msg)
+
         records: Dict = {}
         time = None
         geometry = None
@@ -83,9 +94,9 @@ class NgsiConverter:
             name, value, type_ = attr["name"], attr["value"], attr["type"]
             if value is not None and str(value).strip():
                 try:
-                    converter = getattr(self, f'_get_{name}')
-                except AttributeError:
-                    converter = self.type_mapper.get(type_, None)
+                    converter = self._attrs_mapper[name]
+                except KeyError:
+                    converter = self._type_mapper.get(type_, None)
 
                 try:
                     converted_value = converter(value)
@@ -103,10 +114,6 @@ class NgsiConverter:
         if geometry is None:
             raise RuntimeError("missing latitude and/or longitude")
 
-        sensor_name = self._get_sensor_name(msg)
-        sensor_type = self.fiware_service_path_to_sensor_type[
-            self._get_fiware_service_path(msg)
-        ]
         sensor = self._create_sensor(sensor_name, sensor_type, geometry, records.keys())
 
         return Record(time, sensor, records)
