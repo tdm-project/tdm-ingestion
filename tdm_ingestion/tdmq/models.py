@@ -44,12 +44,12 @@ class RefMeasure(Measure):
 
 
 class EntityType(Model):
-    def __init__(self, name: str, category: str = None):
+    def __init__(self, name: str, category: str = "sensor"):
         self.name = name
-        self.category = category or "sensor"
+        self.category = category
 
     def __repr__(self):
-        return f'SensorType {self.name}'
+        return f'SensorType {self.name} of category {self.category}'
 
 
 class GeometryType(Enum):

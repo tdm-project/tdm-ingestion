@@ -8,9 +8,8 @@ from tdm_ingestion.tdmq.remote import Client
 
 logger = logging.getLogger('tdm_ingestion.kafka_tdms_ingestion')
 
-if __name__ == '__main__':
+def main():
     import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', help='debug', dest='debug', action='store_true',
                         default=False)
@@ -38,8 +37,10 @@ if __name__ == '__main__':
     converter = NgsiConverter()
 
     while True:
-
         try:
             tdmq.write(converter.convert(consumer.poll(timeout_s=5)))
         except Exception as ex:
-            logging.exception(ex)
+            logger.exception(ex)
+
+if __name__ == '__main__':
+    main()

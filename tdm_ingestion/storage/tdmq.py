@@ -17,30 +17,40 @@ class CachedStorage:
 
     @classmethod
     def create_from_json(cls, json: Dict):
-        client = json['client']
-        return CachedStorage(import_class(client['class']).create_from_json(client['args']))
+        client = json["client"]
+        return CachedStorage(import_class(client["class"]).create_from_json(client["args"]))
+
+    # def _idempotent_create_entity_type(self, obj: EntityType):
+    #     # First try to create the entity type
+    #     try:
+    #         self.client.create_entity_types(obj.type_)
+    #         logger.debug("trying to create entity type %s")
+    #     except GenericHttpError:
+    #         logger.debug("error occurred creating entity type")
 
     def _idempotent_create_source(self, obj: Source):
         if obj.id_ not in self._cache:
-            logger.debug('creating the source with id: %s', obj.id_)
+            logger.debug("creating the source with id: %s", obj.id_)
             try:
                 self.client.create_sources([obj])
             except DuplicatedEntryError:
+                logger.debug("source alredy present")
                 self._cache.add(obj.id_)
             except GenericHttpError:
                 logger.debug("error occurred creating the source")
                 return False
-            return True
+            else:
+                logger.debug("successfully created the source")
+        return True
 
     def write(self, time_series: List[Record]):
-        if time_series:
-            ts_to_write = []
-            for ts in time_series:
-                if self._idempotent_create_source(ts.source) is True:
-                    # Only if the source was created correctly or if it was already present the time series will be written
-                    ts_to_write.append(ts)
-            if len(ts_to_write) > 0:
-                self.client.create_time_series(ts_to_write)
+        ts_to_write = []
+        for ts in time_series:
+            if self._idempotent_create_source(ts.source) is True:
+                # Only if the source was created correctly or if it was already present the time series will be written
+                ts_to_write.append(ts)
+        if len(ts_to_write) > 0:
+            self.client.create_time_series(ts_to_write)
 
 
 class AsyncCachedStorage:
@@ -52,13 +62,13 @@ class AsyncCachedStorage:
 
     @classmethod
     def create_from_json(cls, json: Dict):
-        client = json['client']
+        client = json["client"]
         return AsyncCachedStorage(
-            import_class(client['class']).create_from_json(client['args']))
+            import_class(client["class"]).create_from_json(client["args"]))
 
     async def _idempotent_create(self, obj: Union[EntityType, Source]):
         if obj.id_ not in self._cache[obj.__class__]:
-            query = {'name': obj.id_}
+            query = {"name": obj.id_}
             if isinstance(obj, Source):
                 count_method = self.client.sources_count
                 create_method = self.client.create_sources
