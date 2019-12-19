@@ -27,7 +27,7 @@ class NgsiConverter:
     fiware_service_path_to_sensor_type = {
         "/cagliari/edge/meteo": EntityType("WeatherObserver", "Station"),
         "/cagliari/edge/energy": EntityType("EnergyConsumptionMonitor", "Station"),
-        "/cagliari/edge/device": EntityType("DeviceStatus", "Station"),
+        "/cagliari/edge/device": EntityType("DeviceStatusMonitor", "Station"),
     }
 
     #: Maps the ngsi attribute types of to python types

@@ -13,7 +13,7 @@ class Requests(Http):
         data = data or {}
         headers = headers or {}
         headers['content-type'] = 'application/json'
-        logger.debug("doing POST with url %s, json %s and headers %s", url, data, headers)
+        logger.debug("doing POST with url %s and headers %s", url, headers)
         r = requests.post(url, data=data, headers=headers)
         logger.debug("Response status from server is %s", r.status_code)
         r.raise_for_status()
@@ -23,7 +23,7 @@ class Requests(Http):
             headers: Dict[str, str] = None) -> Union[List, Dict]:
         params = params or {}
         headers = headers or {}
-        logger.debug("doing GET with url %s, params %s and headers %s", url, params, headers)
+        logger.debug("doing GET with url %s and headers %s", url, headers)
         r = requests.get(url, params=params, headers=headers)
         logger.debug("Response status from server is %s", r.status_code)
         r.raise_for_status()

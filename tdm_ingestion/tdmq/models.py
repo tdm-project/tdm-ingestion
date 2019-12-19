@@ -51,6 +51,9 @@ class EntityType(Model):
     def __repr__(self):
         return f'SensorType {self.name} of category {self.category}'
 
+    def __eq__(self, obj):
+        return self.name == obj.name and self.category == obj.category
+
 
 class GeometryType(Enum):
     Point = "Point"
@@ -86,9 +89,6 @@ class Source(Model):
         self.controlled_properties = controlled_properties
         self.tdmq_id = tdmq_id
 
-    def __repr__(self):
-        return f'Sensor {self.id_} of {repr(self.type)}'
-
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(
             id=self.id_,
@@ -104,6 +104,8 @@ class Source(Model):
         )
         return jsonify(dct) if serialize else dct
 
+    def __repr__(self):
+        return f'Sensor {self.id_} of {repr(self.type)}'
 
 class Record(Model):
     def __init__(self, utc_time: datetime.datetime, source: Source,
