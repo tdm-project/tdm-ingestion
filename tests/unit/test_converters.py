@@ -1,11 +1,12 @@
 import json
 import logging
 import unittest
+
 from dateutil.parser import isoparse
 
 from tdm_ingestion.converters.ngsi_converter import (CachedNgsiConverter,
                                                      NgsiConverter)
-from tdm_ingestion.tdmq.models import Source
+from tdm_ingestion.tdmq.models import EntityType, Source
 
 logger = logging.getLogger("test_tdm_ingestion")
 
@@ -136,6 +137,7 @@ class TestNgsiConverter(unittest.TestCase):
     def _test_convert_weather(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_weather_msg)])
         self.assertEqual(len(timeseries_list), 1)
+        self.assertEqual(timeseries_list[0].source.type, EntityType("WeatherObserver", "Station"))
         self.assertEqual(timeseries_list[0].data, {
             "windDirection": 174.545,
             "windSpeed": 20.0,
@@ -148,6 +150,7 @@ class TestNgsiConverter(unittest.TestCase):
     def _test_convert_energy(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_energy_msg)])
         self.assertEqual(len(timeseries_list), 1)
+        self.assertEqual(timeseries_list[0].source.type, EntityType("EnergyConsumptionMonitor", "Station"))
         self.assertEqual(timeseries_list[0].data, {
             "consumedEnergy": 2.5,
             "powerFactor": 0.4,
@@ -161,6 +164,7 @@ class TestNgsiConverter(unittest.TestCase):
     def _test_convert_device(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
         self.assertEqual(len(timeseries_list), 1)
+        self.assertEqual(timeseries_list[0].source.type, EntityType("DeviceStatusMonitor", "Station"))
         self.assertEqual(timeseries_list[0].data, {
             "humidity": 47.48968505859375, 
             "temperature": 20.578688964843742, 
