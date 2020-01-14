@@ -56,7 +56,7 @@ try:
     port = get_service_port(docker_yaml, 'web', '8000')
     base_url = f'http://localhost:{port}/api/v0.0'
     for message in messages:
-        sensor_name = NgsiConverter._get_sensor_name(message)
+        sensor_name = NgsiConverter._get_source_id(message)
 
         try_func(send_message, 1, 10, None, 'test', message)
         try_func(check_timeseries, 1, 10, base_url, sensor_name,

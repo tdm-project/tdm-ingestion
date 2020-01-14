@@ -7,7 +7,7 @@ from tdm_ingestion.tdmq.models import EntityType
 from tdm_ingestion.tdmq.remote import Client
 from tdm_ingestion.utils import TimeDelta, DateTimeFormatter
 
-if __name__ == '__main__':
+def main():
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -48,8 +48,7 @@ if __name__ == '__main__':
     if args.time_delta_before:
         time_delta = time_delta_mapping[args.time_delta_before]
         before, after = time_delta.get_before_after()
-        resource_name = DateTimeFormatter(time_delta.value).format(
-            args.ckan_resource)
+        resource_name = DateTimeFormatter(time_delta.value).format(args.ckan_resource)
     else:
         before, after = args.before, args.after
         resource_name = args.ckan_resource
@@ -67,3 +66,7 @@ if __name__ == '__main__':
         args.ckan_dataset,
         resource_name,
         args.upsert)
+
+
+if __name__ == '__main__':
+    main()

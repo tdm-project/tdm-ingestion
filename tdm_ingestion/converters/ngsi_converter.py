@@ -20,7 +20,7 @@ class NgsiConverter:
     Class to convert json-formatted NGSI-Fiware messages to :class:`Record` instances
     """
 
-    non_properties = {"dateObserved", "location"}
+    non_properties = {"dateObserved", "location", "TimeInstant"}
     # Legacy attributes replaced by "location"
     _to_ignore = {"latitude", "longitude"}
 
@@ -30,25 +30,26 @@ class NgsiConverter:
         "/cagliari/edge/device": EntityType("DeviceStatusMonitor", "Station"),
     }
 
-    #: Maps the ngsi attribute types of to python types
+    #: Maps the ngsi attribute types to python types
     _type_mapper = {
-        'String': str,
-        'Float': float,
-        'Integer': int,
-        'geo:point': lambda v: Point(*v.replace(' ', '').split(',')),
-        'ISO8601': isoparse
+        "String": str,
+        "Float": float,
+        "Integer": int,
+        "geo:point": lambda v: Point(*v.replace(" ", "").split(",")),
+        "ISO8601": isoparse
     }
 
     #: Maps the attributes with a specific handler. It has priority higher than type
     _attrs_mapper = {
-        'timestamp': lambda v: datetime.datetime.fromtimestamp(int(v), datetime.timezone.utc),
-        'dateObserved': isoparse,
-        'rssi': int,
-        'dewpoint': float
+        "timestamp": lambda v: datetime.datetime.fromtimestamp(int(v), datetime.timezone.utc),
+        "dateObserved": isoparse,
+        "rssi": int,
+        "dewpoint": float,
+        "memoryFree": float
     }
 
     _message_id_regex = re.compile(
-        r"(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Node>[a-zA-Z0-9_-]+)\.(?P<Sensor>[a-zA-Z0-9_-]+)"
+        r"(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Station>[a-zA-Z0-9_-]+)\.(?P<Sensor>[a-zA-Z0-9_-]+)"
     )
 
     @staticmethod
@@ -61,25 +62,25 @@ class NgsiConverter:
         raise RuntimeError(f"fiware-servicePath not found in msg {msg}")
 
     @staticmethod
-    def _get_sensor_name(msg: Dict) -> str:
+    def _get_source_id(msg: Dict) -> str:
         try:
             match = NgsiConverter._message_id_regex.search(msg["body"]["id"])
         except KeyError:
-            raise RuntimeError(f'invalid id {msg["body"]["id"]}')
+            raise RuntimeError(f"invalid id {msg['body']['id']}")
         else:
             if match:
-                _, _, station_name, st_name = match.groups()
-                sensor_name = "{}.{}".format(station_name, st_name)
-                return sensor_name
+                _, edge_name, station_name, sensor_name = match.groups()
+                source_id = "{}.{}.{}".format(edge_name, station_name, sensor_name)
+                return source_id
 
-        raise RuntimeError(f'invalid id {msg["body"]["id"]}')
+        raise RuntimeError(f"invalid id {msg['body']['id']}")
 
     def _get_sensor_type(self, msg: Dict) -> str:
         try:
             service_path = self._get_fiware_service_path(msg)
             return self.fiware_service_path_to_sensor_type[service_path]
         except KeyError:
-            raise RuntimeError(f'invalid message type {service_path}')
+            raise RuntimeError(f"invalid message type {service_path}")
 
 
     @staticmethod
@@ -88,8 +89,10 @@ class NgsiConverter:
         return Source(sensor_name, sensor_type, geometry, properties)
 
     def _create_record(self, msg: Dict) -> Record:
-        sensor_name = self._get_sensor_name(msg)
+        source_id = self._get_source_id(msg)
         sensor_type = self._get_sensor_type(msg)
+
+        logging.debug("Converting message of type %s", sensor_type.category)
 
         records: Dict = {}
         time = None
@@ -97,7 +100,7 @@ class NgsiConverter:
         for attr in msg["body"]["attributes"]:
             name, value, type_ = attr["name"], attr["value"], attr["type"]
             if value is not None and str(value).strip() and not name in self._to_ignore:
-                # First check for a converter for the attribute 
+                # First check for a converter for the attribute
                 try:
                     converter = self._attrs_mapper[name]
                 except KeyError:
@@ -116,10 +119,13 @@ class NgsiConverter:
                     elif name not in self.non_properties:
                         records[name] = converted_value
 
+        if not records:
+            raise RuntimeError("conversion produced no useful data")
+
         if geometry is None:
             raise RuntimeError("missing latitude and/or longitude")
 
-        sensor = self._create_sensor(sensor_name, sensor_type, geometry, records.keys())
+        sensor = self._create_sensor(source_id, sensor_type, geometry, records.keys())
 
         return Record(time, sensor, records)
 
@@ -132,6 +138,7 @@ class NgsiConverter:
         for m in messages:
             try:
                 m_dict = json.loads(m)
+                logger.debug("Message is %s", m_dict)
                 timeseries_list.append(self._create_record(m_dict))
             except JSONDecodeError:
                 logger.error("exception decoding message %s", m)

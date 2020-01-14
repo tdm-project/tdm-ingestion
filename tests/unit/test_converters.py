@@ -18,7 +18,7 @@ class TestNgsiConverter(unittest.TestCase):
                         {"fiware-servicePath": "/cagliari/edge/meteo"},
                         {"timestamp": 1576513894978}],
             "body": {
-                "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis",
+                "id": "WeatherObserved:Edge-x.esp8266.Davis",
                 "type": "WeatherObserved",
                 "isPattern": "false",
                 "attributes": [
@@ -63,7 +63,7 @@ class TestNgsiConverter(unittest.TestCase):
             "body": {
                 "type": "EnergyMonitor",
                 "isPattern": "false",
-                "id": "EnergyMonitor:Edge-65B526BA.emontx3-08.L3",
+                "id": "EnergyMonitor:Edge-y.emontx3.L3",
                 "attributes": [
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"},
                     {"name": "apparentPower", "type": "Float", "value": " ",
@@ -97,7 +97,7 @@ class TestNgsiConverter(unittest.TestCase):
             "body": {
                 "type": "DeviceStatus",
                 "isPattern": "false",
-                "id": "DeviceStatus:Edge-28DC5A97.EDGE.HTU21D",
+                "id": "DeviceStatus:Edge-z.EDGE.HTU21D",
                 "attributes": [
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"},
                     {"name": "atmosphericPressure", "type": "Float", "value": " "},
@@ -141,11 +141,10 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(timeseries_list[0].data, {
             "windDirection": 174.545,
             "windSpeed": 20.0,
-            "TimeInstant": isoparse("2019-12-16T16:31:34.943Z"),
             "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:31:34Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "esp8266-7806085.Davis")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-x.esp8266.Davis")
 
     def _test_convert_energy(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_energy_msg)])
@@ -155,24 +154,22 @@ class TestNgsiConverter(unittest.TestCase):
             "consumedEnergy": 2.5,
             "powerFactor": 0.4,
             "realPower": 100.0,
-            "TimeInstant": isoparse("2019-12-16T16:33:19.433Z"),
             "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "emontx3-08.L3")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-y.emontx3.L3")
 
     def _test_convert_device(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].source.type, EntityType("DeviceStatusMonitor", "Station"))
         self.assertEqual(timeseries_list[0].data, {
-            "humidity": 47.48968505859375, 
-            "temperature": 20.578688964843742, 
+            "humidity": 47.48968505859375,
+            "temperature": 20.578688964843742,
             "dewpoint": 9.088586800582902,
-            "TimeInstant": isoparse("2019-12-18T14:05:06.823Z"),
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-18T14:05:05Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "EDGE.HTU21D")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-z.EDGE.HTU21D")
 
     def _test_convert_error(self, message):
         timeseries_list = NgsiConverter().convert(message)
@@ -212,6 +209,18 @@ class TestNgsiConverter(unittest.TestCase):
             for header in msg["headers"]:
                 if "fiware-servicePath" in header:
                     msg["headers"].remove(header)
+            self._test_convert_runtime_error(msg)
+
+    def test_runtime_error_no_data(self):
+        """
+        Tests that, when the conversion produced no data (i.e., there were some data but not convertable), the message is skipped 
+        """
+        for msg in (self.in_energy_msg, self.in_weather_msg):
+            # all attributes produce wrong messages
+            msg["body"]["attributes"] = [
+                {"name": "CO", "type": "Float", "value": "null"},
+                {"name": "NO", "type": "Float", "value": "null"}
+            ]
             self._test_convert_runtime_error(msg)
 
     def test_cached_convert(self):
