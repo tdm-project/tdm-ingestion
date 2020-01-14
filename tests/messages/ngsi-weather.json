@@ -121,7 +121,7 @@
             ],
             "type": "WeatherObserved",
             "isPattern": "false",
-            "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+            "id": "WeatherObserved:Edge-x.esp8266.Davis"
         }
     },
     {
@@ -229,7 +229,7 @@
             ],
             "type": "EnergyMonitor",
             "isPattern": "false",
-            "id": "EnergyMonitor:Edge-65B526BA.emontx3-08.L3"
+            "id": "EnergyMonitor:Edge-y.emontx3.L3"
         }
     }
 ]
