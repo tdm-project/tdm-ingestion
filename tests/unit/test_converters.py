@@ -18,7 +18,7 @@ class TestNgsiConverter(unittest.TestCase):
                         {"fiware-servicePath": "/cagliari/edge/meteo"},
                         {"timestamp": 1576513894978}],
             "body": {
-                "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis",
+                "id": "WeatherObserved:Edge-x.esp8266.Davis",
                 "type": "WeatherObserved",
                 "isPattern": "false",
                 "attributes": [
@@ -63,7 +63,7 @@ class TestNgsiConverter(unittest.TestCase):
             "body": {
                 "type": "EnergyMonitor",
                 "isPattern": "false",
-                "id": "EnergyMonitor:Edge-65B526BA.emontx3-08.L3",
+                "id": "EnergyMonitor:Edge-y.emontx3.L3",
                 "attributes": [
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"},
                     {"name": "apparentPower", "type": "Float", "value": " ",
@@ -97,7 +97,7 @@ class TestNgsiConverter(unittest.TestCase):
             "body": {
                 "type": "DeviceStatus",
                 "isPattern": "false",
-                "id": "DeviceStatus:Edge-28DC5A97.EDGE.HTU21D",
+                "id": "DeviceStatus:Edge-z.EDGE.HTU21D",
                 "attributes": [
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"},
                     {"name": "atmosphericPressure", "type": "Float", "value": " "},
@@ -144,7 +144,7 @@ class TestNgsiConverter(unittest.TestCase):
             "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:31:34Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-CFA703F4.esp8266-7806085.Davis")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-x.esp8266.Davis")
 
     def _test_convert_energy(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_energy_msg)])
@@ -157,7 +157,7 @@ class TestNgsiConverter(unittest.TestCase):
             "rssi": -36
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-65B526BA.emontx3-08.L3")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-y.emontx3.L3")
 
     def _test_convert_device(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
@@ -169,7 +169,7 @@ class TestNgsiConverter(unittest.TestCase):
             "dewpoint": 9.088586800582902,
         })
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-18T14:05:05Z")
-        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-28DC5A97.EDGE.HTU21D")
+        self.assertEqual(str(timeseries_list[0].source.id_), "Edge-z.EDGE.HTU21D")
 
     def _test_convert_error(self, message):
         timeseries_list = NgsiConverter().convert(message)
