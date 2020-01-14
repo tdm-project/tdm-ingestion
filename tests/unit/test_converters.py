@@ -211,6 +211,18 @@ class TestNgsiConverter(unittest.TestCase):
                     msg["headers"].remove(header)
             self._test_convert_runtime_error(msg)
 
+    def test_runtime_error_no_data(self):
+        """
+        Tests that, when the conversion produced no data (i.e., there were some data but not convertable), the message is skipped 
+        """
+        for msg in (self.in_energy_msg, self.in_weather_msg):
+            # all attributes produce wrong messages
+            msg["body"]["attributes"] = [
+                {"name": "CO", "type": "Float", "value": "null"},
+                {"name": "NO", "type": "Float", "value": "null"}
+            ]
+            self._test_convert_runtime_error(msg)
+
     def test_cached_convert(self):
         converter = CachedNgsiConverter()
         self.assertEqual(len(converter.sensors), 0)

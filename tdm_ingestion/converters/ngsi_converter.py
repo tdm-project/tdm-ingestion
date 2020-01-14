@@ -119,6 +119,9 @@ class NgsiConverter:
                     elif name not in self.non_properties:
                         records[name] = converted_value
 
+        if not records:
+            raise RuntimeError("conversion produced no useful data")
+
         if geometry is None:
             raise RuntimeError("missing latitude and/or longitude")
 
