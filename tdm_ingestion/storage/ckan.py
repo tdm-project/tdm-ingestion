@@ -62,6 +62,9 @@ class RemoteCkan(CkanClient):
             params=dict(id=dataset)
         )["result"]
 
+    # def reorder_resources(self):
+    #     pass
+
     def create_resource(self, resource: str, dataset: str,
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
@@ -101,9 +104,12 @@ class RemoteCkan(CkanClient):
                 data=jsons.dumps(data),
                 headers=self.headers
             )
-        except HTTPError:
+        except HTTPError as e:
             logger.error("error occurred creating new resource on ckan")
+            logger.error("error is %s", e.response.body)
             return False
+        
+        # self.reorder_resources()
         return True
 
 
