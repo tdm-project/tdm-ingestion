@@ -1,11 +1,14 @@
+import jsons
 import logging
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+from urllib.parse import urljoin
 
 import httpretty
 import jsons
 
+from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.storage.tdmq import CachedStorage
 from tdm_ingestion.tdmq.remote import Client
@@ -54,7 +57,7 @@ class TestCachedStorage(unittest.TestCase):
         storage.write(TIME_SERIES)
 
         client.create_time_series.assert_not_called()
-    
+
     def test_write_sensors_type_pre_loaded(self):
         """
         Tests writing time_series when the client has already loaded the entity types. In this case the entity types won't be created
@@ -99,27 +102,108 @@ class TestCachedStorage(unittest.TestCase):
 
 class TestCkanStorage(unittest.TestCase):
 
-    def test_write_ckan(self):
-        storage = CkanStorage(DummyCkan())
+    def setUp(self):
+        base_url = "http://foo.url"
+        self.ckan_client = RemoteCkan(base_url, Requests(), "api_key")
+        self.records_data = {
+            'resource': {'package_id': 'lisa', 'name': 'test'},
+            'fields': [{'id': 'station'}, {'id': 'type'}, {'id': 'date'}, {'id': 'location'}, {'id': 'temperature'}],
+            'records': [
+                {'station': 's1', 'type': 'cat1', 'date': TIME_SERIES[0].time, 'location': '0,1', 'temperature': 14.0},
+                {'station': 's2', 'type': 'cat2', 'date': TIME_SERIES[1].time, 'location': '2,3', 'humidity': 95.0}]
+        }
 
-        storage.write(TIME_SERIES, 'lisa', 'test')
-        expected_result = {'test': {'dataset': 'lisa',
-                                    'records': [{'date': TIME_SERIES[0].time,
-                                                 'location': '0,1',
-                                                 'station': 's1',
-                                                 'type': 'cat1',
-                                                 'temperature': TIME_SERIES[0].data['temperature']},
-                                                {'date': TIME_SERIES[1].time,
-                                                 'location': '2,3',
-                                                 'station': 's2',
-                                                 'type': 'cat2',
-                                                 'humidity': TIME_SERIES[1].data['humidity']}]}}
-        self.assertDictEqual(storage.client.resources, expected_result)
+        # minimal package info returned from ckan
+        self.package_info = {
+            "result": {
+                "id": "7446532e-715f-4e18-a667-067e059a81bb",
+                "state": "active",
+                "type": "dataset",
+                "resources": [{"name": "test", "id": "random_id", "package_id": "lisa", "state": "active", "position": 0}]
+            }
+        }
 
-    def test_write_ckan_empty(self):
-        storage = CkanStorage(
-            DummyCkan())
-        storage.write([], 'lisa', 'test')
+    @httpretty.activate
+    def test_write_records_no_upsert(self):
+        """
+        Test creation of a resource without deleting the previous one
+        """
+        def request_callback(request, _, response_headers):
+            self.assertEqual(request.body.decode('utf-8'), jsons.dumps(self.records_data))
+            self.assertEqual(request.headers.get("Authorization"), "api_key")
+            self.assertEqual(request.headers.get("content-type"), "application/json")
+            return [200, response_headers, jsons.dumps('')]
+
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=request_callback)
+
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write(TIME_SERIES, 'lisa', 'test')
+        self.assertEqual(res, True)
+
+    @httpretty.activate
+    def test_write_records_upsert(self):
+        def request_callback(request, _, response_headers):
+            self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
+            self.assertEqual(request.headers.get("Authorization"), "api_key")
+            self.assertEqual(request.headers.get("content-type"), "application/json")
+            return [200, response_headers, jsons.dumps(self.records_data)]
+
+        def delete_request_callback(request, _, response_headers):
+            self.assertEqual(request.body.decode("utf-8"), jsons.dumps({"id": "random_id"}))
+            return [200, response_headers, "{}"]
+
+        httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=200, body=jsons.dumps(self.package_info))
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_delete_url, body=delete_request_callback)
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=request_callback)
+
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
+        self.assertEqual(res, True)
+
+    @httpretty.activate
+    def test_write_upsert_error_retrieving_package_info(self):
+        """
+        Tests that, if an error occurs when retrieving package info, no records are stored in ckan
+        """
+
+        httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=400)
+        self.ckan_client.delete_resource = Mock()
+
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
+        self.assertEqual(res, False)
+
+        self.ckan_client.delete_resource.assert_not_called()
+
+    @httpretty.activate
+    def test_write_upsert_error_deleting_previous_records(self):
+        """
+        Tests that, if an error occurs when retrieving package info, no records are stored in ckan
+        """
+
+        httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=200, body=jsons.dumps(self.package_info))
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_delete_url, status=500)
+
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
+        self.assertEqual(res, False)
+
+    @httpretty.activate
+    def test_write_upsert_error_creating_records(self):
+        """
+        Tests that, if an error occurs when creating the resource, it returns False
+        """
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, status=500)
+
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write(TIME_SERIES, 'lisa', 'test')
+        self.assertEqual(res, False)
+
+    @httpretty.activate
+    def test_write_empty_records(self):
+        storage = CkanStorage(self.ckan_client)
+        res = storage.write([], 'lisa', 'test')
+        self.assertEqual(res, False)
 
     def test_ckan_client_write_no_records(self):
         client = RemoteCkan('base_url', DummyHttp(), 'api_key')
