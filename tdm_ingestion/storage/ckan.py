@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
+from urllib.parse import urljoin
 
 import jsons
 from requests.exceptions import HTTPError
@@ -11,6 +12,7 @@ from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
 
 logger = logging.getLogger(__name__)
+
 
 class CkanClient(ABC):
     @abstractmethod
@@ -38,20 +40,24 @@ class RemoteCkan(CkanClient):
 
     def __init__(self, base_url: str, client: Http, api_key: str):
         self.base_url = base_url
+        self.resource_delete_url = urljoin(self.base_url, "/api/3/action/resource_delete")
+        self.dataset_info_url = urljoin(self.base_url, "/api/3/action/package_show")
+        self.resource_create_url = urljoin(self.base_url, "api/3/action/datastore_create")
+
         self.client = client
         self.headers = {"Authorization": api_key}
 
     def delete_resource(self, resource_id: str):
         logger.debug("deleting resource %s", resource_id)
         self.client.post(
-            f"{self.base_url}/api/3/action/resource_delete",
+            self.resource_delete_url,
             headers=self.headers,
             data=jsons.dumps(dict(id=resource_id))
         )
 
     def get_dataset_info(self, dataset: str) -> Dict:
         return self.client.get(
-            f"{self.base_url}/api/3/action/package_show",
+            self.dataset_info_url,
             headers=self.headers,
             params=dict(id=dataset)
         )["result"]
@@ -60,38 +66,45 @@ class RemoteCkan(CkanClient):
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
         logger.debug("create_resource %s %s, %s", resource, dataset, records)
-        if records:
-            if upsert:
-                logger.debug("upsert is true, remove resource first")
-                try:
-                    resources = self.get_dataset_info(dataset)["resources"]
-                except HTTPError:
-                    logger.error("error querying tdmq for resources. Exiting")
-                    return
-                else:
-                    for r in resources:
-                        if r["name"] == resource:
-                            logger.debug("found resource to delete")
-                            try:
-                                self.delete_resource(r["id"])
-                            except HTTPError:
-                                logger.warning("error occurred deleting the resource. Proceed without deleting")
-                            else:
-                                logger.debug("old resource deleted")
-
-            fields = [{"id": field} for field in records[0].keys()]
-            data = dict(
-                resource=dict(package_id=dataset, name=resource),
-                fields=fields,
-                records=records
-            )
+        if not records:
+            return False
+        
+        if upsert:
+            logger.debug("upsert is true, remove resource first")
             try:
-                self.client.post(
-                    f"{self.base_url}/api/3/action/datastore_create",
-                    data=jsons.dumps(data),
-                    headers=self.headers)
+                resources = self.get_dataset_info(dataset)["resources"]
             except HTTPError:
-                logger.error("error occurred creating new resource on ckan")
+                logger.error("error querying tdmq for resources. Exiting")
+                return False
+            else:
+                for r in resources:
+                    if r["name"] == resource:
+                        logger.debug("found resource to delete")
+                        try:
+                            self.delete_resource(r["id"])
+                        except HTTPError:
+                            logger.error("error occurred deleting the resource. Proceed without deleting. Exiting")
+                            return False
+                        else:
+                            logger.debug("old resource deleted")
+
+        fields = [{"id": field} for field in records[0].keys()]
+        data = dict(
+            resource=dict(package_id=dataset, name=resource),
+            fields=fields,
+            records=records
+        )
+
+        try:
+            self.client.post(
+                self.resource_create_url,
+                data=jsons.dumps(data),
+                headers=self.headers
+            )
+        except HTTPError:
+            logger.error("error occurred creating new resource on ckan")
+            return False
+        return True
 
 
 class Formatter(ABC):
@@ -117,7 +130,7 @@ class CkanStorage:
               dataset: str,
               resource: str,
               upsert: bool = False):
-        self.client.create_resource(resource, dataset, [
+        return self.client.create_resource(resource, dataset, [
             {
                 **{
                     "station": ts.source.id_,
