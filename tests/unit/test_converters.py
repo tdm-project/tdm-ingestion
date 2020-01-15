@@ -222,7 +222,7 @@ class TestNgsiConverter(unittest.TestCase):
                 {"name": "NO", "type": "Float", "value": "null"}
             ]
             self._test_convert_runtime_error(msg)
-
+            
     def test_cached_convert(self):
         converter = CachedNgsiConverter()
         self.assertEqual(len(converter.sensors), 0)

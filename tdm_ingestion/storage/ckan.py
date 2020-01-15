@@ -1,9 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
-from datetime import timedelta, datetime
-from typing import List, Dict, Any
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 import jsons
+from requests.exceptions import HTTPError
+
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
@@ -30,40 +32,52 @@ class CkanClient(ABC):
 class RemoteCkan(CkanClient):
     @classmethod
     def create_from_json(cls, json: Dict):
-        client = json['client']
-        return cls(json['base_url'], import_class(client['class'])(),
-                   json['api_key'])
+        client = json["client"]
+        return cls(json["base_url"], import_class(client["class"])(),
+                   json["api_key"])
 
     def __init__(self, base_url: str, client: Http, api_key: str):
         self.base_url = base_url
         self.client = client
-        self.headers = {'Authorization': api_key}
+        self.headers = {"Authorization": api_key}
 
     def delete_resource(self, resource_id: str):
-        logger.debug('deleting resource %s', resource_id)
+        logger.debug("deleting resource %s", resource_id)
         self.client.post(
-            f'{self.base_url}/api/3/action/resource_delete',
+            f"{self.base_url}/api/3/action/resource_delete",
             headers=self.headers,
             data=jsons.dumps(dict(id=resource_id))
         )
 
     def get_dataset_info(self, dataset: str) -> Dict:
         return self.client.get(
-            f'{self.base_url}/api/3/action/package_show',
+            f"{self.base_url}/api/3/action/package_show",
             headers=self.headers,
             params=dict(id=dataset)
-        )['result']
+        )["result"]
 
     def create_resource(self, resource: str, dataset: str,
                         records: List[Dict[str, Any]],
                         upsert: bool = False) -> None:
-        logger.debug('create_resource %s %s, %s', resource, dataset, records)
+        logger.debug("create_resource %s %s, %s", resource, dataset, records)
         if records:
             if upsert:
-                logger.debug('upsert is true, remove resource first')
-                for r in self.get_dataset_info(dataset)['resources']:
-                    if r['name'] == resource:
-                        self.delete_resource(r['id'])
+                logger.debug("upsert is true, remove resource first")
+                try:
+                    resources = self.get_dataset_info(dataset)["resources"]
+                except HTTPError:
+                    logger.error("error querying tdmq for resources. Exiting")
+                    return
+                else:
+                    for r in resources:
+                        if r["name"] == resource:
+                            logger.debug("found resource to delete")
+                            try:
+                                self.delete_resource(r["id"])
+                            except HTTPError:
+                                logger.warning("error occurred deleting the resource. Proceed without deleting")
+                            else:
+                                logger.debug("old resource deleted")
 
             fields = [{"id": field} for field in records[0].keys()]
             data = dict(
@@ -71,11 +85,13 @@ class RemoteCkan(CkanClient):
                 fields=fields,
                 records=records
             )
-
-            self.client.post(
-                f'{self.base_url}/api/3/action/datastore_create',
-                data=jsons.dumps(data),
-                headers=self.headers)
+            try:
+                self.client.post(
+                    f"{self.base_url}/api/3/action/datastore_create",
+                    data=jsons.dumps(data),
+                    headers=self.headers)
+            except HTTPError:
+                logger.error("error occurred creating new resource on ckan")
 
 
 class Formatter(ABC):
@@ -104,10 +120,10 @@ class CkanStorage:
         self.client.create_resource(resource, dataset, [
             {
                 **{
-                    'station': ts.source.id_,
-                    'type': ts.source.type.category,
-                    'date': ts.time,
-                    'location': f'{ts.source.geometry.latitude},{ts.source.geometry.longitude}'
+                    "station": ts.source.id_,
+                    "type": ts.source.type.category,
+                    "date": ts.time,
+                    "location": f"{ts.source.geometry.latitude},{ts.source.geometry.longitude}"
                 },
                 **ts.data
             }
