@@ -106,7 +106,7 @@ class RemoteCkan(CkanClient):
             )
         except HTTPError as e:
             logger.error("error occurred creating new resource on ckan")
-            logger.error("error is %s", e.response.body)
+            logger.error("error is %s", e.response.text)
             return False
         
         # self.reorder_resources()
