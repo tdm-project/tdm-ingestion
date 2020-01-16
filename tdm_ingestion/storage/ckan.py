@@ -77,8 +77,7 @@ class RemoteCkan(CkanClient):
             try:
                 resources = self.get_dataset_info(dataset)["resources"]
             except HTTPError:
-                logger.error("error querying tdmq for resources. Exiting")
-                return False
+                logger.warning("error querying tdmq for resources. Proceeding without deleting the old resource")
             else:
                 for r in resources:
                     if r["name"] == resource:
@@ -86,8 +85,7 @@ class RemoteCkan(CkanClient):
                         try:
                             self.delete_resource(r["id"])
                         except HTTPError:
-                            logger.error("error occurred deleting the resource. Proceed without deleting. Exiting")
-                            return False
+                            logger.warning("error occurred deleting the resource. Proceed without deleting")
                         else:
                             logger.debug("old resource deleted")
 

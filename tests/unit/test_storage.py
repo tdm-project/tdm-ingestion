@@ -142,7 +142,7 @@ class TestCkanStorage(unittest.TestCase):
 
     @httpretty.activate
     def test_write_records_upsert(self):
-        def request_callback(request, _, response_headers):
+        def create_request_callback(request, _, response_headers):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
             self.assertEqual(request.headers.get("Authorization"), "api_key")
             self.assertEqual(request.headers.get("content-type"), "application/json")
@@ -154,7 +154,7 @@ class TestCkanStorage(unittest.TestCase):
 
         httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=200, body=jsons.dumps(self.package_info))
         httpretty.register_uri(httpretty.POST, self.ckan_client.resource_delete_url, body=delete_request_callback)
-        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=request_callback)
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=create_request_callback)
 
         storage = CkanStorage(self.ckan_client)
         res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
@@ -165,13 +165,20 @@ class TestCkanStorage(unittest.TestCase):
         """
         Tests that, if an error occurs when retrieving package info, no records are stored in ckan
         """
+        def create_request_callback(request, _, response_headers):
+            self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
+            self.assertEqual(request.headers.get("Authorization"), "api_key")
+            self.assertEqual(request.headers.get("content-type"), "application/json")
+            return [200, response_headers, jsons.dumps(self.records_data)]
 
         httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=400)
         self.ckan_client.delete_resource = Mock()
 
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=create_request_callback)
+
         storage = CkanStorage(self.ckan_client)
         res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
-        self.assertEqual(res, False)
+        self.assertEqual(res, True)
 
         self.ckan_client.delete_resource.assert_not_called()
 
@@ -180,13 +187,20 @@ class TestCkanStorage(unittest.TestCase):
         """
         Tests that, if an error occurs when retrieving package info, no records are stored in ckan
         """
+        def create_request_callback(request, _, response_headers):
+            self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
+            self.assertEqual(request.headers.get("Authorization"), "api_key")
+            self.assertEqual(request.headers.get("content-type"), "application/json")
+            return [200, response_headers, jsons.dumps(self.records_data)]
 
         httpretty.register_uri(httpretty.GET, self.ckan_client.dataset_info_url, status=200, body=jsons.dumps(self.package_info))
         httpretty.register_uri(httpretty.POST, self.ckan_client.resource_delete_url, status=500)
+        httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, body=create_request_callback)
+
 
         storage = CkanStorage(self.ckan_client)
         res = storage.write(TIME_SERIES, 'lisa', 'test', upsert=True)
-        self.assertEqual(res, False)
+        self.assertEqual(res, True)
 
     @httpretty.activate
     def test_write_upsert_error_creating_records(self):
