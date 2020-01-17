@@ -14,7 +14,9 @@
     "stationary": true,
     "controlledProperties": [
       "temperature",
-      "humidity"
+      "humidity",
+      "rssi",
+      "prova"
     ],
     "shape": [],
     "description": {
@@ -38,7 +40,8 @@
     },
     "controlledProperties": [
       "humidity",
-      "temperature"
+      "temperature",
+      "rssi"
     ],
     "shape": [],
     "storage": null,

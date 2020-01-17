@@ -114,6 +114,10 @@ class Record(Model):
         self.source = source
         self.data = measure
 
+    def to_dict(self):
+        dct = dict(self.__dict__)
+        dct["source"] = self.source.id_
+
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(self.__dict__)
         dct["source"] = self.source.id_

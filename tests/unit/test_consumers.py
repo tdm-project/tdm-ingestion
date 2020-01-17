@@ -94,6 +94,7 @@ class TestTDMQConsumer(unittest.TestCase):
 
         consumer = TDMQConsumer(self.client)
         records = consumer.poll(SENSORS[0].type)
+        print(records)
         self.assertEqual(len(records), 0)
 
     def test_query_params(self):

@@ -4,7 +4,8 @@
     "source": "tdm/sensor_1",
     "data": {
       "temperature": 20,
-      "humidity": 0.42
+      "humidity": 0.42,
+      "rssi": -32.234
     }
   },
   {
@@ -12,7 +13,9 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 22,
-      "humidity": 0.022
+      "humidity": 0.022,
+      "rssi": -32.4,
+      "prova": "val"
     }
   },
   {
@@ -20,7 +23,8 @@
     "source": "tdm/sensor_1",
     "data": {
       "humidity": 0.40,
-      "temperature": 25
+      "temperature": 25,
+      "rssi": -32.4
     }
   },
   {
@@ -35,7 +39,9 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 22,
-      "humidity": 0.122
+      "humidity": 0.122,
+      "rssi": -32.4,
+      "prova": "val"
     }
   },
   {
@@ -43,7 +49,8 @@
     "source": "tdm/sensor_1",
     "data": {
       "humidity": 0.38,
-      "temperature": 22
+      "temperature": 22,
+      "rssi": -32.4
     }
   },
   {
@@ -58,7 +65,9 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 23,
-      "humidity": 0.222
+      "humidity": 0.222,
+      "rssi": -32.4,
+      "prova": "val"
     }
   },
   {
@@ -66,7 +75,9 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 23,
-      "humidity": 0.322
+      "humidity": 0.322,
+      "rssi": -32.4,
+      "prova": "val"
     }
   },
   {
@@ -74,7 +85,8 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 24,
-      "humidity": 0.422
+      "humidity": 0.422,
+      "rssi": -32.4
     }
   },
   {
@@ -82,7 +94,9 @@
     "source": "tdm/sensor_0",
     "data": {
       "temperature": 24,
-      "humidity": 0.522
+      "humidity": 0.522,
+      "rssi": -32.4,
+      "prova": "val"
     }
   },
   {
@@ -90,7 +104,8 @@
     "source": "tdm/sensor_1",
     "data": {
       "temperature": 25,
-      "humidity": 0.35
+      "humidity": 0.35,
+      "rssi": -32.4
     }
   }
 ]

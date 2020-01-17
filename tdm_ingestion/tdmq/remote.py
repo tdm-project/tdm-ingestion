@@ -82,8 +82,7 @@ class Client(BaseClient):
         for idx, time in enumerate(time_series['coords']['time']):
             date_time = datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
             records.append(Record(date_time, source, {data: value_list[idx]
-                                                      for data, value_list in
-                                                      time_series['data'].items()}))
+                                                      for data, value_list in time_series['data'].items()}))
 
         return records
 

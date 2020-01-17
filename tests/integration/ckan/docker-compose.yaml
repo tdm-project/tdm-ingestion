@@ -13,7 +13,7 @@ services:
     depends_on:
       - "timescaledb"
     ports:
-      - 8000
+      - 8000:8000
     environment:
       CREATE_DB: "true"
 
