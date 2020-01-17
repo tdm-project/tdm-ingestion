@@ -13,6 +13,13 @@ logger = logging.getLogger("test_tdm_ingestion")
 
 class TestNgsiConverter(unittest.TestCase):
     def setUp(self):
+        self.ignored_attrs = ("dateObserved", "location", "TimeInstant", "latitude", "longitude", 'timestamp')
+        
+        self.weather_values = {
+            "windDirection": 174.545,
+            "windSpeed": 20.0,
+            "rssi": -36
+        }
         self.in_weather_msg = {
             "headers": [{"fiware-service": "tdm"},
                         {"fiware-servicePath": "/cagliari/edge/meteo"},
@@ -26,8 +33,8 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "dateObserved", "type": "String", "value": "2019-12-16T16:31:34+00:00",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"}]
                      },
-                    {"name": "windDirection", "type": "Float", "value": "174.545"},
-                    {"name": "windSpeed", "type": "Float", "value": "20.0"},
+                    {"name": "windDirection", "type": "Float", "value": f"{self.weather_values['windDirection']}"},
+                    {"name": "windSpeed", "type": "Float", "value": f"{self.weather_values['windSpeed']}"},
                     {"name": "temperature", "type": "Float", "value": " ",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"}]
                      },
@@ -48,11 +55,17 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "SO2", "type": "Float", "value": " "},
                     {"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"},
                     {"name": "altitude", "type": "Float", "value": " "},
-                    {"name": "rssi", "type": "string", "value": "-36",
+                    {"name": "rssi", "type": "string", "value": f"{self.weather_values['rssi']}",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:31:34.943Z"}]
                      }
                 ]
             }
+        }
+        self.energy_values = {
+            "consumedEnergy": 2.5,
+            "powerFactor": 0.4,
+            "realPower": 100.0,
+            "rssi": -36
         }
         self.in_energy_msg = {
             "headers": [
@@ -69,24 +82,29 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "apparentPower", "type": "Float", "value": " ",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
                      },
-                    {"name": "consumedEnergy", "type": "Float", "value": "2.5"},
+                    {"name": "consumedEnergy", "type": "Float", "value": f"{self.energy_values['consumedEnergy']}"},
                     {"name": "current", "type": "Float", "value": " "},
                     {"name": "dateObserved", "type": "String", "value": "2019-12-16T16:33:19+00:00",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
                      },
                     {"name": "frequency", "type": "Float", "value": " "},
                     {"name": "location", "type": "geo:point", "value": "0, 0"},
-                    {"name": "powerFactor", "type": "Float", "value": "0.4"},
-                    {"name": "realPower", "type": "Float", "value": "100"},
+                    {"name": "powerFactor", "type": "Float", "value": f"{self.energy_values['powerFactor']}"},
+                    {"name": "realPower", "type": "Float", "value": f"{self.energy_values['realPower']}"},
                     {"name": "timestamp", "type": "Integer", "value": "1576513999",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
                      },
                     {"name": "voltage", "type": "Float", "value": " "},
-                    {"name": "rssi", "type": "string", "value": "-36",
+                    {"name": "rssi", "type": "string", "value": f"{self.energy_values['rssi']}",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
                      }
                 ]
             }
+        }
+        self.device_values = {
+            "humidity": 47.48968505859375,
+            "temperature": 20.578688964843742,
+            "dewpoint": 9.088586800582902
         }
         self.in_device_msg = {
             "headers": [
@@ -106,7 +124,7 @@ class TestNgsiConverter(unittest.TestCase):
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
                     {"name": "diskFree", "type": "Float", "value": " "},
                     {"name": "diskTotal", "type": "Float", "value": " "},
-                    {"name": "humidity", "type": "Float", "value": "47.48968505859375",
+                    {"name": "humidity", "type": "Float", "value": f"{self.device_values['humidity']}",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
                     {"name": "illuminance", "type": "Float", "value": " "},
                     {"name": "kernelRelease", "type": "String", "value": " "},
@@ -120,7 +138,7 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "swapFree", "type": "Float", "value": " "},
                     {"name": "swapTotal", "type": "Float", "value": " "},
                     {"name": "systemArchitecture", "type": "String", "value": " "},
-                    {"name": "temperature", "type": "Float", "value": "20.578688964843742",
+                    {"name": "temperature", "type": "Float", "value": f"{self.device_values['temperature']}",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
                     {"name": "timestamp", "type": "Integer", "value": "1576677905",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
@@ -128,7 +146,7 @@ class TestNgsiConverter(unittest.TestCase):
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
                     {"name": "longitude", "type": "string", "value": "0",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]},
-                    {"name": "dewpoint", "type": "string", "value": "9.088586800582902",
+                    {"name": "dewpoint", "type": "string", "value": f"{self.device_values['dewpoint']}",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-18T14:05:06.823Z"}]}
                 ]
             }
@@ -138,11 +156,9 @@ class TestNgsiConverter(unittest.TestCase):
         timeseries_list = converter.convert([json.dumps(self.in_weather_msg)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].source.type, EntityType("WeatherObserver", "Station"))
-        self.assertEqual(timeseries_list[0].data, {
-            "windDirection": 174.545,
-            "windSpeed": 20.0,
-            "rssi": -36
-        })
+        data = {attr["name"]: self.weather_values.get(attr["name"], "")
+                for attr in self.in_weather_msg["body"]["attributes"] if attr['name'] not in self.ignored_attrs}
+        self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:31:34Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-x.esp8266.Davis")
 
@@ -150,12 +166,9 @@ class TestNgsiConverter(unittest.TestCase):
         timeseries_list = converter.convert([json.dumps(self.in_energy_msg)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].source.type, EntityType("EnergyConsumptionMonitor", "Station"))
-        self.assertEqual(timeseries_list[0].data, {
-            "consumedEnergy": 2.5,
-            "powerFactor": 0.4,
-            "realPower": 100.0,
-            "rssi": -36
-        })
+        data = {attr["name"]: self.energy_values.get(attr["name"], "")
+                for attr in self.in_energy_msg["body"]["attributes"] if attr['name'] not in self.ignored_attrs}
+        self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-y.emontx3.L3")
 
@@ -163,11 +176,9 @@ class TestNgsiConverter(unittest.TestCase):
         timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
         self.assertEqual(len(timeseries_list), 1)
         self.assertEqual(timeseries_list[0].source.type, EntityType("DeviceStatusMonitor", "Station"))
-        self.assertEqual(timeseries_list[0].data, {
-            "humidity": 47.48968505859375,
-            "temperature": 20.578688964843742,
-            "dewpoint": 9.088586800582902,
-        })
+        data = {attr["name"]: self.device_values.get(attr["name"], "") 
+                for attr in self.in_device_msg["body"]["attributes"] if attr['name'] not in self.ignored_attrs}            
+        self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-18T14:05:05Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-z.EDGE.HTU21D")
 

@@ -99,18 +99,23 @@ class NgsiConverter:
         geometry = None
         for attr in msg["body"]["attributes"]:
             name, value, type_ = attr["name"], attr["value"], attr["type"]
-            if value is not None and str(value).strip() and not name in self._to_ignore:
-                # First check for a converter for the attribute
-                try:
-                    converter = self._attrs_mapper[name]
-                except KeyError:
-                    converter = self._type_mapper.get(type_, None)
+            if not name in self._to_ignore:
+                if value is None or not str(value).strip():
+                    converter = str
+                    value = ''
+                else:
+                    # First check for a converter for the attribute
+                    try:
+                        converter = self._attrs_mapper[name]
+                    except KeyError:
+                        converter = self._type_mapper.get(type_, None)
 
                 try:
                     converted_value = converter(value)
                 except (ValueError, TypeError):
                     # FIXME: should we skip the message or just the property?
                     logger.warning("cannot read attribute %s of type %s with value %s", name, type_, value)
+                    continue
                 else:
                     if name == "timestamp":
                         time = converted_value
