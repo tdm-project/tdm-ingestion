@@ -2,11 +2,14 @@ import json
 import logging
 import os
 import subprocess
+from csv import DictReader
+from io import StringIO
 
 import requests
-from tests.integration.utils import \
-    docker_compose_up, get_service_port, docker_compose_down, try_func, \
-    docker_compose_restart
+
+from tests.integration.utils import (docker_compose_down,
+                                     docker_compose_restart, docker_compose_up,
+                                     get_service_port, try_func)
 
 logging.basicConfig(level=logging.DEBUG)
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -16,21 +19,20 @@ docker_yaml = os.path.join(DIR, 'docker-compose.yaml')
 def check_ckan():
     print('check ckan')
     try:
-        dataset = requests.get(
-            'http://localhost:5000/api/3/action/package_show?id=lisa').json()['result']
+        dataset = requests.get('http://localhost:5000/api/3/action/package_show?id=lisa').json()['result']
 
         print(f'num resources {dataset["num_resources"]}')
         assert dataset['num_resources'] == 1
-        expected = """_id,station,type,date,location,humidity,temperature
-1,tdm/sensor_0,Station,2019-05-02T11:00:00,"38.9900400015583,8.93607900725268",0.272000001122554,23
-2,tdm/sensor_1,Station,2019-05-02T10:50:00,"40.5841280014956,8.24696900768626",0.419999986886978,20
-3,tdm/sensor_1,Station,2019-05-02T11:00:00,"40.5841280014956,8.24696900768626",0.400000005960464,25
-4,tdm/sensor_1,Station,2019-05-02T11:10:00,"40.5841280014956,8.24696900768626",0.379999995231628,22
-5,tdm/sensor_1,Station,2019-05-02T11:20:00,"40.5841280014956,8.24696900768626",0.349999994039536,25"""
+        expected = """_id,station,type,date,location,temperature,humidity
+1,tdm/sensor_0,Station,2019-05-02T11:00:00Z,"38.9900400015583,8.93607900725268",23,0.272000001122554
+2,tdm/sensor_1,Station,2019-05-02T10:50:00Z,"40.5841280014956,8.24696900768626",20,0.419999986886978
+3,tdm/sensor_1,Station,2019-05-02T11:00:00Z,"40.5841280014956,8.24696900768626",25,0.400000005960464
+4,tdm/sensor_1,Station,2019-05-02T11:10:00Z,"40.5841280014956,8.24696900768626",22,0.379999995231628
+5,tdm/sensor_1,Station,2019-05-02T11:20:00Z,"40.5841280014956,8.24696900768626",25,0.349999994039536"""
         actual = requests.get(dataset['resources'][0]['url']).text
-        print(f'actual resource {actual}')
-        print(f'expected resource {expected}')
-        assert expected.splitlines() == actual.splitlines()
+        actual_dict_lines = [dict(l) for l in DictReader(StringIO(actual))]
+        expected_dict_lines = [dict(l) for l in DictReader(StringIO(expected))]
+        assert actual_dict_lines == expected_dict_lines
     except Exception as ex:
         print(ex)
         return False
@@ -47,9 +49,9 @@ try:
 
     with open('data/records.json') as f:
         requests.post(f'{base_url}/records', json=json.load(f))
-
     docker_compose_restart(docker_yaml, 'ingester')
     try_func(check_ckan, 2, 10)
 
 finally:
     docker_compose_down(docker_yaml)
+    pass

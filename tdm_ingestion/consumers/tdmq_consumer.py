@@ -38,7 +38,6 @@ class TDMQConsumer:
             logger.debug("error getting sources from tdmq server")
             return []
 
-        records = []
         params = {}
         if bucket is not None:
             params['bucket'] = bucket
@@ -52,6 +51,7 @@ class TDMQConsumer:
             params['before'] = before.isoformat() if \
                 isinstance(before, datetime) else before
 
+        records = {}
         for source in sources:
             logger.debug("getting time series for source %s", source.id_)
             try:
@@ -59,5 +59,6 @@ class TDMQConsumer:
             except GenericHttpError:
                 logger.debug("error getting time series from tdmq server")
             else:
-                records += times_series
+                if len(times_series) > 0:
+                    records[source.id_] = times_series
         return records

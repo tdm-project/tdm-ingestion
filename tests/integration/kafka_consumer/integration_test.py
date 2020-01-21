@@ -33,6 +33,7 @@ def check_timeseries(base_url, sensor_id, params):
 
 
 def send_message(producer, topic, data):
+    
     if producer is None:
         producer = KafkaProducer(bootstrap_servers='localhost:9092',
                                  value_serializer=lambda v: json.dumps(v).encode('utf-8'))
@@ -50,8 +51,8 @@ def increment_and_wait(counter, wait=5):
 try:
     docker_compose_up(docker_yaml)
     with open(os.path.join(DIR, '../../messages/ngsi-weather.json'), 'rb') as f:
-        messages  = json.load(f)
-    logger.debug("Data to send %s", messages )
+        messages = json.load(f)
+    logger.debug("Data to send %s", messages)
 
     port = get_service_port(docker_yaml, 'web', '8000')
     base_url = f'http://localhost:{port}/api/v0.0'

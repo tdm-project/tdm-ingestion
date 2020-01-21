@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 class CkanClient(ABC):
     @abstractmethod
     def create_resource(self,
-                        resource: str,
-                        dataset: str,
                         records: List[Dict[str, Any]],
+                        dataset: str,
+                        resource: str,
                         upsert: bool = False
                         ) -> None:
         pass
@@ -47,6 +47,49 @@ class RemoteCkan(CkanClient):
         self.client = client
         self.headers = {"Authorization": api_key}
 
+        self.ckan_type_mapper = {
+            str: "text",
+            float: "float"
+        }
+
+    def _get_fields_from_records(self, records: Dict[str, List[Record]]):
+        """
+        It reads from the records all the fields with the correspondant datatype.
+        This is necessary because data from the different sensors can have different fields.
+        If Ckan finds a record with fields different from the first one, it fails the loading,
+        unless the fields with the datatypes are listed in the message
+        """
+        fields_cache = {"station", "type", "date", "location"}
+        fields_structs = [
+            {"id": "station", "type": "text"},
+            {"id": "type", "type": "text"},
+            {"id": "date", "type": "text"},
+            {"id": "location", "type": "text"}
+        ]
+
+        for _, station_records in records.items():
+            record = station_records[0]  # we need only one record. Other records have the same struct
+            new_fields = set(record.data.keys()) - fields_cache  # adds only fields not already present
+
+            fields_structs += [{
+                "id": field,
+                "type": self.ckan_type_mapper.get(type(record.data[field]), "text")
+            } for field in new_fields]
+
+            fields_cache = fields_cache.union(new_fields)
+        return fields_structs
+
+    def _get_dict_records(self, records: Dict[str, List[Record]]):
+        new_records = []
+        for _, station_records in records.items():
+            new_records += [{**{
+                "station": record.source.id_,
+                "type": record.source.type.category,
+                "date": record.time,
+                "location": f"{record.source.geometry.latitude},{record.source.geometry.longitude}"
+            }, **record.data} for record in station_records]
+        return new_records
+
     def delete_resource(self, resource_id: str):
         logger.debug("deleting resource %s", resource_id)
         self.client.post(
@@ -65,20 +108,25 @@ class RemoteCkan(CkanClient):
     # def reorder_resources(self):
     #     pass
 
-    def create_resource(self, resource: str, dataset: str,
-                        records: List[Dict[str, Any]],
-                        upsert: bool = False) -> None:
-        logger.debug("create_resource %s %s, %s", resource, dataset, records)
+    def create_resource(self, records: Dict[str, List[Record]],
+                        dataset: str, resource: str, upsert: bool = False) -> None:
+        """
+        Create resources in Ckan
+
+        :param records: a dict of list of records. The Dict keys are the id of the station and the items
+            are the list of records for that station
+        """
+
+        logger.debug("create resource %s, %s, %s", resource, dataset, records)
         if not records:
             return False
-        
+
         if upsert:
             logger.debug("upsert is true, remove resource first")
             try:
                 resources = self.get_dataset_info(dataset)["resources"]
             except HTTPError:
-                logger.error("error querying tdmq for resources. Exiting")
-                return False
+                logger.warning("error querying tdmq for resources. Proceeding without deleting the old resource")
             else:
                 for r in resources:
                     if r["name"] == resource:
@@ -86,17 +134,21 @@ class RemoteCkan(CkanClient):
                         try:
                             self.delete_resource(r["id"])
                         except HTTPError:
-                            logger.error("error occurred deleting the resource. Proceed without deleting. Exiting")
-                            return False
+                            logger.warning("error occurred deleting the resource. Proceed without deleting")
                         else:
                             logger.debug("old resource deleted")
 
-        fields = [{"id": field} for field in records[0].keys()]
-        data = dict(
-            resource=dict(package_id=dataset, name=resource),
-            fields=fields,
-            records=records
-        )
+        fields = self._get_fields_from_records(records)
+        records = self._get_dict_records(records)
+
+        data = {
+            "resource": {
+                "package_id": dataset,
+                "name": resource
+            },
+            "fields": fields,
+            "records": records
+        }
 
         try:
             self.client.post(
@@ -108,8 +160,7 @@ class RemoteCkan(CkanClient):
             logger.error("error occurred creating new resource on ckan")
             logger.error("error is %s", e.response.text)
             return False
-        
-        # self.reorder_resources()
+
         return True
 
 
@@ -132,18 +183,8 @@ class CkanStorage:
         self.client = client
 
     def write(self,
-              records: List[Record],
+              records: Dict[str, List[Record]],
               dataset: str,
               resource: str,
               upsert: bool = False):
-        return self.client.create_resource(resource, dataset, [
-            {
-                **{
-                    "station": ts.source.id_,
-                    "type": ts.source.type.category,
-                    "date": ts.time,
-                    "location": f"{ts.source.geometry.latitude},{ts.source.geometry.longitude}"
-                },
-                **ts.data
-            }
-            for ts in records], upsert=upsert)
+        return self.client.create_resource(records, dataset, resource, upsert=upsert)

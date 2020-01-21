@@ -13,7 +13,7 @@ services:
     depends_on:
       - "timescaledb"
     ports:
-      - 8000
+      - 8000:8000
     environment:
       CREATE_DB: "true"
 
@@ -50,7 +50,7 @@ services:
 
   ckan:
     container_name: ckan
-    image: ckan/ckan
+    image: tdmproject/ckan
     links:
       - db
       - solr
