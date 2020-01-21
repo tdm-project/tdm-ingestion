@@ -22,21 +22,20 @@ def check_ckan():
         print(f'num resources {dataset["num_resources"]}')
         assert dataset['num_resources'] == 1
         expected = """_id,station,type,date,location,humidity,temperature
-1,tdm/sensor_0,Station,2019-05-02T11:00:00,"38.9900400015583,8.93607900725268",0.272000001122554,23
-2,tdm/sensor_1,Station,2019-05-02T10:50:00,"40.5841280014956,8.24696900768626",0.419999986886978,20
-3,tdm/sensor_1,Station,2019-05-02T11:00:00,"40.5841280014956,8.24696900768626",0.400000005960464,25
-4,tdm/sensor_1,Station,2019-05-02T11:10:00,"40.5841280014956,8.24696900768626",0.379999995231628,22
-5,tdm/sensor_1,Station,2019-05-02T11:20:00,"40.5841280014956,8.24696900768626",0.349999994039536,25"""
+1,tdm/sensor_0,Station,2019-05-02T11:00:00Z,"38.9900400015583,8.93607900725268",0.272000001122554,23
+2,tdm/sensor_1,Station,2019-05-02T10:50:00Z,"40.5841280014956,8.24696900768626",0.419999986886978,20
+3,tdm/sensor_1,Station,2019-05-02T11:00:00Z,"40.5841280014956,8.24696900768626",0.400000005960464,25
+4,tdm/sensor_1,Station,2019-05-02T11:10:00Z,"40.5841280014956,8.24696900768626",0.379999995231628,22
+5,tdm/sensor_1,Station,2019-05-02T11:20:00Z,"40.5841280014956,8.24696900768626",0.349999994039536,25"""
         actual = requests.get(dataset['resources'][0]['url']).text
-        print(f'actual resource {actual}')
-        print(f'expected resource {expected}')
+        print(expected.splitlines())
+        print(actual.splitlines())
         assert expected.splitlines() == actual.splitlines()
     except Exception as ex:
         print(ex)
         return False
     return True
-
-
+    
 try:
     docker_compose_up(docker_yaml)
     subprocess.check_call(['./init.sh'])
@@ -47,9 +46,7 @@ try:
         res = requests.post(f'{base_url}/sources', json=json.load(f))
 
     with open('data/records.json') as f:
-        records = json.load(f)
-        print(records)
-        requests.post(f'{base_url}/records', json=records)
+        requests.post(f'{base_url}/records', json=json.load(f))
     docker_compose_restart(docker_yaml, 'ingester')
     try_func(check_ckan, 2, 10)
 
