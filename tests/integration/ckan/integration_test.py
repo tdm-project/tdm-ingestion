@@ -2,11 +2,14 @@ import json
 import logging
 import os
 import subprocess
+from csv import DictReader
+from io import StringIO
 
 import requests
-from tests.integration.utils import \
-    docker_compose_up, get_service_port, docker_compose_down, try_func, \
-    docker_compose_restart
+
+from tests.integration.utils import (docker_compose_down,
+                                     docker_compose_restart, docker_compose_up,
+                                     get_service_port, try_func)
 
 logging.basicConfig(level=logging.DEBUG)
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -27,9 +30,9 @@ def check_ckan():
 4,tdm/sensor_1,Station,2019-05-02T11:10:00Z,"40.5841280014956,8.24696900768626",22,0.379999995231628
 5,tdm/sensor_1,Station,2019-05-02T11:20:00Z,"40.5841280014956,8.24696900768626",25,0.349999994039536"""
         actual = requests.get(dataset['resources'][0]['url']).text
-        print(expected.splitlines())
-        print(actual.splitlines())
-        assert expected.splitlines() == actual.splitlines()
+        actual_dict_lines = [dict(l) for l in DictReader(StringIO(actual))]
+        expected_dict_lines = [dict(l) for l in DictReader(StringIO(expected))]
+        assert actual_dict_lines == expected_dict_lines
     except Exception as ex:
         print(ex)
         return False
