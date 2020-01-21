@@ -36,7 +36,7 @@ def check_ckan():
     return True
 
 try:
-    # docker_compose_up(docker_yaml)
+    docker_compose_up(docker_yaml)
     subprocess.check_call(['./init.sh'])
 
     port = get_service_port(docker_yaml, 'web', '8000')
@@ -46,9 +46,9 @@ try:
 
     with open('data/records.json') as f:
         requests.post(f'{base_url}/records', json=json.load(f))
-    # docker_compose_restart(docker_yaml, 'ingester')
-    # try_func(check_ckan, 2, 10)
+    docker_compose_restart(docker_yaml, 'ingester')
+    try_func(check_ckan, 2, 10)
 
 finally:
-    # docker_compose_down(docker_yaml)
+    docker_compose_down(docker_yaml)
     pass
