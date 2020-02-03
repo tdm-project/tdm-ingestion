@@ -43,7 +43,7 @@ class RemoteCkan(CkanClient):
         self.resource_delete_url = urljoin(self.base_url, "/api/3/action/resource_delete")
         self.dataset_info_url = urljoin(self.base_url, "/api/3/action/package_show")
         self.resource_create_url = urljoin(self.base_url, "api/3/action/datastore_create")
-
+        self.dataset_reorder_url = urljoin(self.base_url, "api/3/action/package_resource_reorder")
         self.client = client
         self.headers = {"Authorization": api_key}
 
@@ -105,9 +105,17 @@ class RemoteCkan(CkanClient):
             params=dict(id=dataset)
         )["result"]
 
-    # def reorder_resources(self):
-    #     pass
-
+    def dataset_reorder(self, dataset: str, resource_id: str):
+        try:
+            self.client.post(
+                self.dataset_reorder_url,
+                headers=self.headers,
+                data=jsons.dumps(dict(id=dataset, order=[resource_id]))
+            )
+        except HTTPError:
+            logger.error("error occurred getting resources to sort")
+            return False
+        
     def create_resource(self, records: Dict[str, List[Record]],
                         dataset: str, resource: str, upsert: bool = False) -> None:
         """
@@ -151,7 +159,7 @@ class RemoteCkan(CkanClient):
         }
 
         try:
-            self.client.post(
+            res = self.client.post(
                 self.resource_create_url,
                 data=jsons.dumps(data),
                 headers=self.headers
@@ -160,7 +168,8 @@ class RemoteCkan(CkanClient):
             logger.error("error occurred creating new resource on ckan")
             logger.error("error is %s", e.response.text)
             return False
-
+        else:
+            self.dataset_reorder(dataset, res["id"])
         return True
 
 
