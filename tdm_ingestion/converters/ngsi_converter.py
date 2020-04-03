@@ -13,6 +13,15 @@ from tdm_ingestion.tdmq.models import (EntityType, Geometry, Point, Record,
                                        Source)
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class NgsiConverter:

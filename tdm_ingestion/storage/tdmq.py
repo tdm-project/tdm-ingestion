@@ -7,7 +7,16 @@ from tdm_ingestion.tdmq.remote import AsyncClient, DuplicatedEntryError, Generic
 from tdm_ingestion.utils import import_class
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 logger.debug(__name__)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class CachedStorage:

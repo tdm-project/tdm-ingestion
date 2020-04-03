@@ -12,6 +12,15 @@ from tdm_ingestion.tdmq.base import Client as BaseClient
 from tdm_ingestion.tdmq.models import EntityType, Model, Point, Record, Source
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class GenericHttpError(Exception):

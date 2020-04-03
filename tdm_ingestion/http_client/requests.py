@@ -5,6 +5,15 @@ import requests
 from tdm_ingestion.http_client.base import Http
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class Requests(Http):
