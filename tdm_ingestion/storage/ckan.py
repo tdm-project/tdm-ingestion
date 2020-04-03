@@ -117,7 +117,7 @@ class RemoteCkan(CkanClient):
             return False
         
     def create_resource(self, records: Dict[str, List[Record]],
-                        dataset: str, resource: str, upsert: bool = False) -> None:
+                        dataset: str, resource: str, description: str = "", upsert: bool = False) -> None:
         """
         Create resources in Ckan
 
@@ -152,7 +152,8 @@ class RemoteCkan(CkanClient):
         data = {
             "resource": {
                 "package_id": dataset,
-                "name": resource
+                "name": resource,
+                "description": description
             },
             "fields": fields,
             "records": records
@@ -195,5 +196,7 @@ class CkanStorage:
               records: Dict[str, List[Record]],
               dataset: str,
               resource: str,
+              description: str = "",
               upsert: bool = False):
-        return self.client.create_resource(records, dataset, resource, upsert=upsert)
+        return self.client.create_resource(records, dataset, resource,
+                                           description, upsert=upsert)
