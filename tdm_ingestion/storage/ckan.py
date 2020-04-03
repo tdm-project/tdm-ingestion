@@ -12,6 +12,15 @@ from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class CkanClient(ABC):
