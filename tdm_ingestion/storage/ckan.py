@@ -169,7 +169,7 @@ class RemoteCkan(CkanClient):
             logger.error("error is %s", e.response.text)
             return False
         else:
-            self.dataset_reorder(dataset, res["id"])
+            self.dataset_reorder(dataset, res["result"]["resource_id"])
         return True
 
 
