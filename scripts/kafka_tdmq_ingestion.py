@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 import logging
 
+import tdm_ingestion.converters.ngsi_converter
+import tdm_ingestion.storage.tdmq
+import tdm_ingestion.tdmq.remote
+
 from tdm_ingestion.consumers.confluent_kafka_consumer import KafkaConsumer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 from tdm_ingestion.storage.tdmq import CachedStorage
@@ -26,6 +30,10 @@ def main():
     args = parser.parse_args()
 
     logger.info('running with args %s', args.__dict__)
+    if (args.debug):
+        tdm_ingestion.converters.ngsi_converter.set_log_level(logging.DEBUG)
+        tdm_ingestion.storage.tdmq.set_log_level(logging.DEBUG)
+        tdm_ingestion.tdmq.remote.set_log_level(logging.DEBUG)
 
     kwargs = {}
     if args.from_beginning:
