@@ -132,7 +132,7 @@ class NgsiConverter:
 
         sensor = self._create_sensor(source_id, sensor_type, geometry, records.keys())
 
-        return Record(time, sensor, records)
+        return Record(time, sensor, geometry, records)
 
     def convert(self, messages: List[str]) -> List[Record]:
         """
