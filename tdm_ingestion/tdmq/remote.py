@@ -90,7 +90,8 @@ class Client(BaseClient):
         logger.debug('time_series %s', time_series)
         for idx, time in enumerate(time_series['coords']['time']):
             date_time = datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
-            records.append(Record(date_time, source, {data: value_list[idx]
+            footprint = time_series['coords']['footprint']
+            records.append(Record(date_time, source, footprint[idx], {data: value_list[idx]
                                                       for data, value_list in time_series['data'].items()}))
 
         return records
