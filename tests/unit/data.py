@@ -15,8 +15,8 @@ SENSORS = [
 ]
 
 TIME_SERIES = [
-    Record(now, SENSORS[0], {"temperature": 14.0}),
-    Record(now, SENSORS[1], {"humidity": 95.0})
+    Record(now, SENSORS[0], Point(0, 1), {"temperature": 14.0}),
+    Record(now, SENSORS[1], Point(2, 3), {"humidity": 95.0})
 ]
 
 # the dictionary returned from the tdmq polystore rest api
@@ -38,7 +38,10 @@ REST_SOURCE = {
 REST_TIME_SERIES = {
     "bucket": None,
     "coords": {
-        "footprint": [None],
+        "footprint": [{
+            "type": "Point",
+            "coordinates": [0, 1]
+        }],
         "time": [datetime.timestamp(TIME_SERIES[0].time)]
     },
     "data": {

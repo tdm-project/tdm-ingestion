@@ -107,7 +107,11 @@ class TestCkanStorage(unittest.TestCase):
         self.dataset_id = "lisa"
         self.ckan_client = RemoteCkan(base_url, Requests(), "api_key")
         self.records_data = {
-            "resource": {"package_id": self.dataset_id, "name": "test"},
+            "resource": {
+                "package_id": self.dataset_id,
+                "name": "test",
+                "description": "A resource"
+            },
             "fields": [
                 {"id": "station", "type": "text"},
                 {"id": "type", "type": "text"},
@@ -141,7 +145,7 @@ class TestCkanStorage(unittest.TestCase):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
             self.assertEqual(request.headers.get("Authorization"), "api_key")
             self.assertEqual(request.headers.get("content-type"), "application/json")
-            return [200, response_headers, jsons.dumps({"id": new_res_id})]
+            return [200, response_headers, jsons.dumps({"result": {"resource_id": new_res_id}})]
 
         def reorder_callback(request, _, response_headers):
             input_data = {
@@ -158,7 +162,7 @@ class TestCkanStorage(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, self.ckan_client.dataset_reorder_url, body=reorder_callback)
 
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test")
+        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", "A resource")
         self.assertEqual(res, True)
 
     @httpretty.activate
@@ -168,7 +172,7 @@ class TestCkanStorage(unittest.TestCase):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
             self.assertEqual(request.headers.get("Authorization"), "api_key")
             self.assertEqual(request.headers.get("content-type"), "application/json")
-            return [200, response_headers, jsons.dumps({"id": new_res_id})]
+            return [200, response_headers, jsons.dumps({"result": {"resource_id": new_res_id}})]
 
         def delete_request_callback(request, _, response_headers):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps({"id": "random_id"}))
@@ -191,7 +195,7 @@ class TestCkanStorage(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, self.ckan_client.dataset_reorder_url, body=reorder_callback)
 
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", upsert=True)
+        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", "A resource", upsert=True)
         self.assertEqual(res, True)
 
     @httpretty.activate
@@ -204,7 +208,7 @@ class TestCkanStorage(unittest.TestCase):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
             self.assertEqual(request.headers.get("Authorization"), "api_key")
             self.assertEqual(request.headers.get("content-type"), "application/json")
-            return [200, response_headers, jsons.dumps({"id": new_res_id})]
+            return [200, response_headers, jsons.dumps({"result": {"resource_id": new_res_id}})]
 
         def reorder_callback(request, _, response_headers):
             input_data = {"id": self.dataset_id, "order": [new_res_id]}
@@ -220,7 +224,7 @@ class TestCkanStorage(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, self.ckan_client.dataset_reorder_url, body=reorder_callback)
 
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", upsert=True)
+        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", "A resource", upsert=True)
         self.assertEqual(res, True)
 
         self.ckan_client.delete_resource.assert_not_called()
@@ -235,7 +239,7 @@ class TestCkanStorage(unittest.TestCase):
             self.assertEqual(request.body.decode("utf-8"), jsons.dumps(self.records_data))
             self.assertEqual(request.headers.get("Authorization"), "api_key")
             self.assertEqual(request.headers.get("content-type"), "application/json")
-            return [200, response_headers, jsons.dumps({"id": new_res_id})]
+            return [200, response_headers, jsons.dumps({"result": {"resource_id": new_res_id}})]
 
         def reorder_callback(request, _, response_headers):
             input_data = {"id": self.dataset_id, "order": [new_res_id]}
@@ -251,7 +255,7 @@ class TestCkanStorage(unittest.TestCase):
 
 
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", upsert=True)
+        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", "A resource", upsert=True)
         self.assertEqual(res, True)
 
     @httpretty.activate
@@ -262,13 +266,13 @@ class TestCkanStorage(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, self.ckan_client.resource_create_url, status=500)
 
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test")
+        res = storage.write({ts.source.id_: [ts] for ts in TIME_SERIES}, "lisa", "test", "A resource")
         self.assertEqual(res, False)
 
     @httpretty.activate
     def test_write_empty_records(self):
         storage = CkanStorage(self.ckan_client)
-        res = storage.write({}, "lisa", "test")
+        res = storage.write({}, "lisa", "test", "A resource")
         self.assertEqual(res, False)
 
     def test_ckan_client_write_no_records(self):
