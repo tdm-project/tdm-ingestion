@@ -95,7 +95,7 @@ class RemoteCkan(CkanClient):
                 "station": record.source.id_,
                 "type": record.source.type.category,
                 "date": record.time,
-                "location": f"{record.source.geometry.latitude},{record.source.geometry.longitude}"
+                "location": f"{record.footprint.latitude},{record.footprint.longitude}"
             }, **record.data} for record in station_records]
         return new_records
 
