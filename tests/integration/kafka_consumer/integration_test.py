@@ -24,6 +24,8 @@ def check_timeseries(base_url, sensor_id, params):
     check_docker_logs(docker_yaml, 'web')
     r = requests.get(f"{base_url}/sources", params={'id': sensor_id})
     r.raise_for_status()
+    if (len(r.json()) == 0):
+        return False
     tdmq_id = r.json()[0]['tdmq_id']
     r = requests.get(
         f"{base_url}/sources/{tdmq_id}/timeseries",
