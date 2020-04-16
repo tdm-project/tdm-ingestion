@@ -8,7 +8,7 @@ from kafka import KafkaProducer
 from tdm_ingestion.converters.ngsi_converter import NgsiConverter
 from tests.integration.utils import \
     check_docker_logs, docker_compose_up, try_func, \
-    docker_compose_down, get_service_port
+    docker_compose_down, docker_compose_exec, get_service_port
 
 
 logger = logging.getLogger('tdm_ingestion.integration_tests')
@@ -19,11 +19,17 @@ docker_yaml = os.path.join(DIR, 'docker-compose.yaml')
 
 
 def check_timeseries(base_url, sensor_id, params):
+    docker_compose_exec(
+        docker_yaml, 'timescaledb',
+        ['psql', '-U', 'postgres', '-d', 'tdmqtest', '-c',
+         f"UPDATE source SET public = true WHERE external_id = '{sensor_id}';"])
     logger.debug("sensors %s", requests.get(f'{base_url}/sources').json())
     check_docker_logs(docker_yaml, 'ingester')
     check_docker_logs(docker_yaml, 'web')
     r = requests.get(f"{base_url}/sources", params={'id': sensor_id})
     r.raise_for_status()
+    if (len(r.json()) == 0):
+        return False
     tdmq_id = r.json()[0]['tdmq_id']
     r = requests.get(
         f"{base_url}/sources/{tdmq_id}/timeseries",

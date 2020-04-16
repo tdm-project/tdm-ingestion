@@ -108,10 +108,14 @@ class Source(Model):
         return f'Sensor {self.id_} of {repr(self.type)}'
 
 class Record(Model):
-    def __init__(self, utc_time: datetime.datetime, source: Source,
+    def __init__(self,
+                 utc_time: datetime.datetime,
+                 source: Source,
+                 footprint: Geometry,
                  measure: Dict[str, float]):
         self.time = utc_time
         self.source = source
+        self.footprint = footprint
         self.data = measure
 
     def to_dict(self):
@@ -119,7 +123,11 @@ class Record(Model):
         dct["source"] = self.source.id_
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
-        dct = dict(self.__dict__)
-        dct["source"] = self.source.id_
+        dct = dict(
+            source = self.source.id_,
+            time = self.time,
+            footprint = self.footprint.to_json(False),
+            data = self.data
+        )
         camel_cased = to_camel_case_dict(dct)
         return jsonify(camel_cased) if serialize else camel_cased

@@ -12,6 +12,15 @@ from tdm_ingestion.tdmq.base import Client as BaseClient
 from tdm_ingestion.tdmq.models import EntityType, Model, Point, Record, Source
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class GenericHttpError(Exception):
@@ -81,7 +90,10 @@ class Client(BaseClient):
         logger.debug('time_series %s', time_series)
         for idx, time in enumerate(time_series['coords']['time']):
             date_time = datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
-            records.append(Record(date_time, source, {data: value_list[idx]
+
+            # No support for MultiPoint, just bring the last coordinate pair
+            footprint = time_series['coords']['footprint'][idx]["coordinates"][-1]
+            records.append(Record(date_time, source, Point(footprint[0], footprint[1]), {data: value_list[idx]
                                                       for data, value_list in time_series['data'].items()}))
 
         return records

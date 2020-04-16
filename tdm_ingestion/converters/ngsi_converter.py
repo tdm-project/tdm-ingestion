@@ -13,6 +13,15 @@ from tdm_ingestion.tdmq.models import (EntityType, Geometry, Point, Record,
                                        Source)
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class NgsiConverter:
@@ -132,7 +141,7 @@ class NgsiConverter:
 
         sensor = self._create_sensor(source_id, sensor_type, geometry, records.keys())
 
-        return Record(time, sensor, records)
+        return Record(time, sensor, geometry, records)
 
     def convert(self, messages: List[str]) -> List[Record]:
         """

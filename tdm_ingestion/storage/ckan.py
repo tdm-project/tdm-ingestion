@@ -12,6 +12,15 @@ from tdm_ingestion.tdmq.models import Record
 from tdm_ingestion.utils import import_class
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+
+def log_level():
+    return logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    logger.setLevel(level)
 
 
 class CkanClient(ABC):
@@ -86,7 +95,7 @@ class RemoteCkan(CkanClient):
                 "station": record.source.id_,
                 "type": record.source.type.category,
                 "date": record.time,
-                "location": f"{record.source.geometry.latitude},{record.source.geometry.longitude}"
+                "location": f"{record.footprint.latitude},{record.footprint.longitude}"
             }, **record.data} for record in station_records]
         return new_records
 
@@ -117,7 +126,7 @@ class RemoteCkan(CkanClient):
             return False
         
     def create_resource(self, records: Dict[str, List[Record]],
-                        dataset: str, resource: str, upsert: bool = False) -> None:
+                        dataset: str, resource: str, description: str = "", upsert: bool = False) -> None:
         """
         Create resources in Ckan
 
@@ -152,7 +161,8 @@ class RemoteCkan(CkanClient):
         data = {
             "resource": {
                 "package_id": dataset,
-                "name": resource
+                "name": resource,
+                "description": description
             },
             "fields": fields,
             "records": records
@@ -169,7 +179,7 @@ class RemoteCkan(CkanClient):
             logger.error("error is %s", e.response.text)
             return False
         else:
-            self.dataset_reorder(dataset, res["id"])
+            self.dataset_reorder(dataset, res["result"]["resource_id"])
         return True
 
 
@@ -195,5 +205,7 @@ class CkanStorage:
               records: Dict[str, List[Record]],
               dataset: str,
               resource: str,
+              description: str = "",
               upsert: bool = False):
-        return self.client.create_resource(records, dataset, resource, upsert=upsert)
+        return self.client.create_resource(records, dataset, resource,
+                                           description, upsert=upsert)

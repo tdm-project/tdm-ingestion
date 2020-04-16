@@ -29,7 +29,7 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   web:
-    image: tdmproject/tdmq:d95288a8501c241f6581d265f56b4f4e17125385
+    image: tdmproject/tdmq:dev-218
     depends_on:
       - "timescaledb"
     ports:

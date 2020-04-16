@@ -36,6 +36,8 @@ def main():
     parser.add_argument('--ckan_api_key', dest='ckan_api_key', required=True)
     parser.add_argument('--ckan_dataset', dest='ckan_dataset', required=True)
     parser.add_argument('--ckan_resource', dest='ckan_resource', required=True)
+    parser.add_argument('--ckan_description', dest='ckan_description',
+                        required=False, default="")
     parser.add_argument('--upsert', dest='upsert', default=False,
                         action='store_true')
 
@@ -65,6 +67,7 @@ def main():
         ),
         args.ckan_dataset,
         resource_name,
+        args.ckan_description,
         args.upsert)
 
 
