@@ -39,8 +39,8 @@ REST_TIME_SERIES = {
     "bucket": None,
     "coords": {
         "footprint": [{
-            "type": "Point",
-            "coordinates": [0, 1]
+            "type": "MultiPoint",
+            "coordinates": [[0, 1]]
         }],
         "time": [datetime.timestamp(TIME_SERIES[0].time)]
     },
