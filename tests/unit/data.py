@@ -40,7 +40,7 @@ REST_TIME_SERIES = {
     "coords": {
         "footprint": [{
             "type": "MultiPoint",
-            "coordinates": [[0, 1]]
+            "coordinates": [[1, 0]]
         }],
         "time": [datetime.timestamp(TIME_SERIES[0].time)]
     },
