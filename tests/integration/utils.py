@@ -16,6 +16,11 @@ def docker_compose_down(docker_yaml):
     subprocess.check_call(['docker-compose', '-f', docker_yaml, 'down'])
 
 
+def docker_compose_exec(docker_yaml, service, command):
+    subprocess.check_call(
+        ["docker-compose", '-f', docker_yaml, "exec", service, *command])
+
+
 def try_func(func, sleep, retry, *args, **kwargs):
     """
     func must return True or a similiar value
