@@ -24,11 +24,11 @@ def check_ckan():
         print(f'num resources {dataset["num_resources"]}')
         assert dataset['num_resources'] == 1
         expected = """_id,station,type,date,location,temperature,humidity
-1,tdm/sensor_0,Station,2019-05-02T11:00:00Z,"38.9900399938148,8.93607900287515",23,0.272000001122554
-2,tdm/sensor_1,Station,2019-05-02T10:50:00Z,"40.5841279932012,8.24696900295421",20,0.419999986886978
-3,tdm/sensor_1,Station,2019-05-02T11:00:00Z,"40.5841279932012,8.24696900295421",25,0.400000005960464
-4,tdm/sensor_1,Station,2019-05-02T11:10:00Z,"40.5841279932012,8.24696900295421",22,0.379999995231628
-5,tdm/sensor_1,Station,2019-05-02T11:20:00Z,"40.5841279932012,8.24696900295421",25,0.349999994039536"""
+1,tdm/sensor_0,Station,2019-05-02T11:00:00Z,"38.9900400015583,8.93607900725268",23,0.272000001122554
+2,tdm/sensor_1,Station,2019-05-02T10:50:00Z,"40.5841280014956,8.24696900768626",20,0.419999986886978
+3,tdm/sensor_1,Station,2019-05-02T11:00:00Z,"40.5841280014956,8.24696900768626",25,0.400000005960464
+4,tdm/sensor_1,Station,2019-05-02T11:10:00Z,"40.5841280014956,8.24696900768626",22,0.379999995231628
+5,tdm/sensor_1,Station,2019-05-02T11:20:00Z,"40.5841280014956,8.24696900768626",25,0.349999994039536"""
         actual = requests.get(dataset['resources'][0]['url']).text
         actual_dict_lines = [dict(l) for l in DictReader(StringIO(actual))]
         expected_dict_lines = [dict(l) for l in DictReader(StringIO(expected))]
