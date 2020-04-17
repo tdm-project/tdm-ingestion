@@ -21,6 +21,8 @@ def import_class(class_path: str):
 class TimeDelta(Enum):
     one_hour = timedelta(hours=1)
     one_day = timedelta(days=1)
+    one_week = timedelta(weeks=1)
+    one_month = timedelta(weeks=3)
 
     def get_before_after(self, time: datetime = None) -> Tuple[
         datetime, datetime]:
@@ -32,7 +34,7 @@ class TimeDelta(Enum):
                 microsecond=0)
             before = after + timedelta(minutes=59, seconds=59,
                                        microseconds=999999)
-        else:
+        elif self == TimeDelta.one_day:
             after = (now - TimeDelta.one_day.value).replace(
                 hour=0,
                 minute=0,
@@ -41,6 +43,29 @@ class TimeDelta(Enum):
             before = after + timedelta(
                 hours=23, minutes=59, seconds=59,
                 microseconds=999999)
+        elif self == TimeDelta.one_week:
+            after = (
+                now - (TimeDelta.one_week.value + timedelta(days=now.isoweekday()))
+            ).replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+            before = after + timedelta(
+                days=6,
+                hours=23, minutes=59, seconds=59,
+                microseconds=999999)
+        elif self == TimeDelta.one_month:
+            last_month = now.replace(day=1) - timedelta(days=1)
+            after = last_month.replace(
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+            before = last_month.replace(
+                hour=23, minute=59, second=59,
+                microsecond=999999)
         return before, after
 
 
