@@ -20,7 +20,9 @@ def main():
 
     time_delta_mapping = {
         '1h': TimeDelta.one_hour,
-        '1d': TimeDelta.one_day
+        '1d': TimeDelta.one_day,
+        '1w': TimeDelta.one_week,
+        '1m': TimeDelta.one_month
     }
     parser.add_argument('--time_delta_before', dest='time_delta_before',
                         choices=time_delta_mapping.keys())
