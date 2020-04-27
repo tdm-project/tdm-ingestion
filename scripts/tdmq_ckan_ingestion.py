@@ -60,8 +60,8 @@ def main():
         before, after = args.before, args.after
         resource_name = args.ckan_resource
 
+    description_text = args.ckan_description or ''
     if args.ckan_description and args.time_delta_before:
-        description_text = args.ckan_description
 
         if "%{after}" in description_text:
             description_text = description_text.replace(
