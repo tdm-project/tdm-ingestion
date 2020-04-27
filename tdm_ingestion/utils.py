@@ -25,7 +25,7 @@ class TimeDelta(Enum):
     one_month = timedelta(weeks=3)
 
     def get_before_after(self, time: datetime = None) -> Tuple[
-        datetime, datetime]:
+                         datetime, datetime]:
         now = time or datetime.utcnow()
         if self == TimeDelta.one_hour:
             after = (now - TimeDelta.one_hour.value).replace(
@@ -45,7 +45,8 @@ class TimeDelta(Enum):
                 microseconds=999999)
         elif self == TimeDelta.one_week:
             after = (
-                now - (TimeDelta.one_week.value + timedelta(days=now.isoweekday()))
+                now - (TimeDelta.one_week.value +
+                       timedelta(days=now.weekday()))
             ).replace(
                 hour=0,
                 minute=0,
