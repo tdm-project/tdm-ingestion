@@ -5,11 +5,12 @@ from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 import jsons
+import re
 from requests.exceptions import HTTPError
 
 from tdm_ingestion.http_client.base import Http
 from tdm_ingestion.tdmq.models import Record
-from tdm_ingestion.utils import import_class
+from tdm_ingestion.utils import import_class, daterange
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -124,7 +125,7 @@ class RemoteCkan(CkanClient):
         except HTTPError:
             logger.error("error occurred getting resources to sort")
             return False
-        
+
     def create_resource(self, records: Dict[str, List[Record]],
                         dataset: str, resource: str, description: str = "", upsert: bool = False) -> None:
         """
@@ -182,6 +183,39 @@ class RemoteCkan(CkanClient):
             self.dataset_reorder(dataset, res["result"]["resource_id"])
         return True
 
+    def prune_resources(self, dataset: str, resource_name: str,
+                        after: datetime, before: datetime,
+                        prune_weekly: bool) -> None:
+
+        resources_to_delete = []
+
+        daily_prefix = re.sub(r'-weekly.*|-monthly.*', '-daily',
+                              resource_name)
+        weekly_prefix = re.sub(r'-weekly.*|-monthly.*', '-weekly',
+                               resource_name)
+        for day in daterange(after, before):
+            resources_to_delete.append(
+                f"{daily_prefix}-{day.strftime('%Y-%m-%d')}")
+            if prune_weekly:
+                if day.weekday() == 0 and (day + timedelta(days=7)).month == before.month:
+                    resources_to_delete.append(
+                        f"{weekly_prefix}-{day.strftime('%Y-%m-%d')}")
+
+        try:
+            resources = self.get_dataset_info(dataset)["resources"]
+        except HTTPError:
+            logger.warning("error querying tdmq for resources. Proceeding without deleting the old resource")
+        else:
+            for r in resources:
+                if r["name"] in resources_to_delete:
+                    try:
+                        logger.debug("found resource to prune")
+                        self.delete_resource(r["id"])
+                    except HTTPError:
+                        logger.warning("error occurred deleting the resource. Proceed without deleting")
+                    else:
+                        logger.debug("old resource deleted")
+
 
 class Formatter(ABC):
     @abstractmethod
@@ -209,3 +243,12 @@ class CkanStorage:
               upsert: bool = False):
         return self.client.create_resource(records, dataset, resource,
                                            description, upsert=upsert)
+
+    def prune_resources(self,
+                        dataset: str,
+                        resource_name: str,
+                        after: datetime,
+                        before: datetime,
+                        prune_weekly: bool) -> None:
+        return self.client.prune_resources(dataset, resource_name, after,
+                                           before, prune_weekly)

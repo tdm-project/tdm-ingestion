@@ -82,3 +82,8 @@ class DateTimeFormatter(Formatter):
 
     def format(self, name):
         return (datetime.now() - self.time_delta).strftime(name)
+
+
+def daterange(start_date: datetime, end_date: datetime) -> datetime:
+    for n in range(int(((end_date + timedelta(days=1)) - start_date).days)):
+        yield start_date + timedelta(n)
