@@ -5,7 +5,8 @@ from tdm_ingestion.http_client.requests import Requests
 from tdm_ingestion.storage.ckan import CkanStorage, RemoteCkan
 from tdm_ingestion.tdmq.models import EntityType
 from tdm_ingestion.tdmq.remote import Client
-from tdm_ingestion.utils import TimeDelta, DateTimeFormatter
+from tdm_ingestion.utils import TimeDelta
+
 
 def main():
     import argparse
@@ -45,6 +46,10 @@ def main():
         required=False, default="")
     parser.add_argument('--upsert', dest='upsert', default=False,
                         action='store_true')
+    parser.add_argument('--prune', dest='prune', default=False,
+                        help='when create a resource with time deltas of 1w or'
+                        '1m deletes the related daily reports.',
+                        action='store_true')
 
     args = parser.parse_args()
     logging_level = logging.DEBUG if args.debug else logging.INFO
@@ -55,7 +60,7 @@ def main():
     if args.time_delta_before:
         time_delta = time_delta_mapping[args.time_delta_before]
         before, after = time_delta.get_before_after()
-        resource_name = DateTimeFormatter(time_delta.value).format(args.ckan_resource)
+        resource_name = after.strftime(args.ckan_resource)
     else:
         before, after = args.before, args.after
         resource_name = args.ckan_resource
@@ -73,7 +78,8 @@ def main():
 
     consumer = TDMQConsumer(Client(args.tdmq_url))
 
-    storage = CkanStorage(RemoteCkan(args.ckan_url, Requests(), args.ckan_api_key))
+    storage = CkanStorage(
+        RemoteCkan(args.ckan_url, Requests(), args.ckan_api_key))
 
     storage.write(
         consumer.poll(
@@ -85,6 +91,14 @@ def main():
         resource_name,
         description_text,
         args.upsert)
+
+    if args.prune:
+        if args.time_delta_before == '1w':
+            storage.prune_resources(args.ckan_dataset, resource_name,
+                                    after, before, prune_weekly=False)
+        elif args.time_delta_before == '1m':
+            storage.prune_resources(args.ckan_dataset, resource_name,
+                                    after, before, prune_weekly=True)
 
 
 if __name__ == '__main__':
