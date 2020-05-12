@@ -19,6 +19,7 @@ def import_class(class_path: str):
 
 
 class TimeDelta(Enum):
+    today = timedelta(hours=23)
     one_hour = timedelta(hours=1)
     one_day = timedelta(days=1)
     one_week = timedelta(weeks=1)
@@ -66,6 +67,16 @@ class TimeDelta(Enum):
                 microsecond=0)
             before = last_month.replace(
                 hour=23, minute=59, second=59,
+                microsecond=999999)
+        if self == TimeDelta.today:
+            after = now.replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+            before = (now - TimeDelta.one_hour.value).replace(
+                minute=59,
+                second=59,
                 microsecond=999999)
         return before, after
 
