@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--op', dest='operation', required=True)
 
     time_delta_mapping = {
+        'today': TimeDelta.today,
         '1h': TimeDelta.one_hour,
         '1d': TimeDelta.one_day,
         '1w': TimeDelta.one_week,
