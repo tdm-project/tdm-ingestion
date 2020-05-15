@@ -91,8 +91,11 @@ class Client(BaseClient):
         for idx, time in enumerate(time_series['coords']['time']):
             date_time = datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
 
-            # No support for MultiPoint, just bring the last coordinate pair
-            footprint = time_series['coords']['footprint'][idx]["coordinates"][-1]
+            try:
+                # No support for MultiPoint, just bring the last coordinate pair
+                footprint = time_series['coords']['footprint'][idx]["coordinates"][-1]
+            except TypeError:
+                footprint = [0.0, 0.0]
             # Point(latitude, longitude) but point are returned as [longitude, latitude]
             records.append(Record(date_time, source, Point(footprint[1], footprint[0]), {data: value_list[idx]
                                                       for data, value_list in time_series['data'].items()}))
