@@ -29,7 +29,7 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   web:
-    image: tdmproject/tdmq:dev-218
+    image: tdmproject/tdmq:dev-230
     depends_on:
       - "timescaledb"
     ports:
@@ -53,5 +53,7 @@ services:
       - --from_beginning
       - --tdmq_url
       - http://web:8000
+      - --tdmq_auth_token
+      - supersecret
 
     restart: on-failure

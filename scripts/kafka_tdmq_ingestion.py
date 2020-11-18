@@ -26,7 +26,7 @@ def main():
                         action='store_true',
                         default=False)
     parser.add_argument('--tdmq_url', dest='tdmq_url', required=True)
-    parser.add_argument('--tdmq-token', dest='tdmq_auth_token', required=True)
+    parser.add_argument('--tdmq_auth_token', dest='tdmq_auth_token', required=True)
 
     args = parser.parse_args()
 
