@@ -46,8 +46,8 @@ def raise_exception(status_code):
 
 class Client(BaseClient):
 
-    def __init__(self, url: str, http_client: Http = None, api_version='v0.0'):
-        self.http = http_client or Requests()
+    def __init__(self, url: str, http_client: Http = None, api_version='v0.0', auth_token=None):
+        self.http = http_client or Requests(auth_token)
         self.url = url
         logger.debug("tdmq url %s", self.url)
         self.api_version = api_version

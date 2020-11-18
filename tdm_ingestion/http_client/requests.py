@@ -21,7 +21,8 @@ class Requests(Http):
              headers: Dict[str, str] = None) -> Union[List, Dict]:
         data = data or {}
         headers = headers or {}
-        headers['content-type'] = 'application/json'
+        headers.update(self.headers)
+        headers.update({'content-type': 'application/json'})
         logger.debug("doing POST with url %s and headers %s", url, headers)
         r = requests.post(url, data=data, headers=headers)
         logger.debug("Response status from server is %s", r.status_code)
@@ -32,6 +33,7 @@ class Requests(Http):
             headers: Dict[str, str] = None) -> Union[List, Dict]:
         params = params or {}
         headers = headers or {}
+        headers.update(self.headers)
         logger.debug("doing GET with url %s and headers %s", url, headers)
         r = requests.get(url, params=params, headers=headers)
         logger.debug("Response status from server is %s", r.status_code)
