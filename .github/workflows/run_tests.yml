@@ -29,7 +29,16 @@ jobs:
         rm docker/tdm_ingestion_dist -rf
         mkdir docker/tdm_ingestion_dist
         cp -a setup.py VERSION tdm_ingestion scripts docker/tdm_ingestion_dist
-        docker build -f docker/Dockerfile -t ${IMAGE_NAME} ./docker
+        docker build -f docker/Dockerfile -t ${{ IMAGE_NAME }} ./docker
     - name: Run Integration Tests
       run: |
         make tests_no_image
+    - name: Deploy on DockerHub
+      if: ${{ github.ref == 'refs/heads/master' && github.repository == 'tdm-project/tdm-ingestion' }}
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USER }}
+        password: ${{ secrets.DOCKER_HUB_PWD }}
+        repository: ${{ IMAGE_NAME }}
+        tag_with_ref: true
+
