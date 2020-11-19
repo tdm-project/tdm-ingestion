@@ -26,7 +26,10 @@ jobs:
         nosetests tests/unit/ --with-coverage --cover-package tdm_ingestion
     - name: Build Docker Image
       run: |
-        docker build . --file Dockerfile
+        rm docker/tdm_ingestion_dist -rf
+        mkdir docker/tdm_ingestion_dist
+        cp -a setup.py VERSION tdm_ingestion scripts docker/tdm_ingestion_dist
+        docker build -f docker/Dockerfile -t ${IMAGE_NAME} ./docker
     - name: Run Integration Tests
       run: |
         make tests_no_image
