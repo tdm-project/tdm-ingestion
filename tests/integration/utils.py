@@ -18,7 +18,7 @@ def docker_compose_down(docker_yaml):
 
 def docker_compose_exec(docker_yaml, service, command):
     subprocess.check_call(
-        ["docker-compose", '-f', docker_yaml, "exec", service, *command])
+        ["docker-compose", '-f', docker_yaml, "exec", "-T", service, *command])
 
 
 def try_func(func, sleep, retry, *args, **kwargs):
