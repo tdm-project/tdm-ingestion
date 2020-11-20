@@ -28,7 +28,7 @@ def try_func(func, sleep, retry, *args, **kwargs):
     passed = False
     counter = 0
     res = None
-    while not passed or counter < retry:
+    while not passed and counter < retry:
         try:
             res = func(*args, **kwargs)
             if res:
@@ -39,7 +39,7 @@ def try_func(func, sleep, retry, *args, **kwargs):
         counter += 1
         time.sleep(sleep)
     if not passed:
-        raise RuntimeError(f'func {func} failed with args {args} kwargs {kwargs}', func, args, kwargs)
+        raise RuntimeError(f'func {func.__name__} failed with args {args} kwargs {kwargs}')
     return res
 
 
