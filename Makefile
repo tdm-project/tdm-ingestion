@@ -3,10 +3,7 @@ SHELL := /bin/bash
 IMG ?= tdmproject/tdm-ingestion
 
 images:
-	rm docker/tdm_ingestion_dist -rf
-	mkdir docker/tdm_ingestion_dist
-	cp -a setup.py VERSION tdm_ingestion scripts docker/tdm_ingestion_dist
-	docker build -f docker/Dockerfile -t ${IMG} ./docker
+	docker build -f Dockerfile -t ${IMG} .
 
 tests: test_kafka test_ckan
 
