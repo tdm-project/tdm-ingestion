@@ -29,13 +29,14 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   web:
-    image: tdmproject/tdmq:dev-218
+    image: tdmproject/tdmq:dev-289
     depends_on:
       - "timescaledb"
     ports:
       - 8000
     environment:
       CREATE_DB: "true"
+      TDMQ_AUTH_TOKEN: "test"
 
   ingester:
     image: ${IMG}
@@ -53,5 +54,7 @@ services:
       - --from_beginning
       - --tdmq_url
       - http://web:8000
+      - --tdmq_auth_token
+      - test
 
     restart: on-failure

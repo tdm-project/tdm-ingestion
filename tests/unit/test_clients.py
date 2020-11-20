@@ -21,7 +21,14 @@ class TestRemoteClient(unittest.TestCase):
 
     def setUp(self):
         self.url = "http://foo.bar"
+        self.auth_token = "test_token"
 
+    def _get_httpretty_callback(self, expected_response):
+        def create_request_callback(request, _, response_headers):
+            self.assertEqual(request.headers.get("Authorization"), "Bearer {}".format(self.auth_token))
+            return [200, response_headers, jsons.dumps(expected_response)]
+        return create_request_callback
+        
     @httpretty.activate
     def test_create_entity_types(self):
         """
@@ -29,8 +36,8 @@ class TestRemoteClient(unittest.TestCase):
         """
         expected_response = [s.name for s in SENSORS_TYPE]
 
-        client = Client(self.url)
-        httpretty.register_uri(httpretty.POST, client.entity_types_url, body=jsons.dumps(expected_response))
+        client = Client(self.url, auth_token=self.auth_token)
+        httpretty.register_uri(httpretty.POST, client.entity_types_url, body=self._get_httpretty_callback(expected_response))
 
         res = client.create_entity_types(SENSORS_TYPE)
         self.assertEqual(res, expected_response)
@@ -40,8 +47,18 @@ class TestRemoteClient(unittest.TestCase):
         """
         Tests that when an error occurs it raises GenericError
         """
-        client = Client(self.url)
+        client = Client(self.url, auth_token=self.auth_token)
         httpretty.register_uri(httpretty.POST, client.entity_types_url, status=400)
+
+        self.assertRaises(GenericHttpError, client.create_entity_types, SENSORS_TYPE)
+
+    @httpretty.activate
+    def test_create_entity_types_error(self):
+        """
+        Tests that when an error occurs it raises GenericError
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.entity_types_url, status=401)
 
         self.assertRaises(GenericHttpError, client.create_entity_types, SENSORS_TYPE)
 
@@ -50,10 +67,11 @@ class TestRemoteClient(unittest.TestCase):
         """
         Tests correct client answer
         """
+        
         expected_response = [s.id_ for s in SENSORS]
 
-        client = Client(self.url)
-        httpretty.register_uri(httpretty.POST, client.sources_url, body=jsons.dumps(expected_response))
+        client = Client(self.url, auth_token=self.auth_token)
+        httpretty.register_uri(httpretty.POST, client.sources_url, body=self._get_httpretty_callback(expected_response))
 
         res = client.create_sources(SENSORS)
         self.assertEqual(res, expected_response)
@@ -66,6 +84,17 @@ class TestRemoteClient(unittest.TestCase):
         client = Client(self.url)
         httpretty.register_uri(httpretty.POST, client.sources_url, status=400)
         self.assertRaises(GenericHttpError, client.create_sources, SENSORS)
+
+    
+    @httpretty.activate
+    def test_create_source_unauthorized(self):
+        """
+        Tests that when an error occurs it raises GenericError
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.sources_url, status=401)
+
+        self.assertRaises(GenericHttpError, client.create_sources, SENSORS_TYPE)
 
     @httpretty.activate
     def test_create_source_duplicate_entry_error(self):
@@ -80,7 +109,7 @@ class TestRemoteClient(unittest.TestCase):
     def test_create_time_series(self):
         expected_response = jsons.dumps(TIME_SERIES)
 
-        client = Client(self.url)
+        client = Client(self.url, auth_token=self.auth_token)        
         httpretty.register_uri(httpretty.POST, client.records_url, body=jsons.dumps(expected_response))
 
         res = client.create_time_series(TIME_SERIES)
@@ -95,6 +124,17 @@ class TestRemoteClient(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, client.records_url, status=400)
 
         self.assertRaises(GenericHttpError, client.create_time_series, TIME_SERIES)
+
+        
+    @httpretty.activate
+    def test_create_time_series_unauthorized(self):
+        """
+        Tests that when an error occurs it raises GenericError
+        """
+        client = Client(self.url)
+        httpretty.register_uri(httpretty.POST, client.records_url, status=401)
+
+        self.assertRaises(GenericHttpError, client.create_time_series, SENSORS_TYPE)
 
     @httpretty.activate
     def test_get_source_by_id(self):

@@ -1,0 +1,44 @@
+name: Run Tests
+
+on: [ push ] 
+
+env:
+  IMAGE_NAME: tdmproject/tdm-ingestion
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nose kafka-python==1.4.7
+        pip install -e .[confluent]
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Run unit tests
+      run: |
+        nosetests tests/unit/ --with-coverage --cover-package tdm_ingestion
+    - name: Build Docker Image
+      run: |
+        rm docker/tdm_ingestion_dist -rf
+        mkdir docker/tdm_ingestion_dist
+        cp -a setup.py VERSION tdm_ingestion scripts docker/tdm_ingestion_dist
+        docker build -f docker/Dockerfile -t ${IMAGE_NAME} ./docker
+    - name: Run Integration Tests
+      run: |
+        make tests_no_image
+    - name: Deploy on DockerHub
+      if: ${{ github.ref == 'refs/heads/master' && github.repository == 'tdm-project/tdm-ingestion' }}
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USER }}
+        password: ${{ secrets.DOCKER_HUB_PWD }}
+        repository: ${IMAGE_NAME}
+        tag_with_ref: true
+
