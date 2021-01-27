@@ -26,6 +26,8 @@ def main():
                         action='store_true',
                         default=False)
     parser.add_argument('--tdmq_url', dest='tdmq_url', required=True)
+    parser.add_argument('--kafka_group', dest='kafka_group', default='tdm_ingestion',
+                        required=False)
     parser.add_argument('--tdmq_auth_token', dest='tdmq_auth_token', required=True)
 
     args = parser.parse_args()
@@ -41,6 +43,7 @@ def main():
         kwargs['auto.offset.reset'] = 'beginning'
     consumer = KafkaConsumer(args.bootstrap_server.split(','),
                              args.topics.split(','),
+                             args.kafka_group,
                              **kwargs)
     tdmq = CachedStorage(Client(args.tdmq_url, auth_token=args.tdmq_auth_token))
     converter = NgsiConverter()
