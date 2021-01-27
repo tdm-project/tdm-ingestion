@@ -49,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: tdmproject/tdm-ingestion:latest,tdmproject/tdm-ingestion:1.0.8
+          tags: tdmproject/tdm-ingestion:latest,tdmproject/tdm-ingestion:1.0.9
       -
         name: Image digest
         if: ${{ github.ref == 'refs/heads/master' && github.repository == 'tdm-project/tdm-ingestion' }}

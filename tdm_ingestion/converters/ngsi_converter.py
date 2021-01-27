@@ -91,11 +91,26 @@ class NgsiConverter:
         except KeyError:
             raise RuntimeError(f"invalid message type {service_path}")
 
+    @staticmethod
+    def _get_sensor_model(source_id: str, sensor_type: str) -> str:
+        edge_name, station_name, sensor_name = source_id.split('.')
+
+        if sensor_type == EntityType("EnergyConsumptionMonitor", "Station"):
+            if 'emontx' in station_name.lower():
+                return 'emonTx'
+            elif 'iotawatt' in station_name.lower():
+                return 'IoTaWatt'
+            else:
+                return 'IoTaWatt'
+
+        return None
+
 
     @staticmethod
-    def _create_sensor(sensor_name: str, sensor_type: EntityType, geometry: Geometry,
+    def _create_sensor(sensor_name: str, sensor_type: EntityType,
+                       sensor_model: str, geometry: Geometry,
                        properties: List[str]) -> Source:
-        return Source(sensor_name, sensor_type, geometry, properties)
+        return Source(sensor_name, sensor_type, sensor_model, geometry, properties)
 
     def _create_record(self, msg: Dict) -> Record:
         source_id = self._get_source_id(msg)
@@ -106,6 +121,7 @@ class NgsiConverter:
         records: Dict = {}
         time = None
         geometry = None
+        sensor_model = None
         for attr in msg["body"]["attributes"]:
             name, value, type_ = attr["name"], attr["value"], attr["type"]
             if not name in self._to_ignore:
@@ -130,6 +146,8 @@ class NgsiConverter:
                         time = converted_value
                     elif name == "location":
                         geometry = converted_value
+                    elif name == "modelName":
+                        sensor_model = converted_value
                     elif name not in self.non_properties:
                         records[name] = converted_value
 
@@ -139,7 +157,10 @@ class NgsiConverter:
         if geometry is None:
             raise RuntimeError("missing latitude and/or longitude")
 
-        sensor = self._create_sensor(source_id, sensor_type, geometry, records.keys())
+        if sensor_model is None:
+            sensor_model = self._get_sensor_model(source_id, sensor_type)
+
+        sensor = self._create_sensor(source_id, sensor_type, sensor_model, geometry, records.keys())
 
         return Record(time, sensor, geometry, records)
 
@@ -171,8 +192,10 @@ class CachedNgsiConverter(NgsiConverter):
     def _create_sensor(self,
                        sensor_name: str,
                        sensor_type: EntityType,
+                       sensor_model: str,
                        geometry: Geometry,
                        properties: List[str]):
         return self.sensors.setdefault(sensor_name,
                                        Source(sensor_name, sensor_type,
-                                              geometry, properties))
+                                              sensor_model, geometry,
+                                              properties))

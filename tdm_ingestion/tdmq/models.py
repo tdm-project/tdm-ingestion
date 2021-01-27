@@ -80,11 +80,13 @@ class Source(Model):
     def __init__(self,
                  id_: str = None,
                  type_: EntityType = None,
+                 model_name: str = None,
                  geometry: Geometry = None,
                  controlled_properties: List[str] = None,
                  tdmq_id: str = None):
         self.id_ = id_
         self.type = type_
+        self.model_name = model_name
         self.geometry = geometry
         self.controlled_properties = controlled_properties
         self.tdmq_id = tdmq_id
@@ -95,6 +97,7 @@ class Source(Model):
             alias=self.id_,
             entity_type=self.type.name,
             entity_category="Station",
+            model_name=self.model_name,
             default_footprint=self.geometry.to_json(False),
             stationary=True,
             controlledProperties=self.controlled_properties,
