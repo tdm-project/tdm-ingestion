@@ -115,6 +115,7 @@ class Client(BaseClient):
                 return Source(id_=source_data['external_id'],
                               tdmq_id=source_data['tdmq_id'],
                               type_=EntityType(source_data['entity_type'], source_data['entity_category']),
+                              model_name=source_data.get('modelName', ''),
                               geometry=Point(source_data['default_footprint']['coordinates'][1],
                                              source_data['default_footprint']['coordinates'][0]))
             except HTTPError as e:
@@ -124,6 +125,7 @@ class Client(BaseClient):
             return [Source(id_=s['external_id'],
                            tdmq_id=s['tdmq_id'],
                            type_=EntityType(s['entity_type'], s['entity_category']),
+                           model_name=s.get('modelName', ''),
                            geometry=Point(s['default_footprint']['coordinates'][1],
                                           s['default_footprint']['coordinates'][0])
                            ) for s in self.http.get(f'{self.sources_url}', params=query)]

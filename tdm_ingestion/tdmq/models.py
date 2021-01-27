@@ -97,7 +97,7 @@ class Source(Model):
             alias=self.id_,
             entity_type=self.type.name,
             entity_category="Station",
-            model_name=self.model_name,
+            modelName=self.model_name,
             default_footprint=self.geometry.to_json(False),
             stationary=True,
             controlledProperties=self.controlled_properties,

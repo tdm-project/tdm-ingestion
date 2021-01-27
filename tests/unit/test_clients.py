@@ -144,6 +144,7 @@ class TestRemoteClient(unittest.TestCase):
         expected_source = Source(
             id_=REST_SOURCE["external_id"],
             type_=EntityType(REST_SOURCE["entity_type"], REST_SOURCE["entity_category"]),
+            model_name=REST_SOURCE["modelName"],
             geometry=Point(*REST_SOURCE["default_footprint"]["coordinates"][::-1]),  # for some strange reason the points are inverted
             controlled_properties=None,
             tdmq_id=REST_SOURCE["tdmq_id"]
@@ -165,6 +166,7 @@ class TestRemoteClient(unittest.TestCase):
             Source(
                 id_=REST_SOURCE["external_id"],
                 type_=EntityType(REST_SOURCE["entity_type"], REST_SOURCE["entity_category"]),
+                model_name=REST_SOURCE["modelName"],
                 geometry=Point(*REST_SOURCE["default_footprint"]["coordinates"][::-1]),
                 controlled_properties=None,
                 tdmq_id=REST_SOURCE["tdmq_id"]
