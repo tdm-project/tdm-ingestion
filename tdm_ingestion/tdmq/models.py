@@ -83,13 +83,19 @@ class Source(Model):
                  model_name: str = None,
                  geometry: Geometry = None,
                  controlled_properties: List[str] = None,
-                 tdmq_id: str = None):
+                 tdmq_id: str = None,
+                 edge_id: str = None,
+                 station_id: str = None,
+                 sensor_id: str = None):
         self.id_ = id_
         self.type = type_
         self.model_name = model_name
         self.geometry = geometry
         self.controlled_properties = controlled_properties
         self.tdmq_id = tdmq_id
+        self.edge_id = edge_id
+        self.station_id = station_id
+        self.sensor_id = sensor_id
 
     def to_json(self, serialize: bool = True) -> Union[Dict, str]:
         dct = dict(
@@ -103,7 +109,10 @@ class Source(Model):
             controlledProperties=self.controlled_properties,
             shape=[],
             description={
-            }
+            },
+            edge_id = self.edge_id,
+            station_id = self.station_id,
+            sensor_id = self.sensor_id
         )
         return jsonify(dct) if serialize else dct
 

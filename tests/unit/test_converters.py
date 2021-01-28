@@ -65,6 +65,7 @@ class TestNgsiConverter(unittest.TestCase):
             "consumedEnergy": 2.5,
             "powerFactor": 0.4,
             "realPower": 100.0,
+            "meterPulses": 5400.0,
             "rssi": -36
         }
         self.in_energy_msg = {
@@ -91,6 +92,7 @@ class TestNgsiConverter(unittest.TestCase):
                     {"name": "location", "type": "geo:point", "value": "0, 0"},
                     {"name": "powerFactor", "type": "Float", "value": f"{self.energy_values['powerFactor']}"},
                     {"name": "realPower", "type": "Float", "value": f"{self.energy_values['realPower']}"},
+                    {"name": "meterPulses", "type": "Float", "value": f"{self.energy_values['meterPulses']}"},
                     {"name": "timestamp", "type": "Integer", "value": "1576513999",
                      "metadatas": [{"name": "TimeInstant", "type": "ISO8601", "value": "2019-12-16T16:33:19.433Z"}]
                      },
@@ -161,6 +163,9 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:31:34Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-x.esp8266.Davis")
+        self.assertEqual(str(timeseries_list[0].source.edge_id), "Edge-x")
+        self.assertEqual(str(timeseries_list[0].source.station_id), "Edge-x.esp8266")
+        self.assertEqual(str(timeseries_list[0].source.sensor_id), "Davis")
 
     def _test_convert_energy(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_energy_msg)])
@@ -171,6 +176,9 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-16T16:33:19Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-y.emontx3.L3")
+        self.assertEqual(str(timeseries_list[0].source.edge_id), "Edge-y")
+        self.assertEqual(str(timeseries_list[0].source.station_id), "Edge-y.emontx3")
+        self.assertEqual(str(timeseries_list[0].source.sensor_id), "L3")
 
     def _test_convert_device(self, converter):
         timeseries_list = converter.convert([json.dumps(self.in_device_msg)])
@@ -181,6 +189,9 @@ class TestNgsiConverter(unittest.TestCase):
         self.assertEqual(timeseries_list[0].data, data)
         self.assertEqual(timeseries_list[0].time.strftime("%Y-%m-%dT%H:%M:%SZ"), "2019-12-18T14:05:05Z")
         self.assertEqual(str(timeseries_list[0].source.id_), "Edge-z.EDGE.HTU21D")
+        self.assertEqual(str(timeseries_list[0].source.edge_id), "Edge-z")
+        self.assertEqual(str(timeseries_list[0].source.station_id), "Edge-z.EDGE")
+        self.assertEqual(str(timeseries_list[0].source.sensor_id), "HTU21D")
 
     def _test_convert_error(self, message):
         timeseries_list = NgsiConverter().convert(message)

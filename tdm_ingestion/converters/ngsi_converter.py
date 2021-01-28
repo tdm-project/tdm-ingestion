@@ -61,6 +61,10 @@ class NgsiConverter:
         r"(?P<Type>\w+):(?P<Edge>[a-zA-Z0-9_-]+)\.(?P<Station>[a-zA-Z0-9_-]+)\.(?P<Sensor>[a-zA-Z0-9_-]+)"
     )
 
+    _edge_id_regex = re.compile(
+        r"(?P<Edge>Edge-[a-zA-Z0-9_-]+)\.(?P<Station>[a-zA-Z0-9_-]+)\.(?P<Sensor>[a-zA-Z0-9_-]+)"
+    )
+
     @staticmethod
     def _get_fiware_service_path(msg: Dict):
         for header in msg["headers"]:
@@ -110,7 +114,21 @@ class NgsiConverter:
     def _create_sensor(sensor_name: str, sensor_type: EntityType,
                        sensor_model: str, geometry: Geometry,
                        properties: List[str]) -> Source:
-        return Source(sensor_name, sensor_type, sensor_model, geometry, properties)
+
+        match = NgsiConverter._edge_id_regex.search(sensor_name)
+        if match:
+            edge_, station_, sensor_ = match.groups()
+            edge_id = edge_
+            station_id = "{}.{}".format(edge_, station_)
+            sensor_id = sensor_
+        else:
+            edge_id = None
+            station_id = None
+            sensor_id = None
+
+        return Source(sensor_name, sensor_type, sensor_model, geometry,
+                      properties, edge_id=edge_id, station_id=station_id,
+                      sensor_id=sensor_id)
 
     def _create_record(self, msg: Dict) -> Record:
         source_id = self._get_source_id(msg)
@@ -195,7 +213,21 @@ class CachedNgsiConverter(NgsiConverter):
                        sensor_model: str,
                        geometry: Geometry,
                        properties: List[str]):
+
+        match = NgsiConverter._edge_id_regex.search(sensor_name)
+        if match:
+            edge_, station_, sensor_ = match.groups()
+            edge_id = edge_
+            station_id = "{}.{}".format(edge_, station_)
+            sensor_id = sensor_
+        else:
+            edge_id = None
+            station_id = None
+            sensor_id = None
+
         return self.sensors.setdefault(sensor_name,
                                        Source(sensor_name, sensor_type,
                                               sensor_model, geometry,
-                                              properties))
+                                              properties, edge_id=edge_id,
+                                              station_id=station_id,
+                                              sensor_id=sensor_id))

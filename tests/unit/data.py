@@ -10,8 +10,12 @@ SENSORS_TYPE = [
 ]
 
 SENSORS = [
-    Source("s1", SENSORS_TYPE[0], 'model1', Point(0, 1), ["temperature"], "4d9ae10d-df9b-546c-a586-925e1e9ec049"),
-    Source("s2", SENSORS_TYPE[1], 'model2', Point(2, 3), ["humidity"], "6eb57b7e-43a3-5ad7-a4d1-d1ec54bb5520")
+    Source("s1", SENSORS_TYPE[0], 'model1', Point(0, 1), ["temperature"],
+           "4d9ae10d-df9b-546c-a586-925e1e9ec049", "Edge1", "Station1",
+           "Sensor1"),
+    Source("s2", SENSORS_TYPE[1], 'model2', Point(2, 3), ["humidity"],
+           "6eb57b7e-43a3-5ad7-a4d1-d1ec54bb5520", "Edge2", "Station1",
+           "Sensor1"),
 ]
 
 TIME_SERIES = [
@@ -33,7 +37,10 @@ REST_SOURCE = {
     "modelName": SENSORS[0].model_name,
     "external_id": SENSORS[0].id_,
     "stationary": True,
-    "tdmq_id": SENSORS[0].tdmq_id
+    "tdmq_id": SENSORS[0].tdmq_id,
+    "edge_id": SENSORS[0].edge_id,
+    "station_id": SENSORS[0].station_id,
+    "sensor_id": SENSORS[0].sensor_id
 }
 
 REST_TIME_SERIES = {
