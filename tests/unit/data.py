@@ -34,7 +34,7 @@ REST_SOURCE = {
     },
     "entity_type": SENSORS_TYPE[0].name,
     "entity_category": SENSORS_TYPE[0].category,
-    "modelName": SENSORS[0].model_name,
+    "station_model": SENSORS[0].station_model,
     "external_id": SENSORS[0].id_,
     "stationary": True,
     "tdmq_id": SENSORS[0].tdmq_id,
