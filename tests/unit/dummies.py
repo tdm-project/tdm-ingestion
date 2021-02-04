@@ -132,7 +132,7 @@ class DummyConfluentConsumerCorrectMessages(DummyConfluentConsumer):
                 ],
                 "type": "WeatherObserved",
                 "isPattern": "false",
-                "id": "WeatherObserved:Edge-CFA703F4.esp8266-7806085.Davis"
+                "id": "WeatherObserved:Edge-z.Station2.Davis"
             }
         }
         super(DummyConfluentConsumerCorrectMessages, self).__init__(correct_message, None, *args, **kwargs)

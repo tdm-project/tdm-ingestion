@@ -121,7 +121,7 @@
             ],
             "type": "WeatherObserved",
             "isPattern": "false",
-            "id": "WeatherObserved:Edge-x.esp8266.Davis"
+            "id": "WeatherObserved:Edge-x.StationX.Davis"
         }
     },
     {
