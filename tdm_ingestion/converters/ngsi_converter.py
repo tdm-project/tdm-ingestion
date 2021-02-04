@@ -106,6 +106,19 @@ class NgsiConverter:
                 return 'IoTaWatt'
             else:
                 return 'IoTaWatt'
+        elif sensor_type == EntityType("WeatherObserver", "Station"):
+            if 'emontx' in station_name.lower():
+                return 'emonTx'
+            elif 'esp8266-' in station_name.lower():
+                return 'airRohr'
+            elif 'airrohr-' in station_name.lower():
+                return 'airRohr'
+            elif 'edge' in station_name.lower():
+                return 'EdgeGateway'
+            else:
+                return 'Unknown'
+        elif sensor_type == EntityType("DeviceStatusMonitor", "Station"):
+            return 'EdgeGateway'
 
         return None
 
