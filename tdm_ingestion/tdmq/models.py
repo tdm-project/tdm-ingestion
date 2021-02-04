@@ -103,16 +103,16 @@ class Source(Model):
             alias=self.id_,
             entity_type=self.type.name,
             entity_category="Station",
-            station_model=self.station_model,
             default_footprint=self.geometry.to_json(False),
             stationary=True,
             controlledProperties=self.controlled_properties,
             shape=[],
-            description={
-            },
-            edge_id = self.edge_id,
-            station_id = self.station_id,
-            sensor_id = self.sensor_id
+            description=dict(
+                station_model=self.station_model,
+                edge_id = self.edge_id,
+                station_id = self.station_id,
+                sensor_id = self.sensor_id
+            ),
         )
         return jsonify(dct) if serialize else dct
 
