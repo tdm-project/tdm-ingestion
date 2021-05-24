@@ -98,7 +98,7 @@ class Client(BaseClient):
                 footprint = [0.0, 0.0]
             # Point(latitude, longitude) but point are returned as [longitude, latitude]
             records.append(Record(date_time, source, Point(footprint[1], footprint[0]), {data: value_list[idx]
-                                                      for data, value_list in time_series['data'].items() if time_series}))
+                                                      for data, value_list in time_series['data'].items() if value_list}))
 
         return records
 
