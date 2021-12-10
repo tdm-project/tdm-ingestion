@@ -104,6 +104,8 @@ class NgsiConverter:
                 return 'emonTx'
             elif 'iotawatt' in station_name.lower():
                 return 'IoTaWatt'
+            elif 'shelly' in station_name.lower():
+                return 'Shelly'
             else:
                 return 'IoTaWatt'
         elif sensor_type == EntityType("WeatherObserver", "Station"):
@@ -154,11 +156,20 @@ class NgsiConverter:
         geometry = None
         sensor_model = None
         for attr in msg["body"]["attributes"]:
-            name, value, type_ = attr["name"], attr["value"], attr["type"]
+            name, value, type_ = attr.get("name"), attr.get("value"), attr.get("type")
             if not name in self._to_ignore:
                 if value is None or not str(value).strip():
-                    converter = str
-                    value = ''
+                    if name == 'timestamp':
+                        try:
+                            logger.warning("message received with empty timestamp: using the Cygnus received time")
+                            value = next((i for i in msg['headers'] if 'timestamp' in i), None).get('timestamp') / 1000
+                            converter = self._attrs_mapper[name]
+                        except (TypeError, AttributeError):
+                            logger.error("message received with empty timestamp and no Cygnus received time available: skipping")
+                            continue
+                    else:
+                        converter = str
+                        value = ''
                 else:
                     # First check for a converter for the attribute
                     try:
