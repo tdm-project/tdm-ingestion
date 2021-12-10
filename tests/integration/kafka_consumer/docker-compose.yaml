@@ -22,14 +22,14 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   timescaledb:
-    image: timescale/timescaledb-postgis
+    image: timescale/timescaledb-postgis:latest-pg11
     ports:
       - "5432"
     environment:
       - POSTGRES_PASSWORD=foobar
 
   web:
-    image: tdmproject/tdmq:dev-289
+    image: tdmproject/tdmq:master-641
     depends_on:
       - "timescaledb"
     ports:
